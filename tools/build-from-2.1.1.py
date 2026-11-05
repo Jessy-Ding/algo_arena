@@ -47,6 +47,9 @@ rep('const APP = { version: "2.1.1-live",', 'const APP = { version: "3.0.0-b2",'
 # exports are unaffected.
 rep("const DEFAULT_READ = 10; // v2.1: seconds the question is visible, locked, before answers open",
     "const DEFAULT_READ = 5; // seconds the question is visible, locked, before answers open", "default_read_5")
+# 10 s default answer time (user decision, 2026-11-04); 2.1.1 used 20 s. Hosts can still set 5 to 300 s, and a
+# question's own time limit takes priority.
+rep("const DEFAULT_T = 20;", "const DEFAULT_T = 10; // seconds to answer once answers open", "default_t_10")
 # Uploaded files live in Cloud Storage (assets capability in platform-firebase.js), not at claude.ai's /_blob/ path.
 rep('const blobUrl = (id) => id ? "/_blob/" + id : "";',
     'const blobUrl = (id) => !id ? "" : C.assets && C.assets.url ? C.assets.url(id) : "/_blob/" + id;', "blob_url")

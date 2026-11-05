@@ -156,3 +156,6 @@ No High findings left that can be fixed and verified here. Remaining Medium and 
 - Verified: browser e2e 59/59 (8 new: add, edit keeps unshown fields, delete with confirm, download, players see no
   controls, set editor still saves to the set after bank editing); tsc 0. Rules unchanged (bank writes were already
   admin-only, rules.test).
+- Default answer time 20 s -> 10 s (user decision, 2026-11-04): build patch `default_t_10`; hosts can still set 5 to
+  300 s and a question's own time limit wins. Sessions store their own T, so earlier exports are unchanged. The PRD
+  names no default answer time, so it needs no change. Mock e2e checks the default (60/60).

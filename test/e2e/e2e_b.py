@@ -169,6 +169,7 @@ with sync_playwright() as pw:
     # room
     H.click('[data-act="launch"][data-id="set1"]'); H.wait_for_selector("#l_r")
     check("the reading time defaults to 5 s", H.input_value("#l_r") == "5", H.input_value("#l_r"))
+    check("the answer time defaults to 10 s", H.input_value("#l_t") == "10", H.input_value("#l_t"))
     H.fill("#l_t", "15"); H.fill("#l_r", "3")
     H.click('[data-act="createRoom"]'); H.wait_for_selector(".bigcode", timeout=8000)
     code = H.inner_text(".bigcode").strip()
