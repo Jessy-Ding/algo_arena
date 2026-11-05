@@ -190,10 +190,17 @@ with sync_playwright() as pw:
         box.remove(); return r; }""")
     check("the checker's issues show one paragraph each under the summary, each starting with its bold check name",
           audit["head"] == "The checker agrees with the answer but noted 2 issues." and audit["ownLines"] and all(audit["bold"])
-          and audit["items"] == ["Explanation: The lower bound is not argued.", "Feedback error: Feedback A is wrong; it says n."], json.dumps(audit))
-    why = H.evaluate("() => [...document.querySelectorAll('[data-draft]')[0].querySelectorAll('.why li')].map((li) => li.innerText)")
-    check("the host sees the misconception behind each wrong option, and none for the right one",
-          [w[:2] for w in why] == ["B:", "C:", "D:"] and why[0] == "B: Assumes the root never moves.", str(why))
+          and audit["items"] == ["Answer reasoning: The lower bound is not argued.", "Feedback error: Feedback A is wrong; it says n."], json.dumps(audit))
+    expls = H.evaluate("""() => { const e = document.querySelectorAll('[data-draft]')[0].querySelector('.expls');
+        return e && { head: e.querySelector('b').innerText, lines: [...e.querySelectorAll(':scope > div')].map((x) => x.innerText) }; }""")
+    check("under Explanations the wrong options come first in letter order, each with its mistake, then the correct one",
+          expls == {"head": "Explanations:", "lines": [
+              "Option B: Assumes the root never moves;", "Option C: Stops after the first MAX-HEAPIFY call;",
+              "Option D: Confuses a max-heap with a min-heap of the last half;",
+              "Option A: BUILD-MAX-HEAP sifts down from the last internal node, and the maximum, 16, ends at the root. Thus, this is the correct option."]},
+          json.dumps(expls))
+    check("the closing sentence is shown on the card only, not saved in the draft's explanation",
+          "Thus, this is the correct option" not in get(f"data/users/H/profile/sets/set2/drafts/{H.evaluate('() => S.edit.drafts[0]._id')}")["question"]["explanation"])
     check("hosting is off while drafts are pending", H.is_disabled('[data-act="launch"][data-id="set2"]'))
     meta = get("data/users/H/profile/sets/set2")
     check("drafts are stored under the set and counted in its metadata; the dialog closed",

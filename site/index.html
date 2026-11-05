@@ -223,7 +223,7 @@ td.wrap-cell{white-space:normal;min-width:240px}
 .qcard .opt{padding:6px 10px;border-radius:8px;background:var(--surface-2)}
 .qcard .opt.right{background:color-mix(in srgb,var(--ok) 20%,transparent);font-weight:700}
 .vstat{font-weight:700}.vstat.bad{color:var(--bad)}.vstat.warn{color:var(--warn)}.vstat.ok{color:var(--ok)}
-.why{margin:8px 0 0;padding-left:18px;font-size:.88rem;color:var(--muted)}
+.expls{margin:8px 0 0}.expls>div{margin-top:2px}
 .audit{color:var(--muted)}.audit p{margin:4px 0 0}
 .opted{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:12px;border-radius:12px;background:var(--surface-2)}
 .sw{width:30px;height:30px;border-radius:8px;display:grid;place-items:center}
@@ -1132,7 +1132,7 @@ function runCountUps() { $$("[data-count-key]").forEach((el) => { if (COUNTED.ha
 const DRAFT_MODULES = ["Module 1 (Foundations)", "Module 2 (Sorting and Order Statistics)", "Module 3 (Advanced Design and Analysis Techniques)",
   "Module 4 (Graph Algorithms)", "Module 5 (Selected Topics)", "Module 6 (NP-Completeness)"];
 const DRAFT_SUBTYPES = ["complexity", "definition", "proof", "behavior", "loop-count", "recurrence"];
-const AUDIT_LABEL = { explanation: "Explanation", distractor: "Distractor", feedback_leak: "Feedback leak", feedback_wrong: "Feedback error", difficulty: "Difficulty", wording: "Wording" };
+const AUDIT_LABEL = { explanation: "Answer reasoning", distractor: "Distractor", feedback_leak: "Feedback leak", feedback_wrong: "Feedback error", difficulty: "Difficulty", wording: "Wording" };
 const FLAG_NOTE = { duplicate: "Matches a question already in this set or the built-in bank.", near_duplicate: "Similar to a question in this set or the built-in bank; check it is not a repeat." };
 function draftStatus(d) {
   const v = d.verify || {}; const issues = d.auditIssues || [];
@@ -1144,6 +1144,13 @@ function draftStatus(d) {
   if (v.status === "agree") return `<span class="vstat ok">The checker agrees.</span>`;
   return `<span class="vstat warn">Not checked: the checker was unavailable.</span>`;
 }
+// The closing sentence is shown on this card only; the saved explanation, which players see, stays as written.
+function draftExplanations(d) {
+  const q = d.question; const rs = d.rationales || []; const expl = (q.explanation || "").trim();
+  const wrong = q.options.map((_, k) => (k === q.correct || !rs[k] ? "" : `<div>Option ${LETTERS[k]}: ${esc(rs[k].trim().replace(/\.$/, ""))};</div>`)).join("");
+  const right = `<div>Option ${LETTERS[q.correct]}: ${expl ? esc(expl) + (/[.!?]$/.test(expl) ? " " : ". ") : ""}Thus, this is the correct option.</div>`;
+  return `<div class="expls muted small"><b>Explanations:</b>${wrong}${right}</div>`;
+}
 function draftCard(d, i) {
   const q = d.question; const flags = (d.flags || []).map((f) => FLAG_NOTE[f]).filter(Boolean).join(" ");
   return `<div class="qcard" data-draft="${esc(d._id)}"><div class="row"><b>Draft ${i + 1}</b><span class="muted small">${[q.topic, q.subtype, q.difficulty].filter(Boolean).map(esc).join(", ")}</span><span class="spacer"></span>
@@ -1151,8 +1158,7 @@ function draftCard(d, i) {
   <div class="small" style="margin-top:6px">${draftStatus(d)}${flags ? ` <span class="muted">${esc(flags)}</span>` : ""}</div>
   <div style="margin-top:6px;white-space:pre-wrap">${esc(q.prompt)}</div>
   <div class="opts">${q.options.map((o, k) => `<div class="opt ${k === q.correct ? "right" : ""}">${LETTERS[k]}. ${esc(o)}</div>`).join("")}</div>
-  <ul class="why">${(d.rationales || []).map((r, k) => (k === q.correct || !r ? "" : `<li>${LETTERS[k]}: ${esc(r)}</li>`)).join("")}</ul>
-  ${q.explanation ? `<p class="muted small" style="margin:8px 0 0">Explanation: ${esc(q.explanation)}</p>` : ""}${d.sourceQuote ? `<p class="muted small" style="margin:4px 0 0">From your source: "${esc(d.sourceQuote)}"</p>` : ""}</div>`;
+  ${draftExplanations(d)}${d.sourceQuote ? `<p class="muted small" style="margin:4px 0 0">From your source: "${esc(d.sourceQuote)}"</p>` : ""}</div>`;
 }
 function draftsPanel(E) {
   if (!E.drafts || !E.drafts.length) return "";
