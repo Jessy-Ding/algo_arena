@@ -13,7 +13,7 @@ Created: October 29, 2026 · San Francisco, California, USA
 License: This project is licensed under the MIT License — see LICENSE.md for details.
 Copyright © 2026 Yikang (Richard) Liu.
 """
-import json, math, os, re, sys, http.server, threading, functools
+import json, math, os, re, sys, http.server, threading, functools, zipfile
 from playwright.sync_api import sync_playwright
 
 from pathlib import Path
@@ -341,6 +341,18 @@ with sync_playwright() as pw:
     check("export has 7 submission rows (A changed once), 6 of them final, and 6 exposures",
           len(ex["submissions"]) == 7 and len(finals) == 6 and len(ex["exposures"]) == 6,
           str((len(ex["submissions"]), len(finals), len(ex["exposures"]))))
+    with page.expect_download() as dl:
+        H.click('[data-act="aiBatch"]')
+    with zipfile.ZipFile(dl.value.path()) as z:
+        names = z.namelist(); pcsv = z.read("provenance.csv").decode("utf-8") if "provenance.csv" in names else ""
+        pjson = json.loads(z.read("provenance.json")) if "provenance.json" in names else {"reports": []}
+    rows = pjson["reports"]
+    check("the reports zip carries provenance: model, prompt version and evidence snapshot per report, keyed by research id",
+          pcsv.startswith("kind,pid,model,model_tier,prompt_version,evidence_snapshot,generated_at,generated_by,words,resources")
+          and sorted(r["kind"] for r in rows) == ["class", "personal", "personal"]
+          and all(r["model"] == "claude-sonnet-5-5" and r["prompt_version"] and r["evidence_snapshot"] and r["evidence"] for r in rows)
+          and all(r["pid"].startswith("P-") for r in rows if r["kind"] == "personal") and "Alice" not in pcsv,
+          str((names, [(r["kind"], r["pid"]) for r in rows])))
 
     # sign out
     A.click('[data-act="home"]'); A.wait_for_selector('[data-act="signOut"]', timeout=5000); A.click('[data-act="signOut"]')

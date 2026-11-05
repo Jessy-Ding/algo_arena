@@ -1880,7 +1880,14 @@ ACT.aiBatch = async () => {
   for (const p of X.meta.participants || []) { const a = X.ai[p.uid]; if (a && a.status === "ready") files.push({ name: "reports/" + safeName(`${p.name || "player"} (${p.pid}).md`), data: a.md }); }
   if (X.ai._class && X.ai._class.status === "ready") files.push({ name: "class-report.md", data: X.ai._class.md });
   const missing = (X.meta.participants || []).length - files.filter((f) => f.name.startsWith("reports/")).length;
-  files.push({ name: "README.md", data: `# AlgoArena AI Learning Coach reports\n\nSession ${X.sid}, room ${X.meta.code}, ${new Date(X.meta.createdAt).toISOString()}.\n\nThese reports are AI-generated interpretations of recorded session evidence. They are not measurements of ability and are kept separate from the research records.\n\n${missing ? missing + " participant report(s) were not ready at export time.\n" : ""}${X.ai._class && X.ai._class.status === "ready" ? "" : "The class report was not ready at export time.\n"}` });
+  const prov = [...(X.meta.participants || []).map((p) => ({ a: X.ai[p.uid], kind: "personal", pid: p.pid })), { a: X.ai._class, kind: "class", pid: null }]
+    .filter((r) => r.a && r.a.status === "ready")
+    .map(({ a, kind, pid }) => ({ kind, pid, model: a.model || null, model_tier: a.modelTier || null, prompt_version: a.promptVersion || null,
+      evidence_snapshot: a.metricsHash || null, generated_at: a.generatedAt ? new Date(a.generatedAt).toISOString() : null, generated_by: a.generatedBy || null,
+      words: a.words ?? null, resources: (a.resources || []).join(" "), evidence: a.metricsSnapshot || null }));
+  files.push({ name: "provenance.csv", data: csv(prov, ["kind", "pid", "model", "model_tier", "prompt_version", "evidence_snapshot", "generated_at", "generated_by", "words", "resources"]) });
+  files.push({ name: "provenance.json", data: JSON.stringify({ session_id: X.sid, reports: prov }, null, 1) });
+  files.push({ name: "README.md", data: `# AlgoArena AI Learning Coach reports\n\nSession ${X.sid}, room ${X.meta.code}, ${new Date(X.meta.createdAt).toISOString()}.\n\nThese reports are AI-generated interpretations of recorded session evidence. They are not measurements of ability and are kept separate from the research records.\n\nprovenance.csv lists each report with its model, prompt version, evidence snapshot id (the first 16 hex digits of the SHA-256 of the evidence as sent), generation time and source. provenance.json adds the evidence itself; it includes display names, as the reports do.\n\n${missing ? missing + " participant report(s) were not ready at export time.\n" : ""}${X.ai._class && X.ai._class.status === "ready" ? "" : "The class report was not ready at export time.\n"}` });
   await saveFile(`algoarena-reports-${X.meta.code}-${X.sid}.zip`, makeZip(files));
 };
 ACT.aiView = (el) => { const a = S.sess.ai[el.dataset.uid]; S.openMd = { md: a.md, name: `AlgoArena report - ${a.name} (${a.pid}).md` }; openDialog(() => reportDialog(a.md, a)); };
