@@ -178,3 +178,6 @@ No High findings left that can be fixed and verified here. Remaining Medium and 
   the join screen and see it in the lobby); scoring is shown as a formula, one case per line under a brace, with t
   and T explained one size smaller (plain HTML and an inline SVG brace, since MathML needs a math font to stretch
   the brace). Mock e2e checks the formula, one line per case, and the missing notice (68/68).
+- Host lobby (user decisions, 2026-11-04): one centred column, the QR code and under it a single line, "Scan the
+  code, sign in and enter <room code>"; the join link, the big room code and the longer instructions are removed.
+  e2e and the I6 oracle now read the room code from that line. Mock e2e 71/71 (QR centred, line below it); I6 11/11.

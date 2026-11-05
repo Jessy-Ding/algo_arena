@@ -340,6 +340,13 @@ rep("Scoring: a correct answer earns between 500 and 1000 points, more for answe
     # margin-top 3em: two blank lines of this text's own 1.5 line height between the formula and the explanation.
     '<div class="muted score-params" style="font-size:.78rem;margin-top:3em"><i>t</i>: seconds from answers opening to your final choice. <i>T</i>: answer time per question. The score is rounded to a whole number.</div>',
     "launch_scoring_formula")
+# Host lobby (user decision, 2026-11-04): one centred column, the QR code and under it a single line, "Scan the code,
+# sign in and enter <room code>"; the link, the big code and the longer instructions are gone.
+block('    body = bar("") + `<div class="joinboard">', '      <div class="players">',
+      '    body = bar("") + `<div class="joinboard" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px"><div class="qr" id="qr" aria-label="QR code to join">${qrSvg(url)}</div>\n'
+      '      <p class="join-line" style="font-size:1.6rem;margin:4px 0 0">Scan the code, sign in and enter <b style="letter-spacing:.08em" aria-label="room code ${esc(r.code.split("").join(" "))}">${esc(r.code)}</b></p>\n'
+      '      <div class="row" style="justify-content:center"><button class="btn primary big ${n ? "pulse" : ""}" data-act="hStart" ${n ? "" : "disabled"}>Start game</button><span class="muted">${n ? `${n} ready` : "Waiting for players"} <span class="waiting-dots"><span></span><span></span><span></span></span></span></div></div>\n'
+      '      <div class="players" style="justify-content:center">', "lobby_centered")
 # The host's launch screen no longer repeats the consent notice (user decision, 2026-11-04); players still see and
 # accept it on the join screen and in the lobby.
 rep('  <div class="notice small">Players are told before joining that you will see their answers, timing, and an AI-generated learning report for this session.</div>\n',

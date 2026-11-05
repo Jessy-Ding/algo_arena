@@ -186,8 +186,8 @@ def run_game(pages, questions):
     H.fill("#l_t", "15")
     H.fill("#l_r", "3")
     H.click('[data-act="createRoom"]')
-    H.wait_for_selector(".bigcode", timeout=15000)
-    code = H.inner_text(".bigcode").strip()
+    H.wait_for_selector(".join-line b", timeout=15000)
+    code = H.inner_text(".join-line b").strip()
     for p in (A, B):
         p.wait_for_selector("#code", timeout=20000)
         p.fill("#code", code)

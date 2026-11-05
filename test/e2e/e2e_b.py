@@ -186,8 +186,17 @@ with sync_playwright() as pw:
     if os.environ.get("E2E_SHOTS"):
         H.locator(".notice").first.screenshot(path=os.path.join(os.environ["E2E_SHOTS"], "launch-scoring.png"))
     H.fill("#l_t", "15"); H.fill("#l_r", "3")
-    H.click('[data-act="createRoom"]'); H.wait_for_selector(".bigcode", timeout=8000)
-    code = H.inner_text(".bigcode").strip()
+    H.click('[data-act="createRoom"]'); H.wait_for_selector(".join-line b", timeout=8000)
+    code = H.inner_text(".join-line b").strip()
+    lob = H.evaluate("""() => { const q = document.querySelector('#qr').getBoundingClientRect(); const box = document.querySelector('.stage-inner');
+        const c = box.getBoundingClientRect(); const cs = getComputedStyle(box); const mid = c.left + parseFloat(cs.paddingLeft) + (c.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) / 2;
+        const note = document.querySelector('.join-line');
+        return { off: Math.abs(q.left + q.width / 2 - mid), below: !!note && note.getBoundingClientRect().top >= q.bottom, text: document.querySelector('.joinboard').innerText }; }""")
+    check("the host lobby centres the QR code with one line below it: scan, sign in and enter the room code",
+          lob["off"] <= 2 and lob["below"] and lob["text"].strip().startswith(f"Scan the code, sign in and enter {code}") and "Join at" not in lob["text"]
+          and "Players see that" not in lob["text"], str({k: lob[k] for k in ("off", "below")}))
+    if os.environ.get("E2E_SHOTS"):
+        H.locator(".stage-inner").screenshot(path=os.path.join(os.environ["E2E_SHOTS"], "host-lobby.png"))
     for F in (A, B):
         F.fill("#code", code); F.check("#consent"); F.click('[data-act="join"]'); F.wait_for_selector("text=You're in", timeout=8000)
     H.wait_for_selector("text=2 ready", timeout=8000)
