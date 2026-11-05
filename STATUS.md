@@ -27,7 +27,8 @@ needs the classroom.
 
 ## Backlog (not scheduled)
 - AI question generation (v1.1): design agreed 2026-11-04 on branch `feature/ai-question-generation`, see
-  docs/ai-question-generation.md; prompts (its Appendix B) approved 2026-11-04. Server side written 2026-11-05
-  (`draftQuestions` callable, unit and emulator tests green), not deployed: needs the owner's OK and the
-  `OPENAI_API_KEY` secret. Page side waits for approval of the review-list mock. The PRD change (its Appendix A) goes to
+  docs/ai-question-generation.md; prompts (its Appendix B) approved 2026-11-04. Server side live 2026-11-05: the
+  `draftQuestions` callable is deployed to algoarena-for-research (us-central1) with the owner's OK, alone (`coach`
+  untouched), and refuses a signed-out call with not_granted. No page calls it yet, and no real draft has run. Page
+  side waits for approval of the review-list mock. The PRD change (its Appendix A) goes to
   `main` as a pull request.

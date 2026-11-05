@@ -210,9 +210,11 @@ Evidence for the server side (2026-11-05, Node 26 locally; CI runs Node 22):
 
 1. Owner approves the prompts (Appendix B): done 2026-11-04.
 2. Functions code and tests: written 2026-11-05 (`functions/qgen-core.js`, `functions/qgen-prompts.js`, the drafting
-   deps in `functions/deps.js`, the `draftQuestions` callable; unit, contract-fake and emulator tests). Not deployed:
-   the owner approves the functions deploy and adds the `OPENAI_API_KEY` secret first. A function that names a missing
-   secret fails to deploy.
+   deps in `functions/deps.js`, the `draftQuestions` callable; unit, contract-fake and emulator tests). The owner added
+   `OPENAI_API_KEY` (version 1) and an OpenAI project spend limit, and approved the deploy: `firebase deploy --only
+   functions:draftQuestions` on 2026-11-05 created the function and granted its service account access to both
+   secrets; `coach` was not redeployed. A signed-out call returns not_granted. The first real draft (the live check)
+   runs once the page side exists.
 3. Review-list mock approved; site build patch; e2e green; publish.
 4. PRD change (Appendix A) as a pull request on `main`.
 
