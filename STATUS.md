@@ -20,6 +20,10 @@ structured-output fix 353d46d is deployed but not yet proven against Anthropic);
 ## Done outside the milestones
 - Question images and reference files upload to Cloud Storage (2026-11-04): live, approved hosts only. See
   IMPROVEMENT_LOG.md.
+- Built-in bank: admins add, edit and delete single questions and download the bank as JSON (2026-11-04): live.
+- Defaults: answer time 10 s, reading time 5 s (live).
+- Answers can change until time runs out; the last one counts and every selection is recorded (2026-11-04): rules
+  deployed and site live; tested on the emulators and in the browser mock, not yet in a real two-device game.
 
 ## Backlog (not scheduled)
 - AI question generation: not in the code, and excluded from v1.0 by the PRD. Before any code: decide whether to change
