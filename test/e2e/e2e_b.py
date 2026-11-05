@@ -160,8 +160,9 @@ with sync_playwright() as pw:
     set2_docs = lambda sub: sorted((k, v) for k, v in page.evaluate("() => [...__FB.docs.entries()]") if k.startswith(f"data/users/H/profile/sets/set2/{sub}/"))
     H.click('[data-act="editSet"][data-id="set2"]'); H.wait_for_selector('[data-act="draftOpen"]', timeout=6000)
     H.click('[data-act="draftOpen"]'); H.wait_for_selector("#d_module", timeout=4000)
-    check("the draft form names the drafting model and the daily limit",
-          "Claude Sonnet 5.5" in H.inner_text(".dialog") and "up to 50 questions a day" in H.inner_text(".dialog"))
+    check("the draft form names the drafting and checking models and the daily limit",
+          "written by Claude Sonnet 5.5 and checked by GPT-6.1 Terra." in H.inner_text(".dialog") and "up to 50 questions a day" in H.inner_text(".dialog"))
+    check("before any draft, the daily limit number is bold", H.eval_on_selector_all(".dialog p.muted b", "els => els.map((e) => e.innerText)") == ["50"])
     H.select_option("#d_module", "Module 2 (Sorting and Order Statistics)"); H.select_option("#d_count", "2")
     check("the draft button follows the count", H.inner_text("#d_go") == "Draft 2 questions", H.inner_text("#d_go"))
     H.fill("#d_focus", "heaps"); H.fill("#d_ch", "6")
@@ -177,6 +178,19 @@ with sync_playwright() as pw:
     check("drafts are listed with the checker's disagreement first, with its reasoning",
           len(cards) == 2 and "The checker chose B, not the marked A." in cards[0] and "Its reasoning" in cards[0], (cards or [""])[0][:160])
     check("the agreed draft carries its near-duplicate note", "The checker agrees." in cards[1] and "check it is not a repeat" in cards[1])
+    audit = H.evaluate("""() => { const box = document.createElement("div"); box.className = "small";
+        box.innerHTML = draftStatus({ verify: { status: "issues" }, question: { correct: 0 },
+          auditIssues: [{ check: "explanation", note: "The lower bound is not argued." }, { check: "feedback_wrong", note: "Feedback A is wrong; it says n." }] });
+        document.querySelector("[data-draft]").appendChild(box);
+        const head = box.querySelector(".vstat"), ps = [...box.querySelectorAll(".audit > p")];
+        const tops = [head, ...ps].map((e) => e.getBoundingClientRect());
+        const r = { head: head.innerText, items: ps.map((p) => p.innerText),
+          bold: ps.map((p) => p.firstElementChild.tagName === "B" && Number(getComputedStyle(p.firstElementChild).fontWeight) >= 700),
+          ownLines: tops.slice(1).every((t, k) => t.top >= tops[k].bottom - 1) };
+        box.remove(); return r; }""")
+    check("the checker's issues show one paragraph each under the summary, each starting with its bold check name",
+          audit["head"] == "The checker agrees with the answer but noted 2 issues." and audit["ownLines"] and all(audit["bold"])
+          and audit["items"] == ["Explanation: The lower bound is not argued.", "Feedback error: Feedback A is wrong; it says n."], json.dumps(audit))
     why = H.evaluate("() => [...document.querySelectorAll('[data-draft]')[0].querySelectorAll('.why li')].map((li) => li.innerText)")
     check("the host sees the misconception behind each wrong option, and none for the right one",
           [w[:2] for w in why] == ["B:", "C:", "D:"] and why[0] == "B: Assumes the root never moves.", str(why))
@@ -204,6 +218,7 @@ with sync_playwright() as pw:
     check("with no drafts left, the set can be hosted again", not H.is_disabled('[data-act="launch"][data-id="set2"]') and meta.get("drafts") == 0 and meta.get("count") == 2 and not set2_docs("drafts"), str(meta))
     H.click('[data-act="draftOpen"]'); H.wait_for_selector("#d_go", timeout=4000)
     check("the form shows the quota left after a draft", "48 of 50 questions left today" in H.inner_text(".dialog"))
+    check("both quota numbers are bold", H.eval_on_selector_all(".dialog p.muted b", "els => els.map((e) => e.innerText)") == ["48", "50"])
     H.click("#d_go"); H.wait_for_selector('[data-act="draftDiscard"]', timeout=8000)
     for _ in range(2):
         H.click('[data-act="draftDiscard"]'); H.wait_for_selector('[data-act="mOk"]', timeout=4000); H.click('[data-act="mOk"]'); sleep(0.5)

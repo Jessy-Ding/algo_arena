@@ -505,7 +505,8 @@ rep("const qs = await dlist(P.setQ(el.dataset.id)); await pool(qs.map((q) => () 
 rep(".qcard .opt.right{background:color-mix(in srgb,var(--ok) 20%,transparent);font-weight:700}",
     ".qcard .opt.right{background:color-mix(in srgb,var(--ok) 20%,transparent);font-weight:700}\n"
     ".vstat{font-weight:700}.vstat.bad{color:var(--bad)}.vstat.warn{color:var(--warn)}.vstat.ok{color:var(--ok)}\n"
-    ".why{margin:8px 0 0;padding-left:18px;font-size:.88rem;color:var(--muted)}", "qgen_css")
+    ".why{margin:8px 0 0;padding-left:18px;font-size:.88rem;color:var(--muted)}\n"
+    ".audit{color:var(--muted)}.audit p{margin:4px 0 0}", "qgen_css")
 # Research export: questions.csv says which questions began as AI drafts (schema_version 5).
 rep("has_image: !!q.img, n_references: (q.refs || []).length }));",
     "has_image: !!q.img, n_references: (q.refs || []).length, origin: q.origin || \"human\", ai_model: (q.ai && q.ai.model) || \"\",\n"
@@ -531,7 +532,8 @@ function draftStatus(d) {
   const why = v.reason ? ` <span class="muted">Its reasoning: "${esc(v.reason)}"</span>` : "";
   if (v.status === "disagree") return `<span class="vstat bad">The checker chose ${esc(v.choice)}, not the marked ${LETTERS[d.question.correct]}.</span>${why}`;
   if (v.status === "ambiguous") return `<span class="vstat bad">The checker found more than one defensible answer, or none.</span>${why}`;
-  if (v.status === "issues") return `<span class="vstat warn">The checker agrees with the answer but noted ${issues.length} issue${issues.length === 1 ? "" : "s"}.</span> <span class="muted">${esc(issues.map((x) => `${AUDIT_LABEL[x.check] || x.check}: ${x.note}`).join("; "))}</span>`;
+  if (v.status === "issues") return `<span class="vstat warn">The checker agrees with the answer but noted ${issues.length} issue${issues.length === 1 ? "" : "s"}.</span>`
+    + `<div class="audit">${issues.map((x) => `<p><b>${esc(AUDIT_LABEL[x.check] || x.check)}:</b> ${esc(x.note)}</p>`).join("")}</div>`;
   if (v.status === "agree") return `<span class="vstat ok">The checker agrees.</span>`;
   return `<span class="vstat warn">Not checked: the checker was unavailable.</span>`;
 }
@@ -555,9 +557,10 @@ ACT.draftOpen = () => { S.draftForm = S.draftForm || { module: DRAFT_MODULES[0],
 function draftDialog() {
   const f = S.draftForm; const busy = !!S.drafting;
   const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? "selected" : ""}>${esc(label)}</option>`;
-  const left = S.draftQuotaLeft == null ? "You can draft up to 50 questions a day." : `${S.draftQuotaLeft} of 50 questions left today.`;
+  const left = S.draftQuotaLeft == null ? "You can draft up to <b>50</b> questions a day." : `<b>${S.draftQuotaLeft}</b> of <b>50</b> questions left today.`;
+  // The two model names must match draftModel and verifierModel in functions/qgen-core.js.
   return `<div class="dialog" style="max-width:620px"><h2 style="margin-top:0">Draft questions with AI</h2>
-  <p class="muted small">Drafts are written by Claude Sonnet 5.5 and checked by a second model. Nothing is added to this set until you accept it. ${left}</p>
+  <p class="muted small">Drafts are written by Claude Sonnet 5.5 and checked by GPT-6.1 Terra. Nothing is added to this set until you accept it. ${left}</p>
   <div class="fgrid">
    <label class="f">Module<select id="d_module">${DRAFT_MODULES.map((m) => opt(m, m, f.module)).join("")}</select></label>
    <label class="f">How many<select id="d_count">${[1, 2, 3, 4, 5].map((n) => opt(n, n, f.count)).join("")}</select></label>
