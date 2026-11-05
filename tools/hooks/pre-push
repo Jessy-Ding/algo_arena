@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# Git pre-push hook: refuses a push if anything it would send contains a Chinese character. Checked for every commit
+# the push adds (commits not yet on any remote branch): the commit message, the path of each added or changed file,
+# and its content at that commit. Text files are read as UTF-8; .gz files are decompressed first; other binary files
+# (a NUL byte in the first 8000 bytes) are skipped, because their raw bytes would give false matches.
+#
+# Author: Yikang (Richard) Liu, M.S. Candidate in Computer Science, Khoury College of Computer Sciences,
+#     Northeastern University
+# Version: 1.0
+# Created: November 4, 2026 · San Francisco, California, USA
+#
+# License: This project is licensed under the MIT License — see LICENSE.md for details.
+# Copyright © 2026 Yikang (Richard) Liu.
+#
+# Install (git does not track .git/hooks, so this covers every branch of this clone):
+#   cp tools/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+# Not covered: text in encodings other than UTF-8 (for example GBK), and "git push --no-verify", which skips hooks.
+set -uo pipefail
+
+ZERO=0000000000000000000000000000000000000000
+# CJK punctuation, Extension A, Unified Ideographs, Compatibility Ideographs, full-width forms, Extensions B to F.
+CJK='[\x{3000}-\x{303F}\x{3400}-\x{4DBF}\x{4E00}-\x{9FFF}\x{F900}-\x{FAFF}\x{FF00}-\x{FFEF}\x{20000}-\x{2FA1F}]'
+found=0
+
+# Exit 0 if stdin is text (no NUL in the first 8000 bytes) and contains a CJK character.
+text_has_cjk() {
+  perl -e 'local $/; my $d = <STDIN>; exit 1 unless defined $d && length $d;
+    exit 1 if index(substr($d, 0, 8000), "\0") >= 0;
+    utf8::decode($d); exit($d =~ /'"$CJK"'/ ? 0 : 1);'
+}
+
+report() { echo "pre-push: Chinese text in $1" >&2; found=1; }
+
+while read -r _lref lsha _rref rsha; do
+  [ "$lsha" = "$ZERO" ] && continue  # deleting a remote branch sends no content
+  if [ "$rsha" != "$ZERO" ] && git cat-file -e "$rsha^{commit}" 2>/dev/null; then
+    commits=$(git rev-list "$rsha..$lsha")
+  else
+    commits=$(git rev-list "$lsha" --not --remotes)
+  fi
+  for c in $commits; do
+    short=$(git rev-parse --short "$c")
+    git log -1 --format=%B "$c" | text_has_cjk && report "the message of commit $short"
+    while IFS= read -r -d '' path; do
+      printf '%s' "$path" | text_has_cjk && report "the file name $path (commit $short)"
+      case "$path" in
+        *.gz) git cat-file blob "$c:$path" | gzip -dc 2>/dev/null | text_has_cjk && report "$path, decompressed (commit $short)" ;;
+        *) git cat-file blob "$c:$path" | text_has_cjk && report "$path (commit $short)" ;;
+      esac
+    done < <(git diff-tree --no-commit-id -r -z --name-only --diff-filter=ACMRT --root "$c")
+  done
+done
+
+if [ "$found" -ne 0 ]; then
+  echo "pre-push: push refused. This repository keeps no Chinese text; remove it, amend or rewrite the commits, and push again." >&2
+  exit 1
+fi
+exit 0
