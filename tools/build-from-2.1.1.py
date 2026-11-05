@@ -332,9 +332,10 @@ rep("Scoring: a correct answer earns between 500 and 1000 points, more for answe
     '<b>Scoring</b><div style="overflow-x:auto;margin:8px 0 2px"><div style="display:inline-grid;grid-template-columns:auto 10px auto;column-gap:8px;font-size:1.15rem;white-space:nowrap">'
     '<span style="align-self:center">score =</span>'
     # The brace fills the full height and its tip is at 50%; the two cases share the height equally (1fr 1fr) and are
-    # centred in their halves, so the tip always sits midway between them.
+    # centred in their halves, so the tip always sits midway between them. row-gap 1.5em moves the first case up and
+    # the second down by 0.75em each, about three quarters of a digit (user decision, 2026-11-04).
     '<svg class="score-brace" viewBox="0 0 12 100" preserveAspectRatio="none" style="display:block;width:10px;height:100%" aria-hidden="true"><path d="M10 1 C5 1 6 8 6 18 L6 40 C6 46 4 50 1 50 C4 50 6 54 6 60 L6 82 C6 92 5 99 10 99" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>'
-    '<div class="score-cases" style="display:grid;grid-template-columns:max-content max-content;grid-template-rows:1fr 1fr;align-items:center;column-gap:28px;padding:4px 0">'
+    '<div class="score-cases" style="display:grid;grid-template-columns:max-content max-content;grid-template-rows:1fr 1fr;align-items:center;column-gap:28px;row-gap:1.5em;padding:4px 0">'
     '<span>500 + 500 * (1 &#x2212; <i>t</i>/<i>T</i>)</span><span class="muted">if correct</span><span>0</span><span class="muted">if wrong or no answer</span></div></div></div>'
     '<div class="muted" style="font-size:.78rem"><i>t</i>: seconds from answers opening to your final choice. <i>T</i>: answer time per question. The score is rounded to a whole number.</div>',
     "launch_scoring_formula")
