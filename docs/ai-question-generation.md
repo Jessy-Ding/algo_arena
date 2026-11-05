@@ -1,7 +1,7 @@
 # AI-assisted question drafting: design (v1.1)
 
-Status: design agreed with the owner on 2026-11-04. Prompts in Appendix B are proposals pending owner approval; no
-code is written until they are approved. Branch `feature/ai-question-generation` (from `verify/firebase-round3` at
+Status: design agreed with the owner on 2026-11-04. The prompts in Appendix B were approved by the owner on
+2026-11-04 as written (versions qgen-draft-v1, qgen-solve-v1, qgen-audit-v1). Branch `feature/ai-question-generation` (from `verify/firebase-round3` at
 462f035).
 
 ## 1 Goal and non-goals
@@ -194,7 +194,7 @@ ai: {
 
 ## 13 Release order
 
-1. Owner approves the prompts (Appendix B).
+1. Owner approves the prompts (Appendix B): done 2026-11-04.
 2. Functions code and tests; owner approves the functions deploy and the `OPENAI_API_KEY` secret.
 3. Review-list mock approved; site build patch; e2e green; publish.
 4. PRD change (Appendix A) as a pull request on `main`.
@@ -270,14 +270,14 @@ New section after Section 22:
 > Drafting shall be independent of sessions, scoring and research-event persistence. A drafting failure shall not
 > affect existing question sets or sessions.
 
-## Appendix B: proposed prompts (pending owner approval)
+## Appendix B: prompts (approved by the owner on 2026-11-04)
 
-Nothing here is used in code until the owner approves it. Changes after approval get a new version id. Placeholders in
-`{{...}}` are filled by the server from the validated inputs.
+These texts are approved as written. Any change, including the examples and schemas, needs the owner's approval and a
+new version id. Placeholders in `{{...}}` are filled by the server from the validated inputs.
 
-Open points for the owner: (1) the course label and textbook edition to name in the system prompt (the Route 2 pack
-says "CS 5800" and "CLRS 3rd edition"; the repository records neither); (2) whether `mixed` difficulty should follow a
-fixed split such as the pack's "2 easy, 2 medium, 2 hard".
+As approved: the prompts name neither a course code nor a textbook edition ("a graduate algorithms course that
+follows CLRS"), and `{{DIFFICULTY}}` is the host's choice sent as one word (easy, medium, hard or mixed), with no fixed
+split for mixed.
 
 ### B.1 qgen-draft-v1 (claude-sonnet-5-5, structured output)
 

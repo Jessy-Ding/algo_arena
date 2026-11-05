@@ -27,5 +27,5 @@ needs the classroom.
 
 ## Backlog (not scheduled)
 - AI question generation (v1.1): design agreed 2026-11-04 on branch `feature/ai-question-generation`, see
-  docs/ai-question-generation.md. Not in the code yet. Blocked on owner approval of the prompts in its Appendix B; the
-  PRD change (its Appendix A) goes to `main` as a pull request.
+  docs/ai-question-generation.md; prompts (its Appendix B) approved 2026-11-04. Not in the code yet. The PRD change (its
+  Appendix A) goes to `main` as a pull request.

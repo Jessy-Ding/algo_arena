@@ -13,4 +13,5 @@ Code and comment rules for this repository are in agent.md. Repository text is E
     Sonnet 5.5 rejects. Pin a LangGraph release at least two weeks old; it releases several times a week.
   - Drafting model `claude-sonnet-5-5` (already live for reports); verifier `gpt-6.1-terra` (owner choice, low-cost
     OpenAI tier) for a blind solve and an audit that flag drafts but never fix them.
-  - Every prompt and prompt change needs the owner's approval and a new version id.
+  - Every prompt and prompt change needs the owner's approval and a new version id. Approved so far: qgen-draft-v1,
+    qgen-solve-v1, qgen-audit-v1 (2026-11-04, Appendix B of the design doc).
