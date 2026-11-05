@@ -26,6 +26,6 @@ needs the classroom.
   deployed and site live; tested on the emulators and in the browser mock, not yet in a real two-device game.
 
 ## Backlog (not scheduled)
-- AI question generation: not in the code, and excluded from v1.0 by the PRD. Before any code: decide whether to change
-  the PRD, the host quota for drafting questions, and human review before a draft enters a set. To be discussed in plan
-  mode (user, 2026-10-29).
+- AI question generation (v1.1): design agreed 2026-11-04 on branch `feature/ai-question-generation`, see
+  docs/ai-question-generation.md. Not in the code yet. Blocked on owner approval of the prompts in its Appendix B; the
+  PRD change (its Appendix A) goes to `main` as a pull request.
