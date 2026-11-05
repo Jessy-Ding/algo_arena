@@ -174,6 +174,11 @@ with sync_playwright() as pw:
     check("the launch screen shows the scoring formula, one case per line, and no consent notice",
           "score =" in launch and "if wrong or no answer" in launch and "Players are told before joining" not in launch and "Streaks" not in launch
           and H.evaluate("() => [...document.querySelectorAll('.notice span')].filter((s) => /^(500 \\+|0$)/.test(s.textContent)).every((s) => s.getClientRects().length === 1)"))
+    sym = H.evaluate("""() => { const b = document.querySelector('.score-brace').getBoundingClientRect();
+        const rows = [...document.querySelectorAll('.score-cases > span:nth-child(odd)')].map((s) => { const r = s.getBoundingClientRect(); return r.top + r.height / 2; });
+        const tip = b.top + b.height / 2; return { tipToMid: Math.abs(tip - (rows[0] + rows[1]) / 2), topGap: rows[0] - b.top, bottomGap: b.bottom - rows[1] }; }""")
+    check("the brace tip sits midway between the two cases, with equal space above and below",
+          sym["tipToMid"] <= 1 and abs(sym["topGap"] - sym["bottomGap"]) <= 1, str(sym))
     if os.environ.get("E2E_SHOTS"):
         H.locator(".notice").first.screenshot(path=os.path.join(os.environ["E2E_SHOTS"], "launch-scoring.png"))
     H.fill("#l_t", "15"); H.fill("#l_r", "3")
