@@ -227,7 +227,8 @@ with sync_playwright() as pw:
             break
         sleep(0.05)
     check("a change is stored as a new document, the first one kept", get(f"rooms/H/answers/A_{sid}_0") is not None and (get(f"rooms/H/answers/A_{sid}_0_c1") or {}).get("n") == 1)
-    sleep(1.0)
+    t1 = int(A.inner_text("#ringnum")); sleep(1.6); t2 = int(A.inner_text("#ringnum"))
+    check("after answering, the player's countdown keeps running", t2 < t1 < 15, f"{t1} -> {t2}")
     check("everyone has answered, yet the round stays open until time runs out", get("rooms/H")["status"] == "question")
     rc = wait_status("closed", 20)
     check("the round closes when time is up", rc["closed"]["reason"] == "time_up", str(rc["closed"]))
@@ -287,6 +288,8 @@ with sync_playwright() as pw:
         sleep(0.05)
     check("personal reports ready for both players and the class report ready", all(aidoc(u).get("status") == "ready" for u in ("A", "B", "_class")), str({u: aidoc(u).get("status") for u in ("A", "B", "_class")}))
     check("report provenance records the model", aidoc("A").get("model") == "claude-sonnet-5-5", str(aidoc("A").get("model")))
+    check("report headings read 'AI interpretation' without the parenthetical",
+          all("## AI interpretation\n" in (aidoc(u).get("md") or "") and "not a measurement of ability" not in (aidoc(u).get("md") or "") for u in ("A", "_class")))
     A.wait_for_selector('[data-act="myDl"]', timeout=8000)
     check("A receives the report on the end screen", "Download .md" in A.inner_text('[data-act="myDl"]'))
     calls = page.evaluate("() => __FB.aiCalls")

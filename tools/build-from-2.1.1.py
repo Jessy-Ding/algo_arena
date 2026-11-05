@@ -417,6 +417,27 @@ rep("client_elapsed_ms is the device's own unlock-to-tap measurement.\\n`;",
     "selection and final_correct the counted one. Sessions recorded before version 4 have one row per answer.\\n`;",
     "readme_history")
 
+# AI report heading without the parenthetical (user decision, 2026-11-04); the end-screen note that a report is an AI
+# interpretation and not a grade or a measurement stays.
+rep('"## AI interpretation (generated; not a measurement of ability)", parts.summary,', '"## AI interpretation", parts.summary,', "report_heading_personal")
+rep('"## AI interpretation (generated; not a measurement of ability)", String(j.overview || ""),', '"## AI interpretation", String(j.overview || ""),', "report_heading_class")
+# The answer countdown keeps running after a player answers: answers stay changeable until time runs out, so the ring
+# must keep moving (the 2.1.1 tick stopped once an answer was in, when the answered screen had no ring). When time is up,
+# an unanswered question shows "Time's up" and an answered one switches to "Your answer is in".
+block("function playTick() {\n", "\n}\n",
+      "function playTick() {\n"
+      "  const p = S.play; if (!p || S.view !== \"play\") return; const r = p.room;\n"
+      "  if (r.status !== \"question\") return;\n"
+      "  const i = r.qIndex; const answered = !!myAnswer(i) || (p.submitting && p.submitting[i] != null);\n"
+      "  const t = now(); const openL = pOpenLocal(r); const phase = i + (t < openL ? \":read\" : \":answer\");\n"
+      "  if (p.phaseSeen !== phase) { const was = p.phaseSeen; p.phaseSeen = phase; if (was === i + \":read\") { AUDIO.open(); rerender(); return; } }\n"
+      "  if (t < openL) { updateRing(openL - t, r.q.R || 1, true); return; }\n"
+      "  if (!(p.monoOpen && p.monoOpen[i] != null)) p.monoOpen = { ...(p.monoOpen || {}), [i]: performance.now() - (t - openL) };\n"
+      "  const remain = openL + r.q.T * 1000 - t; updateRing(remain, r.q.T);\n"
+      "  if (!answered && remain <= 0 && p.timedOut !== i) { p.timedOut = i; rerender(); }\n"
+      "  if (answered && remain <= -300 && p.finalShown !== i) { p.finalShown = i; rerender(); }\n"
+      "}\n", "tick_after_answer")
+
 # File header and JSDoc overlay (comments only).
 rep("<!doctype html>\n", "<!doctype html>\n<!--\n"
     "  AlgoArena route B: the Live Classroom 2.1.1 page on GitHub Pages with Firebase (built by tools/build-from-2.1.1.py).\n\n"

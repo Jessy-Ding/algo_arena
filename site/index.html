@@ -1509,14 +1509,15 @@ async function latestAnswer(room, k) {
 }
 function playTick() {
   const p = S.play; if (!p || S.view !== "play") return; const r = p.room;
-  if (r.status === "question" && !myAnswer(r.qIndex) && !p.submitting[r.qIndex]) {
-    const t = now(); const openL = pOpenLocal(r); const phase = r.qIndex + (t < openL ? ":read" : ":answer");
-    if (p.phaseSeen !== phase) { const was = p.phaseSeen; p.phaseSeen = phase; if (was === r.qIndex + ":read") { AUDIO.open(); rerender(); return; } }
-    if (t < openL) { updateRing(openL - t, r.q.R || 1, true); return; }
-    if (!(p.monoOpen && p.monoOpen[r.qIndex] != null)) p.monoOpen = { ...(p.monoOpen || {}), [r.qIndex]: performance.now() - (t - openL) };
-    const remain = openL + r.q.T * 1000 - t; updateRing(remain, r.q.T);
-    if (remain <= 0 && p.timedOut !== r.qIndex) { p.timedOut = r.qIndex; rerender(); }
-  }
+  if (r.status !== "question") return;
+  const i = r.qIndex; const answered = !!myAnswer(i) || (p.submitting && p.submitting[i] != null);
+  const t = now(); const openL = pOpenLocal(r); const phase = i + (t < openL ? ":read" : ":answer");
+  if (p.phaseSeen !== phase) { const was = p.phaseSeen; p.phaseSeen = phase; if (was === i + ":read") { AUDIO.open(); rerender(); return; } }
+  if (t < openL) { updateRing(openL - t, r.q.R || 1, true); return; }
+  if (!(p.monoOpen && p.monoOpen[i] != null)) p.monoOpen = { ...(p.monoOpen || {}), [i]: performance.now() - (t - openL) };
+  const remain = openL + r.q.T * 1000 - t; updateRing(remain, r.q.T);
+  if (!answered && remain <= 0 && p.timedOut !== i) { p.timedOut = i; rerender(); }
+  if (answered && remain <= -300 && p.finalShown !== i) { p.finalShown = i; rerender(); }
 }
 ACT.answer = async (el) => {
   const p = S.play; const r = p.room; const i = r.qIndex; const k = Number(el.dataset.i);
@@ -1781,7 +1782,7 @@ function composePersonal(snap, j, res) {
   const L = (a) => (Array.isArray(a) ? a : []).map((x) => String(x).trim()).filter(Boolean).slice(0, 3);
   const parts = { summary: String(j.performance_summary || "").trim(), kp: L(j.knowledge_points), weak: L(j.weak_or_risky_areas), conf: L(j.possible_confusions), next: L(j.next_steps) };
   const build = () => [`# Learning report: ${snap.display_name}`, `${snap.set_title}, ${snap.date}.`, "## Observed evidence", ...evidenceLines(snap),
-    "## AI interpretation (generated; not a measurement of ability)", parts.summary,
+    "## AI interpretation", parts.summary,
     parts.kp.length ? `**Knowledge points covered:** ${parts.kp.join("; ")}` : "", parts.weak.length ? `**Possible weak or risky areas:** ${parts.weak.join("; ")}` : "",
     parts.conf.length ? `**Concepts that may be confused:** ${parts.conf.join("; ")}` : "", parts.next.length ? "**Next steps:**" : "", ...parts.next.map((x) => "- " + x),
     "## Learning resources (curated library)", ...res.map((r) => `- [${r.title}](${r.url})`)].filter((x) => x !== "").join("\n");
@@ -1863,7 +1864,7 @@ ${JSON.stringify(evidence)}`;
     const md = [`# Class report: ${X.meta.setTitle}`, `Room ${X.meta.code}, ${fmtDate(X.meta.createdAt)}.`, "## Observed evidence",
       `- ${people.length} participants; ${perQ.length} questions played; overall first-attempt accuracy ${pct(perQ.reduce((a, p) => a + p.correct, 0), perQ.reduce((a, p) => a + p.n, 0))}.`,
       hard.length ? `- Lowest-accuracy questions: ${hard.map((p) => `Q${p.i + 1} (${pct(p.correct, p.n)})`).join(", ")}.` : "",
-      "## AI interpretation (generated; not a measurement of ability)", String(j.overview || ""),
+      "## AI interpretation", String(j.overview || ""),
       L(j.prominent_knowledge_points).length ? "**Prominent knowledge points:**" : "", ...L(j.prominent_knowledge_points).map((x) => "- " + x),
       L(j.common_error_patterns).length ? "**Common error patterns:**" : "", ...L(j.common_error_patterns).map((x) => "- " + x),
       L(j.possible_confusion_signals).length ? "**Possible concept-confusion signals:**" : "", ...L(j.possible_confusion_signals).map((x) => "- " + x),

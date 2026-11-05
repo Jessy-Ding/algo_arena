@@ -181,3 +181,8 @@ No High findings left that can be fixed and verified here. Remaining Medium and 
 - Host lobby (user decisions, 2026-11-04): one centred column, the QR code and under it a single line, "Scan the
   code, sign in and enter <room code>"; the join link, the big room code and the longer instructions are removed.
   e2e and the I6 oracle now read the room code from that line. Mock e2e 71/71 (QR centred, line below it); I6 11/11.
+- Defect 5 (2026-11-04, found by the owner in a live test): after answering, the player's countdown ring froze at the
+  full time. Cause: answers became changeable and the answered screen kept the ring, but the 2.1.1 tick only updated
+  it before an answer. Fixed (`tick_after_answer`): the ring runs until time is up, then the screen shows "Your
+  answer is in". AI report headings now read "AI interpretation" without "(generated; not a measurement of ability)"
+  (owner decision). Mock e2e checks both (73/73).
