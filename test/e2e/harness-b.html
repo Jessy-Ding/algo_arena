@@ -18,7 +18,7 @@
 <style>body{margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#333}iframe{width:100%;height:900px;border:0;background:#fff}</style>
 <script>
 /** Mock Firebase state shared by every app iframe; now() is this page's clock, which is the mock server clock. */
-window.__FB = { docs: new Map(), subs: new Set(), signedIn: {}, names: {}, refused: [], errs: [], now: () => Date.now() };
+window.__FB = { docs: new Map(), blobs: new Map(), subs: new Set(), signedIn: {}, names: {}, refused: [], errs: [], now: () => Date.now() };
 /**
  * @param {string} name
  * @param {string} uid Test user id, passed to app.html as the `u` query parameter.

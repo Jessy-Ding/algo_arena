@@ -300,3 +300,34 @@ export function httpsCallable(fns, name) {
       throw Object.assign(new Error(e.message), { code: "functions/" + (map[e.code] || "internal"), details: { code: e.code } }); }
   };
 }
+
+/* ---------- storage: a JavaScript mirror of storage.rules for assets/{uid}/{fileId} ---------- */
+const ASSET_RULE_TYPES = /^(image\/(png|jpeg|gif|webp)|application\/pdf|video\/(mp4|webm)|text\/(plain|markdown))$/;
+/**
+ * @param {!Object} app
+ * @return {{kind: string}}
+ */
+export function getStorage(app) { return { kind: "storage" }; }
+/**
+ * @param {!Object} st
+ * @param {string} path
+ * @return {{kind: string, path: string}}
+ */
+export function ref(st, path) { return { kind: "sref", path }; }
+/**
+ * Stores the bytes in M.blobs when storage.rules would allow the create.
+ *
+ * @param {{path: string}} r
+ * @param {!Blob} data
+ * @param {{contentType: string}} meta
+ * @return {!Promise<{ref: !Object}>}
+ */
+export async function uploadBytes(r, data, meta) {
+  await delay();
+  const m = /^assets\/([^/]+)\/([^/]+)$/.exec(r.path); const uid = M.signedIn[ME] ? ME : null;
+  const listed = (d) => ((M.docs.get(`meta/${d}`) || {}).uids || []).includes(uid);
+  const ok = m && uid && m[1] === uid && !M.blobs.has(r.path) && data.size <= 20 * 1024 * 1024
+    && ASSET_RULE_TYPES.test((meta && meta.contentType) || "") && (listed("admins") || listed("aiHosts"));
+  if (!ok) throw Object.assign(new Error("User does not have permission to access this object."), { code: "storage/unauthorized" });
+  M.blobs.set(r.path, { size: data.size, contentType: meta.contentType, by: uid }); return { ref: r };
+}

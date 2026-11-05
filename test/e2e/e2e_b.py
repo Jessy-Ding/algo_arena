@@ -104,6 +104,29 @@ with sync_playwright() as pw:
     offB = B.evaluate("() => DB.serverOffset()")
     check("B's server-clock offset estimate corrects its -5 s skew", 4500 <= offB <= 5500, str(offB))
 
+    # Question image upload: the assets capability against the mock's mirror of storage.rules. Download links are
+    # served locally so the image really loads without the network.
+    PNG = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010806000000"
+                        "1f15c4890000000d49444154789c6360f8cf000002020101a2f4a0a70000000049454e44ae426082")
+    page.route("https://firebasestorage.googleapis.com/**", lambda route: route.fulfill(status=200, content_type="image/png", body=PNG))
+    H.click('[data-act="editSet"][data-id="set1"]'); H.wait_for_selector('[data-act="editQ"][data-i="0"]', timeout=6000)
+    H.click('[data-act="editQ"][data-i="0"]'); H.wait_for_selector("#q_img", state="attached", timeout=4000)
+    H.set_input_files("#q_img", files=[{"name": "q1.png", "mimeType": "image/png", "buffer": PNG}])
+    H.wait_for_selector('img[alt="Prompt image"]', timeout=6000)
+    src = H.get_attribute('img[alt="Prompt image"]', "src")
+    check("an approved host uploads a prompt image to Cloud Storage and sees it in the editor",
+          src.startswith("https://firebasestorage.googleapis.com/v0/b/") and "assets%2FH%2F" in src, src)
+    H.click('[data-act="saveQ"]'); sleep(0.6)
+    img = (get("data/users/H/profile/sets/set1/q/q1") or {}).get("img", "")
+    check("the saved question names the file as <uid>/<random id>, and the file exists",
+          bool(re.match(r"^H/[0-9a-f-]{36}$", img)) and page.evaluate("(p) => __FB.blobs.has(p)", "assets/" + img), img)
+    up = """async ([name, type, size]) => { const a = await claude.use("assets");
+        return a.upload(new File([new Uint8Array(size)], name, { type })).then(() => "accepted", (e) => e.code); }"""
+    check("a player who is not an approved host cannot upload", A.evaluate(up, ["x.png", "image/png", 10]) == "not_uploader")
+    check("an SVG is refused as an unsupported type", H.evaluate(up, ["x.svg", "image/svg+xml", 10]) == "unsupported_type")
+    check("a file over 20 MB is refused before upload", H.evaluate(up, ["big.mp4", "video/mp4", 20 * 1024 * 1024 + 1]) == "too_large")
+    H.click('[data-act="home"]'); H.wait_for_selector('[data-act="launch"][data-id="set1"]', timeout=6000)
+
     # room
     H.click('[data-act="launch"][data-id="set1"]'); H.wait_for_selector("#l_r")
     check("the reading time defaults to 5 s", H.input_value("#l_r") == "5", H.input_value("#l_r"))
@@ -121,6 +144,9 @@ with sync_playwright() as pw:
     check("room has a server timestamp for the question", isinstance(r.get("shownSrv"), dict) and "__ts" in r["shownSrv"] and r["readS"] == 3)
     A.wait_for_selector(".answers.locked", timeout=3000); B.wait_for_selector(".answers.locked", timeout=3000)
     check("both players locked during reading", A.locator('[data-act="answer"]').count() == 0 and B.locator('[data-act="answer"]').count() == 0)
+    A.wait_for_function("() => { const i = document.querySelector('.qprompt img'); return i && i.complete && i.naturalWidth > 0; }", timeout=4000)
+    check("a player sees the uploaded prompt image, loaded from its Storage link",
+          A.get_attribute(".qprompt img", "src") == src, A.get_attribute(".qprompt img", "src"))
     check("database refuses an answer written during reading", direct_answer(A, 0) == "permission_denied")
     A.wait_for_selector('[data-act="answer"]', timeout=4500); B.wait_for_selector('[data-act="answer"]', timeout=4500)
     opened = page.evaluate("() => Date.now()")

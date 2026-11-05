@@ -1,7 +1,8 @@
 /**
  * @fileoverview AlgoArena route B platform layer. The page was written against the claude.ai capability interface
  * (claude.use("db"), "user", "downloads", ...). This module provides the same interface backed by Firebase
- * Authentication (Google sign-in) and Cloud Firestore, so the page logic stays the same. Differences from the
+ * Authentication (Google sign-in), Cloud Firestore and Cloud Storage (uploaded files), so the page logic stays the
+ * same. Differences from the
  * claude.ai runtime are noted where they matter:
  * - db.update() merges nested objects (claude.ai semantics); Firestore's updateDoc replaces nested maps, so updates
  *   are sent as explicit field paths.
@@ -148,6 +149,37 @@ const DOWNLOADS = {
   },
 };
 
+/* ---------- assets capability: question images and reference files in Cloud Storage ---------- */
+// Must match storage.rules; the page's own error messages name the 20 MB limit.
+const ASSET_MAX = 20 * 1024 * 1024;
+const ASSET_TYPES = /^(image\/(png|jpeg|gif|webp)|application\/pdf|video\/(mp4|webm)|text\/(plain|markdown))$/;
+const assetCode = (code, message) => Object.assign(new Error(message), { code });
+const ASSETS = {
+  /**
+   * @param {!File} file
+   * @param {{type?: string}=} opts type overrides file.type (the page sets it for .md and .txt files).
+   * @return {!Promise<{id: string, contentType: string}>} id is "<uid>/<random>", stored in the question.
+   * @throws {!Error} With code too_large, unsupported_type or not_uploader, which the page explains.
+   */
+  upload: async (file, opts = {}) => {
+    const contentType = (opts && opts.type) || file.type || "";
+    if (file.size > ASSET_MAX) throw assetCode("too_large", "The file is over 20 MB.");
+    if (!ASSET_TYPES.test(contentType)) throw assetCode("unsupported_type", `Files of type "${contentType || "unknown"}" cannot be uploaded.`);
+    const stM = F.stM || (F.stM = await import(SDK + "firebase-storage.js"));
+    const id = `${F.user.uid}/${crypto.randomUUID()}`;
+    try { await stM.uploadBytes(stM.ref(stM.getStorage(F.app), "assets/" + id), file, { contentType }); }
+    catch (e) { if (e && e.code === "storage/unauthorized") throw assetCode("not_uploader", "Only approved hosts can upload files."); throw e; }
+    return { id, contentType };
+  },
+  /**
+   * A public download link; storage.rules allow reading a file by its path, since <img> cannot send a sign-in token.
+   *
+   * @param {string} id
+   * @return {string}
+   */
+  url: (id) => `https://firebasestorage.googleapis.com/v0/b/${CONFIG.firebase.storageBucket}/o/${encodeURIComponent("assets/" + id)}?alt=media`,
+};
+
 /* ---------- sample capability: AI reports through the `coach` Cloud Function ---------- */
 const FN_CODES = { "functions/permission-denied": "not_granted", "functions/unauthenticated": "not_granted", "functions/resource-exhausted": "rate_limited", "functions/unavailable": "upstream_error", "functions/deadline-exceeded": "upstream_error", "functions/internal": "upstream_error", "functions/not-found": "not_granted" };
 let samplePromise = null;
@@ -193,8 +225,8 @@ W.claude = {
   /**
    * "downloads" works signed out; the others need a signed-in user.
    *
-   * @param {string} name "db", "user", "downloads" or "sample".
-   * @return {!Promise<*>} The capability, or null when signed out, unavailable, or not provided (room, assets).
+   * @param {string} name "db", "user", "downloads", "assets" or "sample".
+   * @return {!Promise<*>} The capability, or null when signed out, unavailable, or not provided (room).
    */
   use: async (name) => {
     await boot();
@@ -202,6 +234,7 @@ W.claude = {
     if (!F.user) return null;
     if (name === "db") return DB;
     if (name === "user") return USER;
+    if (name === "assets") return CONFIG.assets === false ? null : ASSETS;
     if (name === "sample") return (samplePromise = samplePromise || makeSample().catch((e) => { console.warn("AI reports unavailable:", e); return null; }));
     return null;
   },

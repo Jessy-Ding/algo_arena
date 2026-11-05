@@ -29,6 +29,7 @@ jobs:
       - run: npm install
         working-directory: test/rules
       - run: firebase emulators:exec --only firestore --project demo-algoarena "bash test/rules/run-with-coverage.sh"
+      - run: firebase emulators:exec --only firestore,storage --project demo-algoarena "cd test/rules && node --test storage.test.mjs"
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: rules-coverage, path: test/rules/rules-coverage-* }

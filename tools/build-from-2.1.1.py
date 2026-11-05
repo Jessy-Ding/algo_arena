@@ -47,6 +47,9 @@ rep('const APP = { version: "2.1.1-live",', 'const APP = { version: "3.0.0-b2",'
 # exports are unaffected.
 rep("const DEFAULT_READ = 10; // v2.1: seconds the question is visible, locked, before answers open",
     "const DEFAULT_READ = 5; // seconds the question is visible, locked, before answers open", "default_read_5")
+# Uploaded files live in Cloud Storage (assets capability in platform-firebase.js), not at claude.ai's /_blob/ path.
+rep('const blobUrl = (id) => id ? "/_blob/" + id : "";',
+    'const blobUrl = (id) => !id ? "" : C.assets && C.assets.url ? C.assets.url(id) : "/_blob/" + id;', "blob_url")
 rep('const ARTIFACT_URL = "https://claude.ai/artifact/GwnVWEECxnYh9afck4RpGA";',
     'const ARTIFACT_URL = location.origin + location.pathname; // route B: the page\'s own address (GitHub Pages)', "url")
 rep('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>',

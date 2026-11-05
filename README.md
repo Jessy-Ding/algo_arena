@@ -32,7 +32,7 @@ Stage B2 (this package): AI learning reports through a Cloud Function. See IMPRO
 | Who can read an answer | Everyone who can read the record, protected by encryption | Only its author and the host (encryption kept as a second layer) |
 | Live updates | claude.ai room messages | Firestore listeners |
 | AI reports | claude.ai `sample` | Cloud Function calling the Anthropic API |
-| Uploaded images and PDFs | claude.ai assets | Not in B1; references are links |
+| Uploaded images and PDFs | claude.ai assets | Cloud Storage (`assets/{uid}/{fileId}`), approved hosts only |
 
 ## Data model (Firestore paths)
 
@@ -125,7 +125,10 @@ Anthropic Console and a budget alert in Google Cloud Billing.
 ## Known limits
 
 - `functions/index.js` and `functions/deps.js` are wired to firebase-functions and firebase-admin, which were not installable in the development sandbox. The logic in coach-core.js is unit-tested; the wiring is verified only once you run `npm test` and the functions emulator or a deploy.
-- Uploading images or PDFs to questions is off; references are links and notes.
+- Uploaded files (question images and reference files: png, jpeg, gif, webp, PDF, mp4, webm, text, markdown; at most
+  20 MB) are readable by anyone who has the link, because `<img>` and `<video>` cannot send a sign-in token. Links are
+  random and listing is refused. Only uids in `meta/admins` or `meta/aiHosts` can upload. Needs the Blaze plan and a
+  Storage bucket; otherwise set `assets: false` in `site/firebase-config.js`.
 - Google sign-in is pop-up only. A redirect cannot complete on github.io: the sign-in helper is on firebaseapp.com and
   Chrome 115+, Firefox 109+ and Safari 16.1+ block that third-party storage. When the pop-up is blocked the page asks
   the user to allow pop-ups or to open the link in Safari or Chrome; links opened inside other apps (WeChat, Canvas

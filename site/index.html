@@ -553,7 +553,7 @@ async function saveFile(filename, data) {
   try { await C.downloads.save({ filename, data }); return true; }
   catch (e) { if (e && e.code === "declined") return false; toast("Download failed: " + (e && e.message || e)); return false; }
 }
-const blobUrl = (id) => id ? "/_blob/" + id : "";
+const blobUrl = (id) => !id ? "" : C.assets && C.assets.url ? C.assets.url(id) : "/_blob/" + id;
 
 /* ===================== router ===================== */
 const VIEWS = {}; const AFTER = {}; const ACT = {};
