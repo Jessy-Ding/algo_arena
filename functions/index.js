@@ -31,7 +31,10 @@ export const coach = onCall(
   async (request) => {
     try { return await runCoach({ uid: request.auth && request.auth.uid, data: request.data, deps }); }
     catch (e) {
-      if (e instanceof CoachError) throw new HttpsError(HTTPS[e.code] || "internal", e.message, { code: e.code });
+      if (e instanceof CoachError) {
+        if (e.upstream) console.warn("coach upstream refusal", e.code, JSON.stringify(e.upstream));
+        throw new HttpsError(HTTPS[e.code] || "internal", e.message, { code: e.code });
+      }
       console.error("coach failed", e);
       throw new HttpsError("internal", "The AI report failed.", { code: "upstream_error" });
     }

@@ -18,6 +18,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { runCoach, DEFAULTS, CoachError, dayKey, sessionCap, SCHEMAS } from "../coach-core.js";
 import { firestoreDeps } from "../deps.js";
+import { contractProblem, badRequest } from "./anthropic-contract.mjs";
 
 function fakeAdminDb(seed = {}) {
   const docs = new Map(Object.entries(seed)); const added = [];
@@ -34,7 +35,9 @@ function fakeAdminDb(seed = {}) {
 const NOW = Date.UTC(2026, 9, 29, 15, 0, 0);
 function okFetch(text = '{"performance_summary":"ok"}', extra = {}) {
   const calls = [];
-  const f = async (url, init) => { calls.push({ url, init, body: JSON.parse(init.body) }); return { ok: true, status: 200, json: async () => ({ model: JSON.parse(init.body).model, content: [{ type: "text", text }], stop_reason: "end_turn", usage: { input_tokens: 120, output_tokens: 40 }, ...extra }) }; };
+  const f = async (url, init) => { calls.push({ url, init, body: JSON.parse(init.body) });
+    const problem = contractProblem(JSON.parse(init.body)); if (problem) return badRequest(problem);
+    return { ok: true, status: 200, json: async () => ({ model: JSON.parse(init.body).model, content: [{ type: "text", text }], stop_reason: "end_turn", usage: { input_tokens: 120, output_tokens: 40 }, ...extra }) }; };
   f.calls = calls; return f;
 }
 const statusFetch = (status) => async () => ({ ok: false, status, json: async () => ({ type: "error" }) });
@@ -202,32 +205,42 @@ test("a player may name only the session they played in", async () => {
   await call(deps, "stu1", { prompt: "x", sid: "S1" });
 });
 
-function toolFetch(input, extra = {}) {
-  const calls = [];
-  const f = async (url, init) => { const body = JSON.parse(init.body); calls.push({ body });
-    return { ok: true, status: 200, json: async () => ({ model: body.model, content: input === null ? [] : [{ type: "tool_use", id: "t1", name: body.tool_choice.name, input }], stop_reason: "tool_use", usage: { input_tokens: 10, output_tokens: 5 }, ...extra }) }; };
-  f.calls = calls; return f;
-}
-test("personal reports force the learning_report tool and return its input as JSON text", async () => {
+test("personal reports ask for the learning-report JSON schema and return the JSON text", async () => {
   const input = { performance_summary: "s", knowledge_points: ["a"], weak_or_risky_areas: [], possible_confusions: [], next_steps: ["n"], resource_ids: [] };
-  const { deps, fetch } = setup({ fetch: toolFetch(input) });
+  const { deps, fetch } = setup({ fetch: okFetch(JSON.stringify(input)) });
   const out = await call(deps, "host1", { prompt: "x", kind: "personal" });
   const b = fetch.calls[0].body;
-  assert.equal(b.tools[0].name, "learning_report"); assert.deepEqual(b.tool_choice, { type: "tool", name: "learning_report" });
-  assert.deepEqual(Object.keys(b.tools[0].input_schema.properties).sort(), ["knowledge_points", "next_steps", "performance_summary", "possible_confusions", "resource_ids", "weak_or_risky_areas"]);
+  assert.deepEqual(b.output_config, { format: { type: "json_schema", schema: SCHEMAS.personal } });
+  assert.equal(b.tools, undefined); assert.equal(b.tool_choice, undefined);
+  assert.deepEqual(Object.keys(b.output_config.format.schema.properties).sort(), ["knowledge_points", "next_steps", "performance_summary", "possible_confusions", "resource_ids", "weak_or_risky_areas"]);
   assert.deepEqual(JSON.parse(out.text), input);
 });
-test("class summaries force the class_summary tool", async () => {
-  const { deps, fetch } = setup({ fetch: toolFetch({ overview: "o", prominent_knowledge_points: [], common_error_patterns: [], possible_confusion_signals: [], instructor_review_areas: [] }) });
-  await call(deps, "host1", { prompt: "x", kind: "class" }); assert.equal(fetch.calls[0].body.tool_choice.name, "class_summary");
+test("class summaries ask for the class-summary JSON schema", async () => {
+  const { deps, fetch } = setup({ fetch: okFetch(JSON.stringify({ overview: "o", prominent_knowledge_points: [], common_error_patterns: [], possible_confusion_signals: [], instructor_review_areas: [] })) });
+  await call(deps, "host1", { prompt: "x", kind: "class" }); assert.deepEqual(fetch.calls[0].body.output_config.format.schema, SCHEMAS.class);
   // Sort a copy: sorting in place once reordered the shared, shallowly frozen schema.
-  assert.deepEqual([...SCHEMAS.class.input_schema.required].sort(), ["common_error_patterns", "instructor_review_areas", "overview", "possible_confusion_signals", "prominent_knowledge_points"]);
+  assert.deepEqual([...SCHEMAS.class.required].sort(), ["common_error_patterns", "instructor_review_areas", "overview", "possible_confusion_signals", "prominent_knowledge_points"]);
+});
+// The live failure of 2026-11-04: Sonnet 5.5 answered every forced-tool report call with HTTP 400.
+test("every model tier and report kind passes the Messages API request rules", async () => {
+  for (const tier of Object.keys(DEFAULTS.models)) for (const kind of [null, ...Object.keys(SCHEMAS)]) {
+    const { deps, fetch } = setup({ fetch: okFetch('{"overview":"o"}') });
+    await call(deps, "host1", { prompt: "x", tier, ...(kind ? { kind } : {}) });
+    assert.equal(contractProblem(fetch.calls[0].body), null, `${tier}/${kind}`);
+  }
+});
+test("an API 400 keeps Anthropic's error type and message for the server log", async () => {
+  const { deps } = setup({ fetch: async () => badRequest("claude-sonnet-5-5 rejects tool_choice tool") });
+  await assert.rejects(call(deps, "host1", { prompt: "x" }), (e) => e.code === "invalid_argument" && e.message === "The AI service refused the request."
+    && e.upstream.status === 400 && e.upstream.type === "invalid_request_error" && /tool_choice/.test(e.upstream.message));
 });
 test("an unknown report kind is refused", async () => { const { deps } = setup(); await rejects(call(deps, "host1", { prompt: "x", kind: "essay" }), "invalid_argument"); });
-test("a tool-mode reply without the tool call is empty_completion and refunds", async () => {
-  const { deps, db } = setup({ fetch: toolFetch(null) }); await rejects(call(deps, "host1", { prompt: "x", kind: "personal" }), "empty_completion"); assert.equal(quota(db, "host1"), 0);
+test("a report reply that is not a JSON object is empty_completion and refunds", async () => {
+  for (const text of ["", "I can't help with that.", "[1, 2]", '"text"', '{"cut off":']) {
+    const { deps, db } = setup({ fetch: okFetch(text) }); await rejects(call(deps, "host1", { prompt: "x", kind: "personal" }), "empty_completion"); assert.equal(quota(db, "host1"), 0, text);
+  }
 });
-test("requests without a kind stay plain text", async () => { const { deps, fetch } = setup(); await call(deps, "host1", { prompt: "x" }); assert.equal(fetch.calls[0].body.tools, undefined); });
+test("requests without a kind stay plain text", async () => { const { deps, fetch } = setup(); await call(deps, "host1", { prompt: "x" }); assert.equal(fetch.calls[0].body.output_config, undefined); });
 
 // Round 2: tests for mutants that survived Stryker (verify/evidence/round2/mutation-*.json).
 test("day keys are UTC calendar dates", () => { assert.equal(dayKey(NOW), "2026-10-29"); assert.equal(dayKey(Date.UTC(2026, 9, 29, 23, 59, 59)), "2026-10-29"); });
@@ -247,18 +260,18 @@ test("the fixed system prompt names the coach, its two tasks and the out-of-scop
     '{"error":"out_of_scope"} and nothing else.');
 });
 
-test("report schemas are closed objects with bounded lists of strings", () => {
-  const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "string", description: `at most ${w} words` } });
-  assert.deepEqual(SCHEMAS.personal, { name: "learning_report", description: "Return the student's learning report.", input_schema: {
+test("report schemas are closed objects with lists of strings whose limits are described", () => {
+  const list = (n, w) => ({ type: "array", description: `at most ${n} items`, items: { type: "string", description: `at most ${w} words` } });
+  assert.deepEqual(SCHEMAS.personal, {
     type: "object", additionalProperties: false,
     required: ["performance_summary", "knowledge_points", "weak_or_risky_areas", "possible_confusions", "next_steps", "resource_ids"],
     properties: { performance_summary: { type: "string", description: "at most 50 words" }, knowledge_points: list(3, 18), weak_or_risky_areas: list(3, 18),
-      possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", maxItems: 3, items: { type: "string" } } } } });
-  assert.deepEqual(SCHEMAS.class, { name: "class_summary", description: "Return the class-level summary for the instructor.", input_schema: {
+      possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", description: "1 to 3 ids", items: { type: "string" } } } });
+  assert.deepEqual(SCHEMAS.class, {
     type: "object", additionalProperties: false,
     required: ["overview", "prominent_knowledge_points", "common_error_patterns", "possible_confusion_signals", "instructor_review_areas"],
     properties: { overview: { type: "string", description: "at most 60 words" }, prominent_knowledge_points: list(4, 25), common_error_patterns: list(4, 25),
-      possible_confusion_signals: list(4, 25), instructor_review_areas: list(4, 25) } } });
+      possible_confusion_signals: list(4, 25), instructor_review_areas: list(4, 25) } });
 });
 
 test("a prompt of exactly the maximum length is accepted", async () => {
@@ -324,14 +337,11 @@ test("plain replies concatenate only text blocks, with no separator", async () =
   assert.equal((await call(deps, "host1", { prompt: "x" })).text, "AB");
 });
 
-test("report replies use only a tool_use block for the named tool, and only an object input", async () => {
+test("report replies are read from text blocks only", async () => {
   const input = { performance_summary: "s", knowledge_points: [], weak_or_risky_areas: [], possible_confusions: [], next_steps: [], resource_ids: [] };
-  const reply = (content) => async () => ({ ok: true, status: 200, json: async () => ({ content, stop_reason: "tool_use" }) });
-  let r = setup({ fetch: reply([{ type: "text", text: "preamble", name: "learning_report", input: { wrong: 1 } }, { type: "tool_use", name: "other_tool", input: { wrong: 2 } },
-    { type: "tool_use", name: "learning_report", input }]) });
+  const reply = (content) => async () => ({ ok: true, status: 200, json: async () => ({ content, stop_reason: "end_turn" }) });
+  const r = setup({ fetch: reply([{ type: "thinking", text: '{"wrong":1}' }, { type: "text", text: JSON.stringify(input) }]) });
   assert.deepEqual(JSON.parse((await call(r.deps, "host1", { prompt: "x", kind: "personal" })).text), input);
-  r = setup({ fetch: reply([{ type: "tool_use", name: "learning_report", input: "not an object" }]) });
-  await rejects(call(r.deps, "host1", { prompt: "x", kind: "personal" }), "empty_completion"); assert.equal(quota(r.db, "host1"), 0);
 });
 
 test("player calls are logged with the participant role and no session", async () => {

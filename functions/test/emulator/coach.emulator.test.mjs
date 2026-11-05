@@ -18,6 +18,7 @@ import http from "node:http";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { dayKey } from "../../coach-core.js";
+import { contractProblem } from "../anthropic-contract.mjs";
 
 const PROJECT = "demo-algoarena";
 const FAKE_PORT = Number(process.env.FAKE_ANTHROPIC_PORT || 8799);
@@ -29,8 +30,6 @@ const db = getFirestore();
 const upstream = { requests: [], replies: [] };
 let fake;
 
-const toolReply = (name) => ({ status: 200, body: { model: "claude-sonnet-5-5", stop_reason: "tool_use", usage: { input_tokens: 11, output_tokens: 7 },
-  content: [{ type: "tool_use", name, input: { performance_summary: "Fine." } }] } });
 const textReply = (text) => ({ status: 200, body: { model: "claude-sonnet-5-5", stop_reason: "end_turn", usage: { input_tokens: 5, output_tokens: 3 },
   content: [{ type: "text", text }] } });
 
@@ -67,8 +66,12 @@ before(async () => {
     let raw = "";
     req.on("data", (c) => { raw += c; });
     req.on("end", () => {
-      upstream.requests.push({ headers: req.headers, body: JSON.parse(raw) });
-      const reply = upstream.replies.shift() || textReply("Default reply.");
+      const body = JSON.parse(raw);
+      upstream.requests.push({ headers: req.headers, body });
+      // Answer as the real API would when the request breaks its rules, whatever reply the test queued.
+      const problem = contractProblem(body);
+      const reply = problem ? { status: 400, body: { type: "error", error: { type: "invalid_request_error", message: problem } } }
+        : upstream.replies.shift() || textReply("Default reply.");
       res.writeHead(reply.status, { "content-type": "application/json" });
       res.end(typeof reply.body === "string" ? reply.body : JSON.stringify(reply.body));
     });
@@ -97,16 +100,18 @@ test("a host's call for an ended session returns the model text and charges one 
   assert.deepEqual([s.count, s.cap, s.sid, s.uid], [1, 5, "S-ok", "H"]);
 });
 
-test("the upstream request carries the key from the secret and forces the report tool", async () => {
+test("the upstream request carries the key from the secret and asks for the report schema", async () => {
   await endedSession("H", "S-req", ["A1"]);
   upstream.requests.length = 0;
-  upstream.replies.push(toolReply("learning_report"));
-  const r = await call("H", { prompt: "Write a report.", sid: "S-req", kind: "personal", tier: "quick" });
+  upstream.replies.push(textReply('{"performance_summary":"Fine."}'));
+  // The default tier is Sonnet 5.5, the model that refused forced tool use live on 2026-11-04.
+  const r = await call("H", { prompt: "Write a report.", sid: "S-req", kind: "personal" });
   const sent = upstream.requests[0];
   assert.equal(sent.headers["x-api-key"], EMULATOR_SECRET);
   assert.equal(sent.headers["anthropic-version"], "2023-06-01");
-  assert.equal(sent.body.model, "claude-haiku-5-5");
-  assert.deepEqual(sent.body.tool_choice, { type: "tool", name: "learning_report" });
+  assert.equal(sent.body.model, "claude-sonnet-5-5");
+  assert.equal(sent.body.output_config.format.type, "json_schema");
+  assert.equal(sent.body.tool_choice, undefined);
   assert.deepEqual(JSON.parse(r.result.text), { performance_summary: "Fine." });
 });
 

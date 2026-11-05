@@ -38,14 +38,15 @@ const FB = window.__FB; FB.aiCalls = []; FB.aiFailNext = 0;
 const day = (ms) => new Date(ms).toISOString().slice(0, 10);
 function fakeAnthropic(url, init) {
   const body = JSON.parse(init.body); const prompt = body.messages[0].content;
-  FB.aiCalls.push({ model: body.model, system: body.system, key: init.headers["x-api-key"], chars: prompt.length, names: /Alice|Bob|Host User/.test(prompt), tool: body.tool_choice ? body.tool_choice.name : null, budget: /fits in 400 words/.test(prompt) });
+  FB.aiCalls.push({ model: body.model, system: body.system, key: init.headers["x-api-key"], chars: prompt.length, names: /Alice|Bob|Host User/.test(prompt), schema: body.output_config ? Object.keys(body.output_config.format.schema.properties).sort().join(",") : null, toolChoice: body.tool_choice || null, budget: /fits in 400 words/.test(prompt) });
   if (FB.aiFailNext > 0) { FB.aiFailNext--; return Promise.resolve({ ok: false, status: 529, json: async () => ({ type: "error" }) }); }
   let j;
   if (/class-level summary/.test(prompt)) j = { overview: "The class did well on running-time questions.", prominent_knowledge_points: ["Insertion sort worst case"], common_error_patterns: ["Confusing best and worst case"], possible_confusion_signals: ["Θ(n) vs Θ(n²)"], suggested_follow_up: ["Review loop invariants"] };
   else { const ids = [...(prompt.split("CANDIDATES:")[1] || "").matchAll(/"id":"([^"]+)"/g)].map((m) => m[1]);
     j = { performance_summary: "Your answers suggest steady work on running time.", knowledge_points: ["Worst-case analysis (Q1)"], weak_or_risky_areas: ["Timing on Q2"], possible_confusions: [], next_steps: ["Redo Q2"], resource_ids: ids.slice(0, 1) }; }
-  const content = body.tools ? [{ type: "tool_use", id: "t1", name: body.tool_choice.name, input: j }] : [{ type: "text", text: JSON.stringify(j) }];
-  return Promise.resolve({ ok: true, status: 200, json: async () => ({ model: body.model, content, stop_reason: body.tools ? "tool_use" : "end_turn", usage: { input_tokens: 500, output_tokens: 80 } }) });
+  // Sonnet 5.5 and Opus 5.5 answer a forced tool_choice with HTTP 400 (functions/test/anthropic-contract.mjs).
+  if (body.tool_choice && /5-5$/.test(body.model)) return Promise.resolve({ ok: false, status: 400, json: async () => ({ type: "error", error: { type: "invalid_request_error", message: "forced tool use" } }) });
+  return Promise.resolve({ ok: true, status: 200, json: async () => ({ model: body.model, content: [{ type: "text", text: JSON.stringify(j) }], stop_reason: "end_turn", usage: { input_tokens: 500, output_tokens: 80 } }) });
 }
 /* coach-core.js deps backed by FB.docs instead of the Admin SDK. */
 const deps = {

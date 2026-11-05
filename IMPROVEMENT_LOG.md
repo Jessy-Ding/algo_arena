@@ -117,3 +117,17 @@ No High findings left that can be fixed and verified here. Remaining Medium and 
   question_key and session content_hash of these 37 questions differ from earlier sessions, so repeat-exposure counts
   restart for them. No study sessions exist yet. CLRS procedure names without a person's name (INSERTION-SORT,
   EXTRACT-MIN) and the emphasis words (NOT, FALSE, TRUE, TO, FRACTIONAL) and KNAPSACK, HALTING are unchanged.
+
+## M7, AI reports live (2026-11-04)
+- Blaze on, $10 Google budget alert, `ANTHROPIC_API_KEY` in Secret Manager (set by the user), coach deployed to
+  us-central1 (nodejs22), site `coach: true`.
+- Defect 3, found in the first live report: every report call returned `invalid_argument`. Cause (Anthropic docs,
+  "Define tools"): Claude Sonnet 5.5 and Opus 5.5 answer a forced `tool_choice` with HTTP 400, and coach forced a tool
+  for every report. Why the tests missed it: every fake Anthropic accepted any request. The function also dropped
+  Anthropic's error text, so the log showed no cause.
+- Fix: report kinds use structured outputs (`output_config.format`, JSON in a text block) and must parse to a JSON
+  object; `maxItems` removed from the schemas because structured outputs reject it (the page already trims the lists to
+  3 and 4). Refusals with an upstream status now log Anthropic's error type and message (no prompt or reply).
+- Tests: `functions/test/anthropic-contract.mjs` holds the documented request rules; the unit fake, the emulator fake
+  server and the browser fake answer HTTP 400 when a request breaks them. Unit 55/55 (7 fail on the old code), coach
+  wiring 13/13 on the Functions emulator, browser 45/45, tsc 0. Not yet run: a live report after redeploy.

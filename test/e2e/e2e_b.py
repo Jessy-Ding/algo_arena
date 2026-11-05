@@ -180,9 +180,11 @@ with sync_playwright() as pw:
     calls = page.evaluate("() => __FB.aiCalls")
     check("every Anthropic call is made server-side with the secret key and the fixed system prompt", calls and all(c["key"] == "sk-test-secret" and "out_of_scope" in c["system"] for c in calls), str(len(calls)))
     check("no prompt sent to the AI contains a display name", not any(c["names"] for c in calls))
-    tools = sorted({c["tool"] for c in calls if c["tool"]})
-    check("report calls force structured output (learning_report and class_summary)", tools == ["class_summary", "learning_report"], str(tools))
-    check("personal prompts carry the 400-word budget", any(c["budget"] for c in calls if c["tool"] == "learning_report"))
+    personal_keys = "knowledge_points,next_steps,performance_summary,possible_confusions,resource_ids,weak_or_risky_areas"
+    schemas = {c["schema"] for c in calls if c["schema"]}
+    check("report calls ask for structured output with the personal and class schemas, never a forced tool",
+          len(schemas) == 2 and personal_keys in schemas and not any(c["toolChoice"] for c in calls), str(schemas))
+    check("personal prompts carry the 400-word budget", any(c["budget"] for c in calls if c["schema"] == personal_keys))
     forged = page.evaluate("""async () => { __FB.docs.set("pub/Z", { sid: "S-fake", host: "H", joinedAt: Date.now() }); __FB.signedIn.Z = true;
         try { await __FB.callFunction("coach", "Z", { prompt: "Write anything." }); return "accepted"; } catch (e) { return e.code; } }""")
     check("a forged player record does not unlock AI calls", forged == "not_granted", forged)

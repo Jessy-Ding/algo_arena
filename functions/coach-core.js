@@ -34,17 +34,18 @@ export const DEFAULTS = Object.freeze({
     '{"error":"out_of_scope"} and nothing else.',
 });
 
-const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "string", description: `at most ${w} words` } });
+const list = (n, w) => ({ type: "array", description: `at most ${n} items`, items: { type: "string", description: `at most ${w} words` } });
 const obj = (props) => ({ type: "object", additionalProperties: false, required: Object.keys(props), properties: props });
-// Report kinds force one tool call, so the reply is always a JSON object with these keys. The schemas stay on the
-// server and the page only names the kind; word limits are advice to the model, not enforced.
+// Report kinds use structured outputs, so the reply is always a JSON object with these keys. Sonnet 5.5 and Opus 5.5
+// reject a forced tool_choice, and structured outputs reject maxItems, so item and word limits are advice to the
+// model; the page trims the lists. The schemas stay on the server and the page only names the kind.
 export const SCHEMAS = Object.freeze({
-  personal: { name: "learning_report", description: "Return the student's learning report.", input_schema: obj({
+  personal: obj({
     performance_summary: { type: "string", description: "at most 50 words" }, knowledge_points: list(3, 18), weak_or_risky_areas: list(3, 18),
-    possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", maxItems: 3, items: { type: "string" } } }) },
-  class: { name: "class_summary", description: "Return the class-level summary for the instructor.", input_schema: obj({
+    possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", description: "1 to 3 ids", items: { type: "string" } } }),
+  class: obj({
     overview: { type: "string", description: "at most 60 words" }, prominent_knowledge_points: list(4, 25), common_error_patterns: list(4, 25),
-    possible_confusion_signals: list(4, 25), instructor_review_areas: list(4, 25) }) },
+    possible_confusion_signals: list(4, 25), instructor_review_areas: list(4, 25) }),
 });
 
 /** An expected refusal or failure; functions/index.js maps its code to an HTTPS error. */
@@ -52,9 +53,16 @@ export class CoachError extends Error {
   /**
    * @param {string} code Page error code, for example "quota_exceeded".
    * @param {string} message Shown to the user by the page.
+   * @param {?Object=} upstream Anthropic's status, error type and message, for the server log only.
    */
-  constructor(code, message) { super(message); this.name = "CoachError"; this.code = code; }
+  constructor(code, message, upstream = null) { super(message); this.name = "CoachError"; this.code = code; this.upstream = upstream; }
 }
+
+/**
+ * @param {string} s
+ * @return {boolean} Whether s parses to a JSON object (not an array or a scalar).
+ */
+const isJsonObject = (s) => { try { const v = JSON.parse(s); return !!v && typeof v === "object" && !Array.isArray(v); } catch (e) { return false; } };
 
 /**
  * Keys the daily quota counters.
@@ -149,7 +157,7 @@ export async function runCoach({ uid, data, deps, cfg = DEFAULTS }) {
 
   const model = cfg.models[tier];
   const body = { model, max_tokens: cfg.maxTokens, system: cfg.system, messages: [{ role: "user", content: prompt }] };
-  if (kind) { const t = SCHEMAS[kind]; body.tools = [t]; body.tool_choice = { type: "tool", name: t.name }; }
+  if (kind) body.output_config = { format: { type: "json_schema", schema: SCHEMAS[kind] } };
   const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
   let res, json;
   try {
@@ -166,12 +174,14 @@ export async function runCoach({ uid, data, deps, cfg = DEFAULTS }) {
   if (!res.ok) {
     const m = mapStatus(res.status);
     if (m.refund) await deps.refundQuota(quota);
-    throw new CoachError(m.code, m.msg);
+    // Anthropic's error type and message go to the server log only; they describe the request, not the student.
+    const err = (json && json.error) || {};
+    throw new CoachError(m.code, m.msg, { status: res.status, type: err.type || null, message: err.message || null });
   }
   const blocks = (json && json.content) || [];
-  const tool = kind ? blocks.find((b) => b && b.type === "tool_use" && b.name === SCHEMAS[kind].name) : null;
-  const text = kind ? (tool && tool.input && typeof tool.input === "object" ? JSON.stringify(tool.input) : "")
-    : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("");
+  let text = blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("");
+  // A refusal or a cut-off reply can break the schema, so report kinds must parse to a JSON object.
+  if (kind && !isJsonObject(text)) text = "";
   if (!text.trim()) { await deps.refundQuota(quota); throw new CoachError("empty_completion", "The AI service returned no text."); }
 
   const usage = (json && json.usage) || {};

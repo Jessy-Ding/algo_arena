@@ -105,7 +105,7 @@ charges one unit of a daily quota, calls the Anthropic Messages API with the key
 - No token-consuming automatic retries: the page retries only HTTP 429 and 529 (the request was not processed). An unparseable reply marks that report failed (the host can retry it by hand), and a report over 400 words is shortened locally instead of asking the AI again.
 - Models by tier: quick claude-haiku-5-5, default claude-sonnet-5-5, complex claude-opus-5-5 (edit `DEFAULTS` in functions/coach-core.js).
 - Limits: prompt up to 24,000 characters, reply up to 1,200 tokens, 5 function instances. Personal reports are at most 400 words; the prompt's length limits (summary 50 words, lists of up to 3 items of 18 words) are set so the model's maximum output plus the fixed evidence and resource sections fits, so little generated text is thrown away.
-- Structured output: report requests name their kind (`personal` or `class`); the function forces a tool call whose JSON schema is defined on the server, so replies always parse.
+- Structured output: report requests name their kind (`personal` or `class`); the function asks for structured output (`output_config.format`) with a JSON schema defined on the server, and refuses a reply that does not parse to a JSON object. Sonnet 5.5 and Opus 5.5 reject a forced tool call, and structured outputs reject `maxItems`, so list lengths are described in the schema and trimmed by the page.
 - What is sent to Anthropic: question text, the player's per-question correctness and timing, topic totals. Display names are not sent. Put this in the IRB consent text.
 - The call log (`aiLog`) keeps token counts, sizes and a hash, never the prompt or reply. `aiQuota` and `aiLog` are closed to all clients.
 
