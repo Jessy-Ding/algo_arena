@@ -344,15 +344,22 @@ During Live Classroom:
 - No participant loses the right to answer because another participant answered faster.
 - The experience should create a competitive "race" feeling without using exclusive buzz-in ownership.
 
-### 10.5 One Scored Submission
+### 10.5 Changeable Answer, One Scored Submission
 
-Each participant receives one scored submission per question in Live Classroom.
+Each participant receives one scored submission per question in Live Classroom: their last selection before answer
+time runs out.
 
-After submission:
+While answers are open:
 
-- The submitted answer is locked for that scoring event.
-- The participant cannot change the score by submitting again.
-- The response is recorded immediately.
+- The participant may change their answer by selecting another option, up to 20 changes per question.
+- Every selection is recorded immediately with its server time and kept; earlier selections cannot be edited or
+  removed.
+- Points and response time use the last selection, measured from the moment answers open. Counting the first
+  selection would let a participant select anything at once and change it later at no cost in speed.
+- The question does not close early when every participant has answered, so changes stay possible until time runs
+  out; the host may still stop answers early.
+
+When answer time runs out, the last selection is locked and no further selection is accepted.
 
 ### 10.6 Host-Controlled Pacing
 
@@ -476,7 +483,8 @@ The minimum conceptual entities are:
 
 ### 13.3 Submission
 
-A **Submission** represents one answer selection.
+A **Submission** represents one answer selection. In Live Classroom a participant may make several selections for
+one question; only the last counts.
 
 Suggested fields:
 
@@ -488,14 +496,17 @@ Suggested fields:
 - correctness
 - submission timestamp
 - elapsed response time
-- resulting score
+- resulting score (non-zero only on the counted selection)
+- selection index within the exposure
+- whether it is the counted (final) selection
 - device takeover state
 
 ### 13.4 Exposure
 
 An **Exposure** represents one continuous encounter with a question.
 
-It may contain multiple submissions in Solo Practice but one scored submission in Live Classroom.
+It may contain multiple submissions in Solo Practice. In Live Classroom it may contain several selections (answer
+changes) but exactly one scored submission, the last.
 
 Suggested fields:
 
@@ -692,7 +703,7 @@ This is a product requirement, not merely a design preference.
 
 ### 17.3 Live Classroom Participant
 
-`Login → Confirm Display Name → Join via QR/URL/Code → Lobby → Receive Question → Submit One Answer → Wait for Reveal → See Result/Score → Continue`
+`Login → Confirm Display Name → Join via QR/URL/Code → Lobby → Receive Question → Select an Answer (changeable until time runs out) → Wait for Reveal → See Result/Score → Continue`
 
 ## 18 Functional Acceptance Criteria
 
@@ -713,7 +724,8 @@ The proposed v1.0 baseline is ready for freeze when all of the following are tru
 13. Wrong options may provide targeted explanations.
 14. Live Classroom supports room code, QR code, and URL joining.
 15. All Live participants may answer each question independently.
-16. Live scoring permits exactly one scored submission per participant per question.
+16. Live scoring permits exactly one scored submission per participant per question: the last selection before
+    answer time runs out. Participants may change their answer until then, and every selection is recorded.
 17. Host controls answer reveal and progression to the next question.
 18. Correct timed answers receive 500–1000 points based on elapsed response time.
 19. Incorrect answers and timeouts receive zero points.
