@@ -1,7 +1,8 @@
 /**
  * @fileoverview Request rules of the real Messages API that fakes must enforce, so a request the API would reject
  * with HTTP 400 fails in tests too. Sources: platform.claude.com/docs, "Define tools" (forced tool use) and
- * "Structured outputs" (JSON Schema limits), read on 2026-11-04.
+ * "Structured outputs" (JSON Schema limits), read on 2026-11-04; sampling parameters and assistant prefill from the
+ * claude-api model notes for Claude Sonnet 5.5, read on 2026-11-04.
  *
  * Author: Yikang (Richard) Liu, M.S. Candidate in Computer Science, Khoury College of Computer Sciences,
  *     Northeastern University
@@ -14,6 +15,8 @@
  */
 
 const NO_FORCED_TOOLS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-fable-5-1", "claude-mythos-5-1"];
+// Claude Sonnet 5.5 rejects non-default temperature, top_p and top_k (claude-api model table, read 2026-11-04).
+const NO_SAMPLING = ["claude-sonnet-5-5"];
 // Keywords this project uses that structured outputs accept; anything else (maxItems, minLength, ...) is a 400.
 const SCHEMA_KEYS = new Set(["type", "properties", "required", "additionalProperties", "items", "description", "enum"]);
 
@@ -35,6 +38,9 @@ function schemaProblem(s, at) {
  * @return {?string} Why the real API would answer HTTP 400, or null.
  */
 export function contractProblem(body) {
+  if (NO_SAMPLING.includes(body.model) && ["temperature", "top_p", "top_k"].some((k) => k in body)) return `${body.model} rejects sampling parameters`;
+  const msgs = body.messages || [];
+  if (msgs.length && msgs[msgs.length - 1].role === "assistant") return "assistant prefill is not supported";
   const tc = body.tool_choice && body.tool_choice.type;
   if ((tc === "tool" || tc === "any") && NO_FORCED_TOOLS.includes(body.model)) return `${body.model} rejects tool_choice ${tc}`;
   const f = body.output_config && body.output_config.format;

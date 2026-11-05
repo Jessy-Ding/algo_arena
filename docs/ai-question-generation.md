@@ -43,7 +43,12 @@ Read on 2026-11-04.
 - `@langchain/langgraph` 1.7.0 is the latest release (npm, 2026-11-05), with five releases between 2026-10-21 and
   2026-11-05; peer dependencies `@langchain/core` and `zod`; `engines.node >= 18`. LangChain's
   `ChatAnthropic.withStructuredOutput` defaults to function calling (a forced tool), one reason the LangChain model
-  wrappers are not used.
+  wrappers are not used. Installed pins (each at least two weeks old when chosen on 2026-11-05):
+  `@langchain/langgraph` 1.5.2 (2026-10-21), `@langchain/core` 1.2.20 (2026-10-20), `zod` 4.6.7 (2026-10-12).
+- `@langchain/core` bundles the LangSmith tracing client, but tracing runs only when `LANGSMITH_TRACING_V2`,
+  `LANGCHAIN_TRACING_V2`, `LANGSMITH_TRACING` or `LANGCHAIN_TRACING` is "true"
+  (`@langchain/core/dist/utils/callbacks.js`, read 2026-11-05). None is set, so no data goes to LangSmith; the unit
+  tests' fake fetch fails on any URL other than the two APIs.
 - Built-in bank vocabulary (`data/bank.json`, 252 items): subtypes complexity, definition, proof, behavior, loop-count,
   recurrence; topics "Module 1 (Foundations)" to "Module 6 (NP-Completeness)"; difficulty easy, medium, hard. The CLRS
   edition is not recorded in the repository.
@@ -192,10 +197,22 @@ ai: {
 - e2e: draft form, review list order, Accept/Edit/Discard, launch blocked with pending drafts, export columns.
 - A live check before release; every Firebase deploy is approved by the owner first.
 
+Evidence for the server side (2026-11-05, Node 26 locally; CI runs Node 22):
+- `node --test functions/test/*.test.mjs`: 92 of 92 pass (55 existing, 37 new in `qgen-core.test.mjs`). One test
+  checks that every prompt constant is a verbatim copy of its Appendix B block.
+- `functions/test/emulator/run.sh`: 16 of 16 pass (13 existing `coach`, 3 new `draftQuestions`).
+- `tsc -p verify/tsconfig.json` (now including the two new modules): no errors.
+- Stryker: 91.61% overall; `qgen-core.js` 89.25% (75.17% before the mutation-driven tests), `coach-core.js` 98.72%,
+  `deps.js` 92.82%. Most survivors left are constant strings and error details inside verifier calls whose failure is
+  deliberately swallowed (the draft becomes `unverified`).
+
 ## 13 Release order
 
 1. Owner approves the prompts (Appendix B): done 2026-11-04.
-2. Functions code and tests; owner approves the functions deploy and the `OPENAI_API_KEY` secret.
+2. Functions code and tests: written 2026-11-05 (`functions/qgen-core.js`, `functions/qgen-prompts.js`, the drafting
+   deps in `functions/deps.js`, the `draftQuestions` callable; unit, contract-fake and emulator tests). Not deployed:
+   the owner approves the functions deploy and adds the `OPENAI_API_KEY` secret first. A function that names a missing
+   secret fails to deploy.
 3. Review-list mock approved; site build patch; e2e green; publish.
 4. PRD change (Appendix A) as a pull request on `main`.
 
@@ -209,6 +226,22 @@ a verifier that sees the key before solving (replaced by a blind solve plus a se
 verifier auto-fix and third-model arbitration (the human is the arbiter, and no third vendor is added); `interrupt()`
 with a checkpointer (review spans days on the page); the packaged bank snapshot (the live `bank/` collection is used);
 the provenance string format (structured fields instead).
+
+## 15 Replacing the verifier (owner is considering DeepSeek)
+
+Not decided. What a swap would involve, from DeepSeek's API docs read on 2026-11-05:
+
+- DeepSeek offers JSON mode (`response_format: {type: "json_object"}`), not strict `json_schema`. Its docs require the
+  word "json" in the prompt plus an example of the expected format, and warn that `content` can come back blank. The
+  solve and audit prompts would therefore change, which needs the owner's approval and new prompt versions.
+- Current models: `deepseek-flash` and `deepseek-v4-pro`, with OpenAI-format and Anthropic-format endpoints. Listed
+  prices (peak, per million tokens, cache miss): $0.30 in and $1.20 out for `deepseek-flash`, $1.32 in and $3.96 out
+  for `deepseek-v4-pro`.
+- Code impact is contained: `verifierJson` in `functions/qgen-core.js` is the only provider-specific verifier code, and
+  `readSolve`/`readAudit` already re-check every reply against the schema, so a provider without strict schemas is
+  safe. A new secret replaces `OPENAI_API_KEY`.
+- To check before switching (not verified here): where DeepSeek processes and stores API data, and whether that is
+  acceptable for the study's IRB. Only question content would be sent, never student data or source text.
 
 ## Appendix A: PRD wording (for a pull request on `main`)
 
@@ -384,9 +417,6 @@ Output schema (`output_config.format`; word limits stay advice in descriptions, 
 
 `ABCD(x)` is an object with required string properties A, B, C and D and `additionalProperties: false`.
 
-Repair call (same system prompt and schema): the user message lists each failed draft with the checks it failed and
-asks for a corrected version of those drafts only, following the same rules.
-
 ### B.2 qgen-solve-v1 (gpt-6.1-terra, strict json_schema)
 
 ```
@@ -423,3 +453,35 @@ Checks:
 
 Schema: `{issues: [{check: enum [explanation, distractor, feedback_leak, feedback_wrong, difficulty, wording], note: string}]}`,
 an empty list when every check holds.
+
+### B.4 qgen-repair-v1 (claude-sonnet-5-5, structured output; approved 2026-11-04)
+
+Sent with the qgen-draft-v1 system prompt and schema as a third message: the first user message, the model's previous
+JSON reply as the assistant message, then this user message. Only questions that failed a deterministic check are
+listed; duplicates are flagged, not repaired. A question with an empty prompt or an empty option is dropped, since no
+approved sentence describes it.
+
+```
+Some of your questions failed automatic checks. Rewrite only the questions listed below so that they pass, following the same rules and examples as before. Return exactly {{N}} questions, in the order listed, and nothing else.
+```
+
+Then one block per failed question:
+
+```
+Question {{i}} failed: {{CHECKS}}
+{{QUESTION_JSON}}
+```
+
+`{{CHECKS}}` is a semicolon-separated list of these fixed sentences:
+
+```
+two options are the same
+an option is "all of the above" or "none of the above"
+the explanation is empty
+the feedback for option {{K}} is empty
+the rationale for wrong option {{K}} is empty
+the correct option has a rationale; leave it empty
+the {{FIELD}} is longer than {{MAX}} characters
+source_quote is not an exact sentence from the source text
+source_quote must be empty because no source text was given
+```

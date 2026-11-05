@@ -1,6 +1,7 @@
 /**
- * @fileoverview Preloaded into the Functions emulator (NODE_OPTIONS=--import) so calls to the Anthropic API reach the
- * test's fake endpoint instead. Inert unless FAKE_ANTHROPIC_URL is set; never loaded in production.
+ * @fileoverview Preloaded into the Functions emulator (NODE_OPTIONS=--import) so calls to the Anthropic API (and, when
+ * FAKE_OPENAI_URL is set, the OpenAI API) reach the test's fake endpoint instead. Inert unless FAKE_ANTHROPIC_URL is
+ * set; never loaded in production.
  *
  * Author: Yikang (Richard) Liu, M.S. Candidate in Computer Science, Khoury College of Computer Sciences,
  *     Northeastern University
@@ -12,7 +13,13 @@
  * @license MIT
  */
 const target = process.env.FAKE_ANTHROPIC_URL;
+const openaiTarget = process.env.FAKE_OPENAI_URL;
 if (target) {
   const realFetch = globalThis.fetch;
-  globalThis.fetch = (url, init) => realFetch(String(url).startsWith("https://api.anthropic.com/") ? target : url, init);
+  const route = (url) => {
+    const u = String(url);
+    if (u.startsWith("https://api.anthropic.com/")) return target;
+    return openaiTarget && u.startsWith("https://api.openai.com/") ? openaiTarget : url;
+  };
+  globalThis.fetch = (url, init) => realFetch(route(url), init);
 }

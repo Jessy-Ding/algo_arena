@@ -1,2 +1,2 @@
 { "compilerOptions": { "allowJs": true, "checkJs": true, "noEmit": true, "strict": false, "noImplicitAny": false, "target": "es2022", "module": "es2022", "moduleResolution": "bundler", "lib": ["es2022", "dom"], "skipLibCheck": true },
-  "files": ["../functions/coach-core.js", "../functions/deps.js", "../site/platform-firebase.js"] }
+  "files": ["../functions/coach-core.js", "../functions/deps.js", "../functions/qgen-core.js", "../functions/qgen-prompts.js", "../site/platform-firebase.js"] }

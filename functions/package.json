@@ -11,8 +11,11 @@
     "mutation": "stryker run"
   },
   "dependencies": {
+    "@langchain/core": "1.2.20",
+    "@langchain/langgraph": "1.5.2",
     "firebase-admin": "^12.1.0",
-    "firebase-functions": "^5.0.1"
+    "firebase-functions": "^5.0.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@stryker-mutator/core": "^8.2.6"

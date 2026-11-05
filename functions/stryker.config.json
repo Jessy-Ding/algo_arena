@@ -6,7 +6,8 @@
   },
   "mutate": [
     "coach-core.js",
-    "deps.js"
+    "deps.js",
+    "qgen-core.js"
   ],
   "reporters": [
     "html",

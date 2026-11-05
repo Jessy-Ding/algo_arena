@@ -1,7 +1,7 @@
 /**
- * @fileoverview Firestore-backed dependencies for runCoach (functions/coach-core.js). Quota counters
- * (aiQuota) and the call log (aiLog) live in top-level collections that the security rules do not open to any
- * client, so users cannot reset or read them.
+ * @fileoverview Firestore-backed dependencies for runCoach (functions/coach-core.js) and runDraft
+ * (functions/qgen-core.js). Quota counters (aiQuota) and the call log (aiLog) live in top-level collections that the
+ * security rules do not open to any client, so users cannot reset or read them.
  *
  * Author: Yikang (Richard) Liu, M.S. Candidate in Computer Science, Khoury College of Computer Sciences,
  *     Northeastern University
@@ -14,14 +14,15 @@
  */
 /**
  * @param {!Object} db Admin SDK Firestore, or a test stand-in with doc, collection and runTransaction.
- * @param {{fetch: function(string, !Object): !Promise<!Object>, apiKey: function(): string, now: function(): number}}
- *     io `now` returns epoch milliseconds.
- * @return {!Object} The deps that runCoach expects.
+ * @param {{fetch: function(string, !Object): !Promise<!Object>, apiKey: function(): string, now: function(): number,
+ *     openaiKey: (function(): string|undefined)}} io `now` returns epoch milliseconds; openaiKey is only used by
+ *     runDraft.
+ * @return {!Object} The deps that runCoach and runDraft expect.
  */
-export function firestoreDeps(db, { fetch, apiKey, now }) {
+export function firestoreDeps(db, { fetch, apiKey, now, openaiKey }) {
   const uidsIn = async (path, uid) => { const s = await db.doc(path).get(); return s.exists && (s.get("uids") || []).includes(uid); };
   return {
-    now, fetch, apiKey,
+    now, fetch, apiKey, openaiKey,
     isHost: async (uid) => (await uidsIn("meta/aiHosts", uid)) || (await uidsIn("meta/admins", uid)),
     // pub/{uid} is self-written and only names the session; membership comes from the host's own record, which
     // players cannot write.
@@ -53,5 +54,25 @@ export function firestoreDeps(db, { fetch, apiKey, now }) {
       refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, { merge: true }));
     }),
     log: (entry) => db.collection("aiLog").add(entry),
+    // AI question drafting (qgen-core.js). A set's questions live in its q subcollection; null when the set is not
+    // the host's.
+    setQuestions: async (uid, setId) => {
+      const base = `data/users/${uid}/profile/sets/${setId}`;
+      if (!(await db.doc(base).get()).exists) return null;
+      return (await db.collection(`${base}/q`).get()).docs.map((d) => d.data());
+    },
+    bankQuestions: async () => (await db.collection("bank").get()).docs.map((d) => d.data()),
+    // Counted per question in its own counter, so drafting never uses up the report quota.
+    reserveDrafts: ({ uid, day, n, cap }) => db.runTransaction(async (tx) => {
+      const ref = db.doc(`aiQuota/${uid}_g_${day}`); const snap = await tx.get(ref);
+      const used = snap.exists ? snap.get("count") || 0 : 0;
+      if (used + n > cap) return { ok: false, used };
+      tx.set(ref, { uid, day, kind: "qgen", count: used + n, updatedAt: now() }, { merge: true });
+      return { ok: true, used: used + n };
+    }),
+    refundDrafts: ({ uid, day, n }) => db.runTransaction(async (tx) => {
+      const ref = db.doc(`aiQuota/${uid}_g_${day}`); const snap = await tx.get(ref);
+      tx.set(ref, { count: Math.max(0, (snap.exists ? snap.get("count") || 0 : 0) - n), updatedAt: now() }, { merge: true });
+    }),
   };
 }

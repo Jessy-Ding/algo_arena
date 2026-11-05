@@ -27,5 +27,7 @@ needs the classroom.
 
 ## Backlog (not scheduled)
 - AI question generation (v1.1): design agreed 2026-11-04 on branch `feature/ai-question-generation`, see
-  docs/ai-question-generation.md; prompts (its Appendix B) approved 2026-11-04. Not in the code yet. The PRD change (its
-  Appendix A) goes to `main` as a pull request.
+  docs/ai-question-generation.md; prompts (its Appendix B) approved 2026-11-04. Server side written 2026-11-05
+  (`draftQuestions` callable, unit and emulator tests green), not deployed: needs the owner's OK and the
+  `OPENAI_API_KEY` secret. Page side waits for approval of the review-list mock. The PRD change (its Appendix A) goes to
+  `main` as a pull request.
