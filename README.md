@@ -38,6 +38,9 @@ Stage B2 (this package): AI learning reports through a Cloud Function. See IMPRO
 
 - `data/users/{uid}/**`: everything a user owns (profile, question sets, hosted sessions and their logs, keys, joined games, answer reviews). Private to that user.
 - `bank/{id}`, `meta/{id}`: built-in questions and metadata. Read by any signed-in user, written by admins listed in `meta/admins.uids`.
+  Admins add, edit and delete single bank questions in the app (Built-in bank tab), so `bank/` in Firestore is the live
+  bank and `data/bank.json` is the original 252-question import. Use "Download bank as JSON" for a backup; the
+  same file loads back through "Replace or reload the built-in bank".
 - `rooms/{hostUid}`: the live room. Read by any signed-in user, written by the host. While a question is open it holds `shownSrv` (server time the question appeared), `readS` (reading seconds), `q.T` (answer seconds) and optionally `openNowSrv` (server time the host opened answers early). It never holds the correct option before the reveal.
 - `rooms/{hostUid}/answers/{uid}_{sid}_{qIndex}`: one sealed answer per participant per question, create-only. Fields: `uid, sid, q, ct` (sealed choice), `srv` (server timestamp), and optional client telemetry `mono` (ms from unlock to tap, from `performance.now()`), `localAt, offset, rtt, dev`.
 - `rooms/{hostUid}/r/{sid}_{uid}`: sealed AI-report delivery to one participant.

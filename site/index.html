@@ -813,12 +813,12 @@ ACT.delQ = async (el) => {
 };
 
 /* ---------- question editor dialog ---------- */
-ACT.addQ = () => { S.qdraft = normQ({ options: ["", "", "", ""], correct: -1 }, S.edit.qs.length); S.qdraftIndex = -1; openDialog(qEditor); };
-ACT.editQ = (el) => { const i = Number(el.dataset.i); S.qdraft = clone(S.edit.qs[i]); S.qdraftIndex = i; openDialog(qEditor); };
+ACT.addQ = () => { S.qdraftBank = false; S.qdraft = normQ({ options: ["", "", "", ""], correct: -1 }, S.edit.qs.length); S.qdraftIndex = -1; openDialog(qEditor); };
+ACT.editQ = (el) => { S.qdraftBank = false; const i = Number(el.dataset.i); S.qdraft = clone(S.edit.qs[i]); S.qdraftIndex = i; openDialog(qEditor); };
 function qEditor() {
   const q = S.qdraft;
   const canUp = !!C.assets;
-  return `<div class="dialog" style="max-width:860px"><div class="row"><h2 style="margin:0">${S.qdraftIndex < 0 ? "New question" : "Edit question " + (S.qdraftIndex + 1)}</h2><span class="spacer"></span><button class="btn sm ghost" data-act="close">Cancel</button></div>
+  return `<div class="dialog" style="max-width:860px"><div class="row"><h2 style="margin:0">${S.qdraftBank ? (S.qdraftIndex < 0 ? "New bank question" : "Edit bank question") : S.qdraftIndex < 0 ? "New question" : "Edit question " + (S.qdraftIndex + 1)}</h2><span class="spacer"></span><button class="btn sm ghost" data-act="close">Cancel</button></div>
   <div class="stack" style="margin-top:14px">
   <label class="f">Question prompt<span class="hint">Text, an image, or both.</span><textarea id="q_prompt" rows="4">${esc(q.prompt)}</textarea></label>
   <div class="row">${q.img ? `<img src="${blobUrl(q.img)}" alt="Prompt image" style="max-height:160px;border-radius:10px"><button class="btn sm danger" data-act="qImgDel">Remove image</button>` : ""}
@@ -848,6 +848,7 @@ function readQForm() {
 }
 ACT.saveQ = async () => {
   const q = readQForm(); const errs = validateQ(q); if (errs.length) return toast("This question " + errs.join("; ") + ".");
+  if (S.qdraftBank) return bankSaveQ(q);
   const E = S.edit; const order = S.qdraftIndex < 0 ? (E.qs.length ? Math.max(...E.qs.map((x) => x.order ?? 0)) + 1 : 0) : q.order;
   await dset(`${P.setQ(E.id)}/${q.id}`, qDoc(q, order)); q.order = order;
   if (S.qdraftIndex < 0) E.qs.push(q); else E.qs[S.qdraftIndex] = q;
@@ -933,7 +934,7 @@ function homeBank() {
   if (!S.bank) return `<p class="muted">Loading the built-in bank…</p>`;
   const loader = S.isAdmin ? `<div class="panel" style="margin-bottom:16px"><h3>${S.bank.length ? "Replace or reload the built-in bank" : "Load the built-in bank"}</h3>
     <p class="muted small">Choose the original AlgoArena <code>index.html</code> (its <code>QUESTION_BANK</code> is read exactly as written) or a JSON array. ${S.bank.length ? "Loading again replaces the current " + S.bank.length + " questions." : ""}</p>
-    <label class="btn primary">Choose file<input type="file" accept=".html,.htm,.json,text/html,application/json" class="hide" data-up="bank"></label>
+    <label class="btn primary">Choose file<input type="file" accept=".html,.htm,.json,text/html,application/json" class="hide" data-up="bank"></label> <button class="btn" data-act="bankNewQ">New question</button>${S.bank.length ? ' <button class="btn ghost" data-act="bankDl">Download bank as JSON</button>' : ""}
     ${S.bankPreview ? `<div class="notice" style="margin-top:12px">${S.bankPreview.fatal ? esc(S.bankPreview.fatal) : `Found ${S.bankPreview.ok.length} valid questions${S.bankPreview.bad.length ? `, ${S.bankPreview.bad.length} invalid (skipped)` : ""}.`}
       ${S.bankPreview.ok.length ? `<div class="row" style="margin-top:8px"><button class="btn primary" data-act="bankWrite">Save ${S.bankPreview.ok.length} questions as the built-in bank</button><button class="btn ghost" data-act="bankCancel">Cancel</button></div>` : ""}</div>` : ""}</div>` : "";
   if (!S.bank.length) return loader + `<div class="empty"><h3>The built-in bank hasn't been loaded yet</h3><p>${S.isAdmin ? "Load it above from the original AlgoArena file." : "Ask the AlgoArena owner to load it. Meanwhile you can create your own sets."}</p></div>`;
@@ -951,8 +952,8 @@ function homeBank() {
     <button class="btn sm" data-act="bankAll">Select all matches</button><button class="btn sm ghost" data-act="bankNone">Clear selection</button><span class="spacer"></span>
     ${target ? `<button class="btn sm primary" data-act="bankAddTo" ${sel.size ? "" : "disabled"}>Add ${sel.size} to "${esc(target.title)}"</button>` : ""}
     <button class="btn sm ${target ? "" : "primary"}" data-act="bankToSet" ${sel.size ? "" : "disabled"}>Make a new set</button><button class="btn sm primary" data-act="bankHost" ${sel.size ? "" : "disabled"}>Host selected now</button></div>
-  <div class="list">${shown.map((q) => `<label class="qcard" style="display:block;cursor:pointer"><div class="row"><input type="checkbox" data-bsel="${q.id}" ${sel.has(q.id) ? "checked" : ""}><span class="muted small">${[q.chapter ? "Ch. " + q.chapter : "", q.topic, q.subtype, q.difficulty].filter(Boolean).map(esc).join(", ")}</span></div>
-    <div style="margin-top:6px;white-space:pre-wrap">${esc(q.prompt)}</div><div class="opts">${q.options.map((o, k) => `<div class="opt">${LETTERS[k]}. ${esc(o)}</div>`).join("")}</div></label>`).join("")}</div>
+  <div class="list">${shown.map((q) => `<label class="qcard" style="display:block;cursor:pointer"><div class="row"><input type="checkbox" data-bsel="${q.id}" ${sel.has(q.id) ? "checked" : ""}><span class="muted small">${[q.chapter ? "Ch. " + q.chapter : "", q.topic, q.subtype, q.difficulty].filter(Boolean).map(esc).join(", ")}</span>${S.isAdmin ? `<span class="spacer"></span><button class="btn sm" data-act="bankEditQ" data-id="${esc(q.id)}">Edit</button><button class="btn sm danger" data-act="bankDelQ" data-id="${esc(q.id)}">Delete</button>` : ""}</div>
+    <div style="margin-top:6px;white-space:pre-wrap">${esc(q.prompt)}${q.img ? ' <span class="chip">Image prompt</span>' : ""}</div><div class="opts">${q.options.map((o, k) => `<div class="opt">${LETTERS[k]}. ${esc(o)}</div>`).join("")}</div></label>`).join("")}</div>
   ${list.length > shown.length ? `<div class="row" style="justify-content:center;margin-top:14px"><button class="btn" data-act="bankMore">Show more (${list.length - shown.length} left)</button></div>` : ""}`;
 }
 document.addEventListener("input", (e) => {
@@ -992,6 +993,31 @@ ACT.bankWrite = async () => {
   await dset(P.bankMeta, { count: pv.ok.length, source: pv.file, loadedAt: now() });
   S.bankPreview = null; toast(`Built-in bank saved: ${pv.ok.length} questions.`); await loadBank();
 };
+
+/* Built-in bank editing (admins): one question at a time in bank/{id}; meta/bank keeps the count. Sets and past
+   sessions hold their own copies, so an edit or a delete changes neither. */
+const bankDay = () => new Date().toISOString().slice(0, 10);
+async function bankCount() { const m = (await dget(P.bankMeta)) || {}; await dset(P.bankMeta, { ...m, count: S.bank.length, updatedAt: now() }); }
+ACT.bankNewQ = () => { S.qdraftBank = true; S.qdraft = normQ({ options: ["", "", "", ""], correct: -1 }, 0); S.qdraftIndex = -1; openDialog(qEditor); };
+ACT.bankEditQ = (el) => { const i = S.bank.findIndex((q) => q.id === el.dataset.id); if (i < 0) return; S.qdraftBank = true; S.qdraft = clone(S.bank[i]); S.qdraftIndex = i; openDialog(qEditor); };
+async function bankSaveQ(q) {
+  const isNew = S.qdraftIndex < 0;
+  const order = isNew ? (S.bank.length ? Math.max(...S.bank.map((x) => x.order ?? 0)) + 1 : 0) : q.order ?? 0;
+  // Provenance records each change, so research exports can tell a bank question was written or edited here.
+  const note = `${isNew ? "Written" : "Edited"} in AlgoArena on ${bankDay()}.`;
+  if (!String(q.provenance || "").includes(note)) q.provenance = [q.provenance, note].filter(Boolean).join(" ");
+  await dset(`${P.bank}/${q.id}`, qDoc(q, order)); q.order = order;
+  if (isNew) S.bank.push(q); else S.bank[S.qdraftIndex] = q;
+  await bankCount(); S.dialog = null; S.qdraftBank = false; toast(isNew ? "Added to the built-in bank." : "Bank question saved."); rerender();
+}
+ACT.bankDelQ = async (el) => {
+  const q = S.bank.find((x) => x.id === el.dataset.id); if (!q) return;
+  if (!(await askConfirm(`Delete this question from the built-in bank? "${q.prompt.slice(0, 120)}" Your sets and past games keep their own copies.`, "Delete", true))) return;
+  await ddel(`${P.bank}/${q.id}`); S.bank = S.bank.filter((x) => x.id !== q.id); S.bankSel.delete(q.id);
+  await bankCount(); toast("Deleted from the built-in bank."); rerender();
+};
+// The same JSON array format the bank loader reads, so a download can be loaded back with Replace.
+ACT.bankDl = () => saveFile(`algoarena-bank-${bankDay()}.json`, JSON.stringify(S.bank.map(({ _id, ...q }) => q), null, 1));
 
 /* ===================== Live Classroom: shared helpers ===================== */
 const CLOCK = { offset: null, rtt: null, samples: [], pending: new Map() };

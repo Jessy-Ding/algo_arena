@@ -44,6 +44,9 @@ SEED = {"meta/admins": {"uids": ["H"]},
         "data/users/H/profile/sets/set1": {"title": "Pilot set", "count": 3, "updatedAt": 2}}
 for k, q in enumerate(Q):
     SEED[f"data/users/H/profile/sets/set1/q/q{k + 1}"] = {**q, "order": k}
+SEED["bank/bk1"] = {**bank(4), "order": 0}
+SEED["bank/bk2"] = {**bank(5), "order": 1}
+SEED["meta/bank"] = {"count": 2, "source": "seed"}
 
 with sync_playwright() as pw:
     browser = pw.chromium.launch(); page = browser.new_page(viewport={"width": 1800, "height": 950})
@@ -125,6 +128,42 @@ with sync_playwright() as pw:
     check("a player who is not an approved host cannot upload", A.evaluate(up, ["x.png", "image/png", 10]) == "not_uploader")
     check("an SVG is refused as an unsupported type", H.evaluate(up, ["x.svg", "image/svg+xml", 10]) == "unsupported_type")
     check("a file over 20 MB is refused before upload", H.evaluate(up, ["big.mp4", "video/mp4", 20 * 1024 * 1024 + 1]) == "too_large")
+    H.click('[data-act="home"]'); H.wait_for_selector('[data-act="launch"][data-id="set1"]', timeout=6000)
+
+    # Built-in bank editing: admins add, edit and delete one question at a time; players see no controls.
+    bank_ids = lambda: sorted(k for k in page.evaluate("() => [...__FB.docs.keys()]") if k.startswith("bank/"))
+    H.click('[data-act="tab"][data-tab="bank"]'); H.wait_for_selector('[data-act="bankEditQ"][data-id="bk1"]', timeout=6000)
+    H.click('[data-act="bankNewQ"]'); H.wait_for_selector("#q_prompt", timeout=4000)
+    check("New question in the bank opens the editor in bank mode", "New bank question" in H.inner_text(".dialog h2"))
+    H.fill("#q_prompt", "Which structure gives O(1) find-min?")
+    for k, o in enumerate(["Unsorted array", "Binary min-heap", "Stack", "Queue"]):
+        H.fill(f"#q_o{k}", o)
+    H.check('input[name="q_c"][value="1"]'); H.click('[data-act="saveQ"]'); sleep(0.6)
+    added = [k for k in bank_ids() if k not in ("bank/bk1", "bank/bk2")]
+    nq = get(added[0]) if len(added) == 1 else {}
+    check("a new bank question is saved to bank/{id} with its provenance, and the count updates",
+          nq.get("prompt", "").startswith("Which structure") and nq.get("correct") == 1 and "Written in AlgoArena on" in nq.get("provenance", "")
+          and get("meta/bank")["count"] == 3, str(added))
+    before = get("bank/bk1")
+    H.click('[data-act="bankEditQ"][data-id="bk1"]'); H.wait_for_selector("#q_o1", timeout=4000)
+    check("Edit opens the bank question in the editor", "Edit bank question" in H.inner_text(".dialog h2") and H.input_value("#q_prompt") == before["prompt"])
+    H.fill("#q_o1", "Edited option B"); H.click('[data-act="saveQ"]'); sleep(0.6)
+    after = get("bank/bk1")
+    check("an edited option is saved in place; fields the form does not show are kept",
+          after["options"][1] == "Edited option B" and after.get("chapter") == before.get("chapter") and "Edited in AlgoArena on" in after.get("provenance", ""))
+    H.click('[data-act="bankDelQ"][data-id="bk2"]'); H.wait_for_selector('[data-act="mOk"]', timeout=4000); H.click('[data-act="mOk"]'); sleep(0.6)
+    check("Delete asks first, then removes the question and updates the count",
+          get("bank/bk2") is None and get("meta/bank")["count"] == 2 and H.locator('[data-act="bankDelQ"][data-id="bk2"]').count() == 0)
+    with page.expect_download() as dl:
+        H.click('[data-act="bankDl"]')
+    dumped = json.loads(Path(dl.value.path()).read_text(encoding="utf-8"))
+    check("Download bank as JSON holds the current bank", len(dumped) == 2 and any(q["options"][1] == "Edited option B" for q in dumped), str(len(dumped)))
+    A.click('[data-act="tab"][data-tab="bank"]'); A.wait_for_selector(".qcard", timeout=6000)
+    check("players see the bank without edit, delete or new-question controls",
+          A.locator('[data-act="bankEditQ"], [data-act="bankDelQ"], [data-act="bankNewQ"]').count() == 0)
+    H.click('[data-act="tab"][data-tab="sets"]'); H.click('[data-act="editSet"][data-id="set1"]'); H.wait_for_selector('[data-act="editQ"][data-i="1"]', timeout=6000)
+    H.click('[data-act="editQ"][data-i="1"]'); H.wait_for_selector("#q_prompt", timeout=4000); H.click('[data-act="saveQ"]'); sleep(0.6)
+    check("after bank editing, the set editor still saves into the set", bank_ids() == sorted(["bank/bk1"] + added) and get("data/users/H/profile/sets/set1/q/q2") is not None)
     H.click('[data-act="home"]'); H.wait_for_selector('[data-act="launch"][data-id="set1"]', timeout=6000)
 
     # room

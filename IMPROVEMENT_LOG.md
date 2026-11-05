@@ -146,3 +146,13 @@ No High findings left that can be fixed and verified here. Remaining Medium and 
   green. Live, as the admin: a PNG uploads and loads from its link (also anonymously, HTTP 200); an SVG and an
   upload into another uid's folder are refused by the server; anonymous upload and listing return 403. One 69-byte
   probe image remains at assets/YP3N87nGwBP9ZPRWHaRpTBfwfRV2/ (the rules allow no deletes).
+
+## Built-in bank editing (2026-11-04)
+- User decision: admins add a question directly in the bank view ("New question"), edit or delete one question at a
+  time (delete after a confirmation, no hidden state), and download the bank as JSON in the loader's format.
+- Build patches `bank_*` reuse the set editor's dialog; S.qdraftBank routes its save to bank/{id}. Each save appends
+  "Written/Edited in AlgoArena on <date>." to provenance; meta/bank keeps the count. Sets and past sessions hold
+  their own copies, so edits and deletes change neither.
+- Verified: browser e2e 59/59 (8 new: add, edit keeps unshown fields, delete with confirm, download, players see no
+  controls, set editor still saves to the set after bank editing); tsc 0. Rules unchanged (bank writes were already
+  admin-only, rules.test).

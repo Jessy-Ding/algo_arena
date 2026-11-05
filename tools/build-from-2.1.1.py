@@ -50,6 +50,53 @@ rep("const DEFAULT_READ = 10; // v2.1: seconds the question is visible, locked, 
 # Uploaded files live in Cloud Storage (assets capability in platform-firebase.js), not at claude.ai's /_blob/ path.
 rep('const blobUrl = (id) => id ? "/_blob/" + id : "";',
     'const blobUrl = (id) => !id ? "" : C.assets && C.assets.url ? C.assets.url(id) : "/_blob/" + id;', "blob_url")
+# Built-in bank editing for admins (user decision, 2026-11-04): add, edit or delete one question at a time, and
+# download the bank as JSON. The set editor's dialog is reused; S.qdraftBank sends its save to bank/{id}.
+rep('ACT.addQ = () => { S.qdraft = normQ(', 'ACT.addQ = () => { S.qdraftBank = false; S.qdraft = normQ(', "bank_addq")
+rep('ACT.editQ = (el) => { const i = Number(el.dataset.i); S.qdraft',
+    'ACT.editQ = (el) => { S.qdraftBank = false; const i = Number(el.dataset.i); S.qdraft', "bank_editq")
+rep('<h2 style="margin:0">${S.qdraftIndex < 0 ? "New question" : "Edit question " + (S.qdraftIndex + 1)}</h2>',
+    '<h2 style="margin:0">${S.qdraftBank ? (S.qdraftIndex < 0 ? "New bank question" : "Edit bank question") : S.qdraftIndex < 0 ? "New question" : "Edit question " + (S.qdraftIndex + 1)}</h2>',
+    "bank_title")
+rep('ACT.saveQ = async () => {\n  const q = readQForm(); const errs = validateQ(q); if (errs.length) return toast("This question " + errs.join("; ") + ".");\n',
+    'ACT.saveQ = async () => {\n  const q = readQForm(); const errs = validateQ(q); if (errs.length) return toast("This question " + errs.join("; ") + ".");\n'
+    '  if (S.qdraftBank) return bankSaveQ(q);\n', "bank_saveq")
+rep('data-up="bank"></label>',
+    'data-up="bank"></label> <button class="btn" data-act="bankNewQ">New question</button>'
+    '${S.bank.length ? \' <button class="btn ghost" data-act="bankDl">Download bank as JSON</button>\' : ""}', "bank_buttons")
+rep('q.subtype, q.difficulty].filter(Boolean).map(esc).join(", ")}</span></div>\n'
+    '    <div style="margin-top:6px;white-space:pre-wrap">${esc(q.prompt)}</div>',
+    'q.subtype, q.difficulty].filter(Boolean).map(esc).join(", ")}</span>'
+    '${S.isAdmin ? `<span class="spacer"></span><button class="btn sm" data-act="bankEditQ" data-id="${esc(q.id)}">Edit</button>'
+    '<button class="btn sm danger" data-act="bankDelQ" data-id="${esc(q.id)}">Delete</button>` : ""}</div>\n'
+    '    <div style="margin-top:6px;white-space:pre-wrap">${esc(q.prompt)}${q.img ? \' <span class="chip">Image prompt</span>\' : ""}</div>',
+    "bank_card")
+rep("/* ===================== Live Classroom: shared helpers ===================== */",
+    "/* Built-in bank editing (admins): one question at a time in bank/{id}; meta/bank keeps the count. Sets and past\n"
+    "   sessions hold their own copies, so an edit or a delete changes neither. */\n"
+    "const bankDay = () => new Date().toISOString().slice(0, 10);\n"
+    "async function bankCount() { const m = (await dget(P.bankMeta)) || {}; await dset(P.bankMeta, { ...m, count: S.bank.length, updatedAt: now() }); }\n"
+    "ACT.bankNewQ = () => { S.qdraftBank = true; S.qdraft = normQ({ options: [\"\", \"\", \"\", \"\"], correct: -1 }, 0); S.qdraftIndex = -1; openDialog(qEditor); };\n"
+    "ACT.bankEditQ = (el) => { const i = S.bank.findIndex((q) => q.id === el.dataset.id); if (i < 0) return; S.qdraftBank = true; S.qdraft = clone(S.bank[i]); S.qdraftIndex = i; openDialog(qEditor); };\n"
+    "async function bankSaveQ(q) {\n"
+    "  const isNew = S.qdraftIndex < 0;\n"
+    "  const order = isNew ? (S.bank.length ? Math.max(...S.bank.map((x) => x.order ?? 0)) + 1 : 0) : q.order ?? 0;\n"
+    "  // Provenance records each change, so research exports can tell a bank question was written or edited here.\n"
+    "  const note = `${isNew ? \"Written\" : \"Edited\"} in AlgoArena on ${bankDay()}.`;\n"
+    "  if (!String(q.provenance || \"\").includes(note)) q.provenance = [q.provenance, note].filter(Boolean).join(\" \");\n"
+    "  await dset(`${P.bank}/${q.id}`, qDoc(q, order)); q.order = order;\n"
+    "  if (isNew) S.bank.push(q); else S.bank[S.qdraftIndex] = q;\n"
+    "  await bankCount(); S.dialog = null; S.qdraftBank = false; toast(isNew ? \"Added to the built-in bank.\" : \"Bank question saved.\"); rerender();\n"
+    "}\n"
+    "ACT.bankDelQ = async (el) => {\n"
+    "  const q = S.bank.find((x) => x.id === el.dataset.id); if (!q) return;\n"
+    "  if (!(await askConfirm(`Delete this question from the built-in bank? \"${q.prompt.slice(0, 120)}\" Your sets and past games keep their own copies.`, \"Delete\", true))) return;\n"
+    "  await ddel(`${P.bank}/${q.id}`); S.bank = S.bank.filter((x) => x.id !== q.id); S.bankSel.delete(q.id);\n"
+    "  await bankCount(); toast(\"Deleted from the built-in bank.\"); rerender();\n"
+    "};\n"
+    "// The same JSON array format the bank loader reads, so a download can be loaded back with Replace.\n"
+    "ACT.bankDl = () => saveFile(`algoarena-bank-${bankDay()}.json`, JSON.stringify(S.bank.map(({ _id, ...q }) => q), null, 1));\n\n"
+    "/* ===================== Live Classroom: shared helpers ===================== */", "bank_actions")
 rep('const ARTIFACT_URL = "https://claude.ai/artifact/GwnVWEECxnYh9afck4RpGA";',
     'const ARTIFACT_URL = location.origin + location.pathname; // route B: the page\'s own address (GitHub Pages)', "url")
 rep('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>',
