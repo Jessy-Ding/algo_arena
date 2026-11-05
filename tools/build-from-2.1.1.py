@@ -337,7 +337,8 @@ rep("Scoring: a correct answer earns between 500 and 1000 points, more for answe
     '<svg class="score-brace" viewBox="0 0 12 100" preserveAspectRatio="none" style="display:block;width:10px;height:100%" aria-hidden="true"><path d="M10 1 C5 1 6 8 6 18 L6 40 C6 46 4 50 1 50 C4 50 6 54 6 60 L6 82 C6 92 5 99 10 99" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>'
     '<div class="score-cases" style="display:grid;grid-template-columns:max-content max-content;grid-template-rows:1fr 1fr;align-items:center;column-gap:28px;row-gap:1.5em;padding:4px 0">'
     '<span>500 + 500 * (1 &#x2212; <i>t</i>/<i>T</i>)</span><span class="muted">if correct</span><span>0</span><span class="muted">if wrong or no answer</span></div></div></div>'
-    '<div class="muted" style="font-size:.78rem"><i>t</i>: seconds from answers opening to your final choice. <i>T</i>: answer time per question. The score is rounded to a whole number.</div>',
+    # margin-top 3em: two blank lines of this text's own 1.5 line height between the formula and the explanation.
+    '<div class="muted score-params" style="font-size:.78rem;margin-top:3em"><i>t</i>: seconds from answers opening to your final choice. <i>T</i>: answer time per question. The score is rounded to a whole number.</div>',
     "launch_scoring_formula")
 # The host's launch screen no longer repeats the consent notice (user decision, 2026-11-04); players still see and
 # accept it on the join screen and in the lobby.

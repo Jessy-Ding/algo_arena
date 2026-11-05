@@ -179,6 +179,10 @@ with sync_playwright() as pw:
         const tip = b.top + b.height / 2; return { tipToMid: Math.abs(tip - (rows[0] + rows[1]) / 2), topGap: rows[0] - b.top, bottomGap: b.bottom - rows[1] }; }""")
     check("the brace tip sits midway between the two cases, with equal space above and below",
           sym["tipToMid"] <= 1 and abs(sym["topGap"] - sym["bottomGap"]) <= 1, str(sym))
+    gap = H.evaluate("""() => { const p = document.querySelector('.score-params'); const f = document.querySelector('.score-cases').getBoundingClientRect();
+        return { gap: p.getBoundingClientRect().top - f.bottom, line: parseFloat(getComputedStyle(p).lineHeight) }; }""")
+    check("two blank lines of the explanation's own line height separate it from the formula",
+          abs(gap["gap"] - 2 * gap["line"]) <= 2, str(gap))
     if os.environ.get("E2E_SHOTS"):
         H.locator(".notice").first.screenshot(path=os.path.join(os.environ["E2E_SHOTS"], "launch-scoring.png"))
     H.fill("#l_t", "15"); H.fill("#l_r", "3")
