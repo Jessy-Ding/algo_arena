@@ -131,3 +131,18 @@ No High findings left that can be fixed and verified here. Remaining Medium and 
 - Tests: `functions/test/anthropic-contract.mjs` holds the documented request rules; the unit fake, the emulator fake
   server and the browser fake answer HTTP 400 when a request breaks them. Unit 55/55 (7 fail on the old code), coach
   wiring 13/13 on the Functions emulator, browser 45/45, tsc 0. Not yet run: a live report after redeploy.
+
+## Question images and reference files (2026-11-04)
+- The page's assets capability now uses Cloud Storage (bucket algoarena-for-research.firebasestorage.app,
+  us-central1). Upload only by uids in meta/admins or meta/aiHosts, own folder, at most 20 MB, the editor's types;
+  public read by link, no listing, no overwrite or delete (storage.rules).
+- Defect 4, found at the first live upload: every upload was refused. Cause: the rules read the host list from
+  Firestore (cross-service rules), and the project had not granted Storage that access; the emulator does not check
+  it. Fixed by the console's "Attach permissions" (user approved). Took about a minute to apply.
+- Also found: the frozen 2.1.1 source the build reads existed only in a temporary folder and had been cleaned up.
+  Restored from the claude.ai artifact (SHA-256 0670bd9a...dd7e, identical to the recorded freeze) to
+  ../algoarena-live-v2.1.1-freeze/index.html; a rebuild differs from the previous site only by the blobUrl patch.
+- Verified: storage rules 11/11 on the emulators (allow-all rules fail 8); browser e2e 51/51; CI run 41968277176
+  green. Live, as the admin: a PNG uploads and loads from its link (also anonymously, HTTP 200); an SVG and an
+  upload into another uid's folder are refused by the server; anonymous upload and listing return 403. One 69-byte
+  probe image remains at assets/YP3N87nGwBP9ZPRWHaRpTBfwfRV2/ (the rules allow no deletes).

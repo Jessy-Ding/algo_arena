@@ -16,6 +16,10 @@ Updated 2026-10-29. One line per milestone, in order. A milestone is done only w
 
 Where we are: M6 done, so the app is usable in class without AI reports. Blaze is on. Next: M7 (AI reports) once you
 set the Anthropic spend limit and the secret; M8 needs the classroom.
+## Done outside the milestones
+- Question images and reference files upload to Cloud Storage (2026-11-04): live, approved hosts only. See
+  IMPROVEMENT_LOG.md.
+
 ## Backlog (not scheduled)
 - AI question generation: not in the code, and excluded from v1.0 by the PRD. Before any code: decide whether to change
   the PRD, the host quota for drafting questions, and human review before a draft enters a set. To be discussed in plan
