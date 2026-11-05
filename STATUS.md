@@ -10,12 +10,12 @@ Updated 2026-10-29. One line per milestone, in order. A milestone is done only w
 | M4 | Site online at a public URL | open the app in a browser | DONE | https://yikangliu823.github.io/algo_arena/ serves 3.0.0-b2 and shows the sign-in screen with no console errors (Pages deploy run 41010189111); algo_arena made public on 2026-10-29 at your request | Claude |
 | M5 | First sign-in, question bank imported, you are admin | create and host games | DONE | sign-in works on the live site (popup only); uid in meta/admins; bank/ holds the 252 questions (the site reads back 252); server-clock offset measured live (-137 ms) after the probe-path fix | you + Claude |
 | M6 | Two-device test, including iPhone Safari sign-in | **use it in class, without AI reports** | DONE | you reported no problems (2026-10-29). Data from session Smvul4ovww4af: 2 players joined, Q1 opened early and Q2 after the full reading time, both answered Q1 and Q2 and saw the reveal, host ended the game during Q3 (no Q3 answers, none refused). Device type is not recorded in the data, so the iPhone part rests on your report | you |
-| M7 | AI learning reports live | AI reports for hosts and players | NOT DONE | needs Blaze, budget alert, Anthropic spend limit, secret set (you); then deploy and test (Claude) | you, then Claude |
+| M7 | AI learning reports live | AI reports for hosts and players | NOT DONE | done 2026-10-30: Blaze on (billing account 01630E-DCFB4B-018724), budget alert $10 a month at 50/90/100%, alerts only. ANTHROPIC_API_KEY in Secret Manager, version 1 enabled (2026-11-04; key in Anthropic workspace AlgoArena). coach deployed 2026-11-04 (us-central1, nodejs22, 2nd gen); an unauthenticated call returns 403 not_granted. Next: you confirm the Anthropic spend limits, then site coach: true and one test session (Claude, after asking) | you, then Claude |
 | M8 | Classroom calibration and load at 120 and 240 | confidence that a full class of 120 works | NOT DONE | needs you on the classroom network | you + Claude |
 | M9 | Research-ready: IRB approval, usability test with 5 students, pilot | data counts for the study | NOT DONE | university and instructor | you |
 
-Where we are: M6 done, so the app is usable in class without AI reports. Next: M7 (AI reports) once you set up Blaze
-and the secret; M8 needs the classroom.
+Where we are: M6 done, so the app is usable in class without AI reports. Blaze is on. Next: M7 (AI reports) once you
+set the Anthropic spend limit and the secret; M8 needs the classroom.
 ## Backlog (not scheduled)
 - AI question generation: not in the code, and excluded from v1.0 by the PRD. Before any code: decide whether to change
   the PRD, the host quota for drafting questions, and human review before a draft enters a set. To be discussed in plan

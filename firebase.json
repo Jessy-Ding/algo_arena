@@ -25,6 +25,7 @@
       "ignore": [
         "node_modules",
         "test",
+        "reports",
         ".git"
       ]
     }
