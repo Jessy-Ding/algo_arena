@@ -95,13 +95,13 @@
   "model": "claude-sonnet-5-5",
   "verifierModel": "gpt-6.1-terra",
   "promptVersions": {
-   "draft": "qgen-draft-v1",
+   "draft": "qgen-draft-v2",
    "repair": "qgen-repair-v1",
    "solve": "qgen-solve-v1",
    "audit": "qgen-audit-v1"
   },
   "generatedAt": 1793898000000,
-  "requestSha256": "5623011d2fc5af5a6af830e0a225e1cd8d0266985fe9c575ad29e39e48031ab5"
+  "requestSha256": "060c39209dba8c0b81f272a9f807da10ba13c9071abcf5a9fc44f8d27262bcdb"
  },
  "requested": 2,
  "delivered": 2,

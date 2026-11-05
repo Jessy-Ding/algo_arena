@@ -14,7 +14,10 @@ Code and comment rules for this repository are in agent.md. Repository text is E
   - Drafting model `claude-sonnet-5-5` (already live for reports); verifier `gpt-6.1-terra` (owner choice, low-cost
     OpenAI tier) for a blind solve and an audit that flag drafts but never fix them.
   - Every prompt and prompt change needs the owner's approval and a new version id. Approved so far: qgen-draft-v1,
-    qgen-solve-v1, qgen-audit-v1, qgen-repair-v1 (2026-11-04, Appendix B of the design doc).
+    qgen-solve-v1, qgen-audit-v1, qgen-repair-v1 (2026-11-04, Appendix B of the design doc); qgen-draft-v2 (2026-11-05:
+    CLRS 3rd edition, the module's chapters and the chosen chapter by title, procedure names in first-letter capitals).
+  - Modules and chapters (owner, 2026-11-05): the bank's six modules plus Module 7 (Data Structures), with CLRS 3rd
+    edition chapters per module in `CHAPTERS` (functions/qgen-core.js) and `DRAFT_CHAPTERS` (page), kept equal by a test.
   - Pinned exactly: `@langchain/langgraph` 1.5.2, `@langchain/core` 1.2.20, `zod` 4.6.7. LangSmith tracing stays off
     (no LANGSMITH_*/LANGCHAIN_TRACING* variable is set).
   - The owner may later replace the GPT verifier with DeepSeek; design doc section 15 lists what that changes.

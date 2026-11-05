@@ -506,7 +506,9 @@ rep(".qcard .opt.right{background:color-mix(in srgb,var(--ok) 20%,transparent);f
     ".qcard .opt.right{background:color-mix(in srgb,var(--ok) 20%,transparent);font-weight:700}\n"
     ".vstat{font-weight:700}.vstat.bad{color:var(--bad)}.vstat.warn{color:var(--warn)}.vstat.ok{color:var(--ok)}\n"
     ".expls{margin:8px 0 0}.expls>div{margin-top:2px}\n"
-    ".audit{color:var(--muted)}.audit p{margin:4px 0 0}", "qgen_css")
+    ".audit{color:var(--muted)}.audit p{margin:4px 0 0}\n"
+    ".dgrid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}\n"
+    "@media (max-width:480px){.dgrid3{grid-template-columns:repeat(2,minmax(0,1fr))}.dgrid3 label:last-child{grid-column:1/-1}}", "qgen_css")
 # Research export: questions.csv says which questions began as AI drafts (schema_version 5).
 rep("has_image: !!q.img, n_references: (q.refs || []).length }));",
     "has_image: !!q.img, n_references: (q.refs || []).length, origin: q.origin || \"human\", ai_model: (q.ai && q.ai.model) || \"\",\n"
@@ -521,10 +523,26 @@ rep("Sessions recorded before version 4 have one row per answer.\\n`;",
     "as origin human.\\n`;", "readme_qgen")
 rep("/* ===================== Live Classroom: host ===================== */\n",
     r'''/* ===================== AI question drafts (v1.1) ===================== */
-// Must match MODULES and SUBTYPES in functions/qgen-core.js (checked by functions/test/qgen-core.test.mjs).
+// Must match MODULES, CHAPTERS and SUBTYPES in functions/qgen-core.js (checked by functions/test/qgen-core.test.mjs).
 const DRAFT_MODULES = ["Module 1 (Foundations)", "Module 2 (Sorting and Order Statistics)", "Module 3 (Advanced Design and Analysis Techniques)",
-  "Module 4 (Graph Algorithms)", "Module 5 (Selected Topics)", "Module 6 (NP-Completeness)"];
+  "Module 4 (Graph Algorithms)", "Module 5 (Selected Topics)", "Module 6 (NP-Completeness)", "Module 7 (Data Structures)"];
 const DRAFT_SUBTYPES = ["complexity", "definition", "proof", "behavior", "loop-count", "recurrence"];
+// CLRS 3rd edition chapters of each module, in DRAFT_MODULES order: the bank's grouping plus chapters 1, 17 and 35,
+// and Module 7 for the data-structure chapters (owner, 2026-11-05).
+const DRAFT_CHAPTERS = [
+  [[1, "The Role of Algorithms in Computing"], [2, "Getting Started"], [3, "Growth of Functions"], [4, "Divide-and-Conquer"],
+    [5, "Probabilistic Analysis and Randomized Algorithms"]],
+  [[6, "Heapsort"], [7, "Quicksort"], [8, "Sorting in Linear Time"], [9, "Medians and Order Statistics"]],
+  [[15, "Dynamic Programming"], [16, "Greedy Algorithms"], [17, "Amortized Analysis"]],
+  [[22, "Elementary Graph Algorithms"], [23, "Minimum Spanning Trees"], [24, "Single-Source Shortest Paths"]],
+  [[25, "All-Pairs Shortest Paths"], [26, "Maximum Flow"], [27, "Multithreaded Algorithms"], [28, "Matrix Operations"],
+    [29, "Linear Programming"], [30, "Polynomials and the FFT"], [31, "Number-Theoretic Algorithms"], [32, "String Matching"],
+    [33, "Computational Geometry"]],
+  [[34, "NP-Completeness"], [35, "Approximation Algorithms"]],
+  [[10, "Elementary Data Structures"], [11, "Hash Tables"], [12, "Binary Search Trees"], [13, "Red-Black Trees"],
+    [14, "Augmenting Data Structures"], [18, "B-Trees"], [19, "Fibonacci Heaps"], [20, "van Emde Boas Trees"],
+    [21, "Data Structures for Disjoint Sets"]]
+];
 const AUDIT_LABEL = { explanation: "Answer reasoning", distractor: "Distractor", feedback_leak: "Feedback leak", feedback_wrong: "Feedback error", difficulty: "Difficulty", wording: "Wording" };
 const FLAG_NOTE = { duplicate: "Matches a question already in this set or the built-in bank.", near_duplicate: "Similar to a question in this set or the built-in bank; check it is not a repeat." };
 function draftStatus(d) {
@@ -564,15 +582,16 @@ function draftDialog() {
   const f = S.draftForm; const busy = !!S.drafting;
   const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? "selected" : ""}>${esc(label)}</option>`;
   const left = S.draftQuotaLeft == null ? "You can draft up to <b>50</b> questions a day." : `<b>${S.draftQuotaLeft}</b> of <b>50</b> questions left today.`;
+  const scope = f.chapter === "" ? `m${DRAFT_MODULES.indexOf(f.module)}` : `c${f.chapter}`;
   // The two model names must match draftModel and verifierModel in functions/qgen-core.js.
   return `<div class="dialog" style="max-width:620px"><h2 style="margin-top:0">Draft questions with AI</h2>
   <p class="muted small">Drafts are written by Claude Sonnet 5.5 and checked by GPT-6.1 Terra. Nothing is added to this set until you accept it. ${left}</p>
-  <div class="fgrid">
-   <label class="f">Module<select id="d_module">${DRAFT_MODULES.map((m) => opt(m, m, f.module)).join("")}</select></label>
+  <label class="f">Module and chapter<select id="d_scope">${DRAFT_MODULES.map((m, i) => `<optgroup label="Module ${i + 1}: ${esc(m.slice(m.indexOf("(") + 1, -1))}">`
+    + opt(`m${i}`, `Module ${i + 1} · All chapters`, scope) + DRAFT_CHAPTERS[i].map(([n, t]) => opt(`c${n}`, `Module ${i + 1} · Chapter ${n}: ${t}`, scope)).join("") + "</optgroup>").join("")}</select></label>
+  <div class="dgrid3">
    <label class="f">How many<select id="d_count">${[1, 2, 3, 4, 5].map((n) => opt(n, n, f.count)).join("")}</select></label>
    <label class="f">Difficulty<select id="d_diff">${[["mixed", "Mixed"], ["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"]].map(([v, l]) => opt(v, l, f.difficulty)).join("")}</select></label>
    <label class="f">Subtype<select id="d_sub">${[["", "Any"], ...DRAFT_SUBTYPES.map((x) => [x, x])].map(([v, l]) => opt(v, l, f.subtype)).join("")}</select></label>
-   <label class="f">CLRS chapter <span class="hint">optional</span><input id="d_ch" type="number" min="1" max="40" value="${esc(f.chapter)}"></label>
   </div>
   <label class="f" style="margin-top:12px">Focus <span class="hint">optional, up to 200 characters</span><input id="d_focus" maxlength="200" value="${esc(f.focus)}"></label>
   <label class="f" style="margin-top:12px">Source text <span class="hint">optional, plain text, up to 12,000 characters; sent to Claude only</span><textarea id="d_src" rows="4" maxlength="12000">${esc(f.sourceText)}</textarea></label>
@@ -580,13 +599,14 @@ function draftDialog() {
 }
 document.addEventListener("change", (e) => { if (e.target && e.target.id === "d_count" && !S.drafting) { const b = $("#d_go"); if (b) b.textContent = draftGo(e.target.value); } });
 function readDraftForm() {
-  const f = S.draftForm; f.module = $("#d_module").value; f.count = Number($("#d_count").value); f.difficulty = $("#d_diff").value; f.subtype = $("#d_sub").value;
-  f.chapter = $("#d_ch").value.trim(); f.focus = $("#d_focus").value.trim(); f.sourceText = $("#d_src").value; return f;
+  const f = S.draftForm; const v = $("#d_scope").value; const n = Number(v.slice(1));
+  f.module = DRAFT_MODULES[v[0] === "m" ? n : DRAFT_CHAPTERS.findIndex((cs) => cs.some(([c]) => c === n))]; f.chapter = v[0] === "c" ? n : "";
+  f.count = Number($("#d_count").value); f.difficulty = $("#d_diff").value; f.subtype = $("#d_sub").value;
+  f.focus = $("#d_focus").value.trim(); f.sourceText = $("#d_src").value; return f;
 }
 ACT.draftRun = async () => {
   const E = S.edit; if (!E || !C.draft || S.drafting) return; const f = readDraftForm();
-  const chapter = f.chapter === "" ? null : Number(f.chapter);
-  if (chapter !== null && !(Number.isInteger(chapter) && chapter >= 1 && chapter <= 40)) return toast("The chapter must be a whole number from 1 to 40.");
+  const chapter = f.chapter === "" ? null : f.chapter;
   S.drafting = true; S.dialogLocked = true; rerender();
   let r;
   // The function's own message (quota, access, upstream failure) is shown as is; errMsg() would misread quota_exceeded as storage.

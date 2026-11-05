@@ -159,13 +159,21 @@ with sync_playwright() as pw:
     check("an approved host may draft with AI and a player may not", A.evaluate("() => S.canDraft") is False)
     set2_docs = lambda sub: sorted((k, v) for k, v in page.evaluate("() => [...__FB.docs.entries()]") if k.startswith(f"data/users/H/profile/sets/set2/{sub}/"))
     H.click('[data-act="editSet"][data-id="set2"]'); H.wait_for_selector('[data-act="draftOpen"]', timeout=6000)
-    H.click('[data-act="draftOpen"]'); H.wait_for_selector("#d_module", timeout=4000)
+    H.click('[data-act="draftOpen"]'); H.wait_for_selector("#d_scope", timeout=4000)
     check("the draft form names the drafting and checking models and the daily limit",
           "written by Claude Sonnet 5.5 and checked by GPT-6.1 Terra." in H.inner_text(".dialog") and "up to 50 questions a day" in H.inner_text(".dialog"))
     check("before any draft, the daily limit number is bold", H.eval_on_selector_all(".dialog p.muted b", "els => els.map((e) => e.innerText)") == ["50"])
-    H.select_option("#d_module", "Module 2 (Sorting and Order Statistics)"); H.select_option("#d_count", "2")
+    groups = H.evaluate("() => [...document.querySelectorAll('#d_scope optgroup')].map((g) => [g.label, [...g.querySelectorAll('option')].map((o) => o.text)])")
+    check("one list offers every module, each with an all-chapters choice and its CLRS 3rd edition chapters",
+          [g[0] for g in groups] == ["Module 1: Foundations", "Module 2: Sorting and Order Statistics", "Module 3: Advanced Design and Analysis Techniques",
+                                     "Module 4: Graph Algorithms", "Module 5: Selected Topics", "Module 6: NP-Completeness",
+                                     "Module 7: Data Structures"]
+          and groups[1][1] == ["Module 2 \u00b7 All chapters", "Module 2 \u00b7 Chapter 6: Heapsort", "Module 2 \u00b7 Chapter 7: Quicksort",
+                               "Module 2 \u00b7 Chapter 8: Sorting in Linear Time", "Module 2 \u00b7 Chapter 9: Medians and Order Statistics"]
+          and sum(len(g[1]) - 1 for g in groups) == 35, json.dumps(groups)[:300])
+    H.select_option("#d_scope", "c6"); H.select_option("#d_count", "2")
     check("the draft button follows the count", H.inner_text("#d_go") == "Draft 2 questions", H.inner_text("#d_go"))
-    H.fill("#d_focus", "heaps"); H.fill("#d_ch", "6")
+    H.fill("#d_focus", "heaps")
     page.evaluate("() => { __FB.draftFailNext = { code: 'quota_exceeded', message: 'The daily AI drafting limit (50 questions) leaves 0 for today.' }; }")
     H.click("#d_go"); H.wait_for_selector(".toast", timeout=6000)
     check("a quota refusal shows the function's message, not the storage-full one", "leaves 0 for today" in H.inner_text(".toast"), H.inner_text(".toast"))
@@ -204,13 +212,13 @@ with sync_playwright() as pw:
     check("hosting is off while drafts are pending", H.is_disabled('[data-act="launch"][data-id="set2"]'))
     meta = get("data/users/H/profile/sets/set2")
     check("drafts are stored under the set and counted in its metadata; the dialog closed",
-          len(set2_docs("drafts")) == 2 and meta.get("drafts") == 2 and H.query_selector("#d_module") is None and H.evaluate("() => S.draftQuotaLeft") == 48, str(meta))
+          len(set2_docs("drafts")) == 2 and meta.get("drafts") == 2 and H.query_selector("#d_scope") is None and H.evaluate("() => S.draftQuotaLeft") == 48, str(meta))
     ids = H.eval_on_selector_all("[data-draft]", "els => els.map((e) => e.dataset.draft)")
     H.click(f'[data-act="draftAccept"][data-id="{ids[1]}"]'); H.wait_for_function("() => S.edit && S.edit.qs.length === 1", timeout=6000); sleep(0.4)
     q = set2_docs("q")[0][1]
     check("an accepted draft is stored with origin ai_draft and its drafting record",
           q.get("origin") == "ai_draft" and q["ai"]["model"] == "claude-sonnet-5-5" and q["ai"]["verifierModel"] == "gpt-6.1-terra"
-          and q["ai"]["promptVersions"]["draft"] == "qgen-draft-v1" and q["ai"]["verify"]["status"] == "agree" and q["ai"]["editedBeforeAccept"] is False
+          and q["ai"]["promptVersions"]["draft"] == "qgen-draft-v2" and q["ai"]["verify"]["status"] == "agree" and q["ai"]["editedBeforeAccept"] is False
           and q["ai"]["distractorRationales"]["B"].startswith("Multiplies") and q["ai"]["acceptedBy"] == "H" and "distractor_rationales" not in q, json.dumps(q)[:300])
     check("its provenance says who drafted, checked and accepted it",
           "Drafted by claude-sonnet-5-5 on" in q.get("provenance", "") and "verified by gpt-6.1-terra: agree; reviewed and accepted by the host on" in q.get("provenance", ""), q.get("provenance", ""))

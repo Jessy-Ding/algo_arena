@@ -41,7 +41,23 @@ export const QGEN = Object.freeze({
 
 export const MODULES = Object.freeze(["Module 1 (Foundations)", "Module 2 (Sorting and Order Statistics)",
   "Module 3 (Advanced Design and Analysis Techniques)", "Module 4 (Graph Algorithms)", "Module 5 (Selected Topics)",
-  "Module 6 (NP-Completeness)"]);
+  "Module 6 (NP-Completeness)", "Module 7 (Data Structures)"]);
+// CLRS 3rd edition chapters of each module, in MODULES order (owner, 2026-11-05). The page's DRAFT_CHAPTERS must match
+// (checked by functions/test/qgen-core.test.mjs).
+export const CHAPTERS = Object.freeze([
+  [[1, "The Role of Algorithms in Computing"], [2, "Getting Started"], [3, "Growth of Functions"], [4, "Divide-and-Conquer"],
+    [5, "Probabilistic Analysis and Randomized Algorithms"]],
+  [[6, "Heapsort"], [7, "Quicksort"], [8, "Sorting in Linear Time"], [9, "Medians and Order Statistics"]],
+  [[15, "Dynamic Programming"], [16, "Greedy Algorithms"], [17, "Amortized Analysis"]],
+  [[22, "Elementary Graph Algorithms"], [23, "Minimum Spanning Trees"], [24, "Single-Source Shortest Paths"]],
+  [[25, "All-Pairs Shortest Paths"], [26, "Maximum Flow"], [27, "Multithreaded Algorithms"], [28, "Matrix Operations"],
+    [29, "Linear Programming"], [30, "Polynomials and the FFT"], [31, "Number-Theoretic Algorithms"], [32, "String Matching"],
+    [33, "Computational Geometry"]],
+  [[34, "NP-Completeness"], [35, "Approximation Algorithms"]],
+  [[10, "Elementary Data Structures"], [11, "Hash Tables"], [12, "Binary Search Trees"], [13, "Red-Black Trees"],
+    [14, "Augmenting Data Structures"], [18, "B-Trees"], [19, "Fibonacci Heaps"], [20, "van Emde Boas Trees"],
+    [21, "Data Structures for Disjoint Sets"]]
+]);
 export const SUBTYPES = Object.freeze(["complexity", "definition", "proof", "behavior", "loop-count", "recurrence"]);
 const DIFFICULTIES = ["easy", "medium", "hard", "mixed"];
 const KEYS = ["A", "B", "C", "D"];
@@ -99,13 +115,13 @@ const SAY = {
 export function validateDraftInput(data, cfg = QGEN) {
   const d = data || {};
   const bad = (msg) => new CoachError("invalid_argument", msg);
-  if (!MODULES.includes(d.module)) throw bad("Choose one of the six modules.");
+  if (!MODULES.includes(d.module)) throw bad("Choose one of the seven modules.");
   if (!Number.isInteger(d.count) || d.count < 1 || d.count > cfg.maxCount) throw bad(`Draft 1 to ${cfg.maxCount} questions at a time.`);
   if (typeof d.setId !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(d.setId)) throw bad("The question set id is not valid.");
   const focus = d.focus == null ? "" : d.focus;
   if (typeof focus !== "string" || focus.length > cfg.maxFocus) throw bad(`The focus must be text of at most ${cfg.maxFocus} characters.`);
   const chapter = d.chapter == null || d.chapter === "" ? null : d.chapter;
-  if (chapter !== null && (!Number.isInteger(chapter) || chapter < 1 || chapter > 40)) throw bad("The chapter must be a whole number from 1 to 40.");
+  if (chapter !== null && !CHAPTERS[MODULES.indexOf(d.module)].some(([n]) => n === chapter)) throw bad("Choose a chapter of the selected module.");
   const difficulty = d.difficulty == null || d.difficulty === "" ? "mixed" : d.difficulty;
   if (!DIFFICULTIES.includes(difficulty)) throw bad("Difficulty must be easy, medium, hard or mixed.");
   const subtype = d.subtype == null || d.subtype === "" ? null : d.subtype;
@@ -123,15 +139,17 @@ const oneLine = (s) => String(s).replace(/\s+/g, " ").trim();
  * @param {!Object} inp Output of validateDraftInput.
  * @param {!Array<string>} existing Prompts the model must not repeat, most relevant first.
  * @param {!Object=} cfg
- * @return {string} The qgen-draft-v1 user message.
+ * @return {string} The user message of the draft prompt in PROMPT_VERSIONS.
  */
 export function draftUserMessage(inp, existing, cfg = QGEN) {
   const avoid = [...new Set(existing.map(oneLine).filter(Boolean))].slice(0, cfg.maxExisting);
+  const chapters = CHAPTERS[MODULES.indexOf(inp.module)]; const chapter = chapters.find(([n]) => n === inp.chapter);
   return fill(P.DRAFT_USER, {
     "{{COUNT}}": String(inp.count),
     "{{MODULE}}": inp.module,
+    "{{MODULE_CHAPTERS}}": chapters.map(([n, t]) => `${n} (${t})`).join(", "),
+    '{{CHAPTER | "any of the module\'s chapters"}}': chapter ? `${chapter[0]} (${chapter[1]})` : "any of the module's chapters",
     '{{FOCUS | "none"}}': inp.focus || "none",
-    '{{CHAPTER | "not specified"}}': inp.chapter === null ? "not specified" : String(inp.chapter),
     "{{DIFFICULTY}}": inp.difficulty,
     '{{SUBTYPE | "choose from: complexity, definition, proof, behavior, loop-count, recurrence"}}':
       inp.subtype || "choose from: complexity, definition, proof, behavior, loop-count, recurrence",
