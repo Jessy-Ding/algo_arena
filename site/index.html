@@ -241,6 +241,10 @@ td.wrap-cell{white-space:normal;min-width:240px}
 
 .brow .stk{white-space:nowrap}
 .btn{white-space:nowrap}
+.topbar .chip{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.btn.big{white-space:normal;text-wrap:balance;text-align:center}
+@media (max-width:640px){.item{flex-wrap:wrap}.item .grow{flex-basis:100%}}
+@media (max-width:420px){.wordmark .mk{display:none}}
 @media (max-width:640px){
   .qhead{grid-template-columns:1fr;gap:10px}
   .qhead .ring{order:-1;width:78px;height:78px;justify-self:end;margin-bottom:-4px}

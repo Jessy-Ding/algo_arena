@@ -89,6 +89,12 @@ with sync_playwright() as pw:
             await DB.doc(`rooms/${p.hostId}/answers/${S.uid}_${p.sid}_${q}`).set({ uid: S.uid, sid: p.sid, q, ct: "forged", srv: srvServer ? DB.serverTime() : Date.now() });
             return "accepted"; } catch (e) { return e.code; } }""", [q, srv_server])
 
+    def page_width_at(name, width):
+        """Narrows iframe `name` to `width` px for one measurement; returns its page's [scrollWidth, clientWidth]."""
+        return page.evaluate("""async ([n, w]) => { const f = document.querySelector(`iframe[name="${n}"]`); f.style.width = w + "px";
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+            const de = f.contentDocument.documentElement; const dims = [de.scrollWidth, de.clientWidth]; f.style.width = ""; return dims; }""", [name, width])
+
     # Google sign-in
     for F in (H, A, B):
         F.wait_for_selector('[data-act="signIn"]', timeout=8000)
@@ -108,12 +114,28 @@ with sync_playwright() as pw:
     offB = B.evaluate("() => DB.serverOffset()")
     check("B's server-clock offset estimate corrects its -5 s skew", 4500 <= offB <= 5500, str(offB))
 
+    # Phone width (375 px, iPhone SE): scrollWidth above clientWidth means the page scrolls sideways. The seeded
+    # name "Host" is short enough to hide a header overflow, so the header checks also use a long name.
+    def host_width_with_name(display_name):
+        name0 = H.evaluate("() => S.profile.displayName")
+        H.evaluate("(n) => { S.profile.displayName = n; rerender(); }", display_name)
+        dims = page_width_at("host", 375)
+        H.evaluate("(n) => { S.profile.displayName = n; rerender(); }", name0)
+        return dims
+    LONG_NAME = "Maria Fernanda Gonzalez-Rodriguez"
+    dims = page_width_at("host", 375)
+    check("at 375 px the signed-in home screen does not scroll sideways", dims[0] <= dims[1], str(dims))
+    dims = host_width_with_name(LONG_NAME)
+    check("at 375 px a long display name is cut short in the header instead of widening the page", dims[0] <= dims[1], str(dims))
+
     # Question image upload: the assets capability against the mock's mirror of storage.rules. Download links are
     # served locally so the image really loads without the network.
     PNG = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010806000000"
                         "1f15c4890000000d49444154789c6360f8cf000002020101a2f4a0a70000000049454e44ae426082")
     page.route("https://firebasestorage.googleapis.com/**", lambda route: route.fulfill(status=200, content_type="image/png", body=PNG))
     H.click('[data-act="editSet"][data-id="set1"]'); H.wait_for_selector('[data-act="editQ"][data-i="0"]', timeout=6000)
+    dims = host_width_with_name(LONG_NAME)
+    check("at 375 px the set editor does not scroll sideways, even with a long display name", dims[0] <= dims[1], str(dims))
     H.click('[data-act="editQ"][data-i="0"]'); H.wait_for_selector("#q_img", state="attached", timeout=4000)
     H.set_input_files("#q_img", files=[{"name": "q1.png", "mimeType": "image/png", "buffer": PNG}])
     H.wait_for_selector('img[alt="Prompt image"]', timeout=6000)

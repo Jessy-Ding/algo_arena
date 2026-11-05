@@ -629,6 +629,18 @@ ACT.draftDiscard = async (el) => {
 /* ===================== Live Classroom: host ===================== */
 ''', "qgen_block")
 
+# Phone widths: 2.1.1 sized the header, the list rows and the large buttons for desktop, and none of them can shrink
+# (.btn and .chip are nowrap), so a signed-in phone scrolled sideways: the wordmark, "Sound on" and the name chip
+# need 394 px, and a set's four buttons squeezed its title to zero width. The name now truncates, the wordmark drops
+# its mark at 420 px or less and keeps the "AlgoArena" text at full size (owner decision, 2026-11-05), list buttons
+# wrap below the title at 640 px or less, and a large button wraps its label rather than being cut off.
+rep(".btn{white-space:nowrap}\n",
+    ".btn{white-space:nowrap}\n"
+    ".topbar .chip{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis}\n"
+    ".btn.big{white-space:normal;text-wrap:balance;text-align:center}\n"
+    "@media (max-width:640px){.item{flex-wrap:wrap}.item .grow{flex-basis:100%}}\n"
+    "@media (max-width:420px){.wordmark .mk{display:none}}\n", "phone_fit_css")
+
 # File header and JSDoc overlay (comments only).
 rep("<!doctype html>\n", "<!doctype html>\n<!--\n"
     "  AlgoArena route B: the Live Classroom 2.1.1 page on GitHub Pages with Firebase (built by tools/build-from-2.1.1.py).\n\n"
