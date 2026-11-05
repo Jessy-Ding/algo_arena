@@ -100,10 +100,14 @@ function inWindow(r, now) {
 }
 function validAnswer(host, aid, raw, now) {
   const r = M.docs.get(`rooms/${host}`); if (!r || r.status !== "question") return false;
-  const keys = Object.keys(raw); const allowed = ["uid", "sid", "q", "ct", "srv", "mono", "localAt", "offset", "rtt", "dev"];
+  const keys = Object.keys(raw); const allowed = ["uid", "sid", "q", "ct", "srv", "mono", "localAt", "offset", "rtt", "dev", "n"];
   if (!keys.every((k) => allowed.includes(k)) || !["uid", "sid", "q", "ct", "srv"].every((k) => keys.includes(k))) { M.refusedWhy = [...(M.refusedWhy || []), { who: ME, why: ["keys"], keys }]; return false; }
+  // A change n is document <base>_c<n> and needs the selection before it.
+  const base = `${ME}_${r.sid}_${r.qIndex}`; const n = raw.n === undefined ? 0 : raw.n;
+  const prev = n === 1 ? base : `${base}_c${n - 1}`;
+  const idOk = Number.isInteger(n) && n >= 0 && n <= 20 && (n === 0 ? aid === base : aid === `${base}_c${n}` && M.docs.has(`rooms/${host}/answers/${prev}`));
   const why = [["uid", raw.uid === ME], ["sid", raw.sid === r.sid], ["q", raw.q === r.qIndex], ["ct", typeof raw.ct === "string" && raw.ct.length < 4096],
-    ["aid", aid === `${ME}_${r.sid}_${r.qIndex}`], ["srv", isSent(raw.srv)], ["window", inWindow(r, now)]].filter(([, ok]) => !ok).map(([k]) => k);
+    ["aid", idOk], ["srv", isSent(raw.srv)], ["window", inWindow(r, now)]].filter(([, ok]) => !ok).map(([k]) => k);
   if (why.length) M.refusedWhy = [...(M.refusedWhy || []), { who: ME, why, ctLen: raw.ct && raw.ct.length }];
   return !why.length;
 }

@@ -42,7 +42,9 @@ Stage B2 (this package): AI learning reports through a Cloud Function. See IMPRO
   bank and `data/bank.json` is the original 252-question import. Use "Download bank as JSON" for a backup; the
   same file loads back through "Replace or reload the built-in bank".
 - `rooms/{hostUid}`: the live room. Read by any signed-in user, written by the host. While a question is open it holds `shownSrv` (server time the question appeared), `readS` (reading seconds), `q.T` (answer seconds) and optionally `openNowSrv` (server time the host opened answers early). It never holds the correct option before the reveal.
-- `rooms/{hostUid}/answers/{uid}_{sid}_{qIndex}`: one sealed answer per participant per question, create-only. Fields: `uid, sid, q, ct` (sealed choice), `srv` (server timestamp), and optional client telemetry `mono` (ms from unlock to tap, from `performance.now()`), `localAt, offset, rtt, dev`.
+- `rooms/{hostUid}/answers/{uid}_{sid}_{qIndex}`: a participant's first selection for a question; a change is
+  `{uid}_{sid}_{qIndex}_c{n}` (n 1 to 20). Every selection is a create-only document, and the host counts the highest
+  n. Fields: `uid, sid, q, ct` (sealed choice), `srv` (server timestamp), and optional client telemetry `mono` (ms from unlock to tap, from `performance.now()`), `localAt, offset, rtt, dev`, and `n` on a change.
 - `rooms/{hostUid}/r/{sid}_{uid}`: sealed AI-report delivery to one participant.
 - `pub/{uid}`: the participant's record for the game they are in (name, public key, `host`, `sid`, events). Read by the participant and by the host it names. Host queries must include `where("host", "==", hostUid)`.
 
@@ -53,7 +55,9 @@ An answer is accepted only if, at the server's own time of the write:
 - the room status is `question`, and the answer is for the room's current `sid` and `qIndex`;
 - `srv` equals the server timestamp of the request (a client cannot choose it);
 - answers are open: `shownSrv + readS` (or `openNowSrv`) <= now <= open time + `T` seconds + 250 ms;
-- the document id is `{uid}_{sid}_{qIndex}` and does not exist yet (one answer per question).
+- the document id is `{uid}_{sid}_{qIndex}` (n absent or 0) or `{uid}_{sid}_{qIndex}_c{n}` with 1 <= n <= 20 and the
+  previous selection already stored, and the document does not exist yet. A player can change their answer until the
+  window closes; points and response time use the last selection.
 
 Response time for scoring becomes `srv − open time`, both server clock. Network delay from the student's
 device to Firestore is included in it; `mono` is kept alongside for analysis, labeled as client-reported.

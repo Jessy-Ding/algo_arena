@@ -118,10 +118,37 @@ test("answer rejected for another user, question, session or id", async () => {
   await assertFails(setDoc(ansRef(as(A), aid(A)), answer(A, { score: 1000 })));
 });
 
-test("one answer per question: a second write is refused", async () => {
+test("a selection is never overwritten: a second write to the same document is refused", async () => {
   await seedRoom({ shownAgoMs: 5000 });
   await assertSucceeds(setDoc(ansRef(as(A), aid(A)), answer(A)));
   await assertFails(setDoc(ansRef(as(A), aid(A)), answer(A, { ct: "changed" })));
+});
+
+test("a change is a new document numbered after the previous selection, inside the window", async () => {
+  await seedRoom({ shownAgoMs: 5000 });
+  await assertFails(setDoc(ansRef(as(A), aid(A) + "_c1"), answer(A, { n: 1 }))); // no first answer yet
+  await assertSucceeds(setDoc(ansRef(as(A), aid(A)), answer(A)));
+  await assertSucceeds(setDoc(ansRef(as(A), aid(A) + "_c1"), answer(A, { n: 1, ct: "second" })));
+  await assertFails(setDoc(ansRef(as(A), aid(A) + "_c3"), answer(A, { n: 3 }))); // skips change 2
+  await assertSucceeds(setDoc(ansRef(as(A), aid(A) + "_c2"), answer(A, { n: 2 })));
+  await assertFails(setDoc(ansRef(as(A), aid(A) + "_c2"), answer(A, { n: 2, ct: "rewrite" }))); // history is fixed
+});
+
+test("a change must match its document id and stay within 20 changes", async () => {
+  await seedRoom({ shownAgoMs: 5000 });
+  await seed(`rooms/${HOST}/answers/${aid(B)}`, answer(B, { srv: Timestamp.now() }));
+  await seed(`rooms/${HOST}/answers/${aid(B)}_c20`, answer(B, { n: 20, srv: Timestamp.now() }));
+  await assertFails(setDoc(ansRef(as(B), aid(B) + "_c21"), answer(B, { n: 21 }))); // over the cap, previous exists
+  await assertFails(setDoc(ansRef(as(B), aid(B) + "_c1"), answer(B, { n: 2 }))); // n does not match the id
+  await assertFails(setDoc(ansRef(as(B), aid(B) + "_c0"), answer(B, { n: 0 }))); // n 0 is the first answer's id only
+  await assertFails(setDoc(ansRef(as(B), aid(B) + "_c-1"), answer(B, { n: -1 })));
+  await assertFails(setDoc(ansRef(as(B), aid(B) + "_c1"), answer(B, { n: "1" })));
+});
+
+test("a change after the deadline is refused", async () => {
+  await seedRoom({ shownAgoMs: 30000, readS: 3, T: 15 });
+  await seed(`rooms/${HOST}/answers/${aid(A)}`, answer(A, { srv: Timestamp.fromMillis(Date.now() - 20000) }));
+  await assertFails(setDoc(ansRef(as(A), aid(A) + "_c1"), answer(A, { n: 1 })));
 });
 
 test("answers are readable by the host and their author only", async () => {

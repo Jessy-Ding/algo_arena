@@ -273,6 +273,123 @@ rep("submitted_before_open = false.\\n`;",
     "submitted_before_open = false.\\n- schema_version 3 (AlgoArena 3, Firebase): timing fields use the Firestore server clock; elapsed_ms includes network delay from the device; client_elapsed_ms is the device's own unlock-to-tap measurement.\\n`;",
     "readme_note")
 
+# Changeable answers (user decision, 2026-11-04): a player may change their answer until time runs out; the last
+# choice counts, with its own server time for points. Each selection is a create-only document (<base>, then
+# <base>_c1 .. _c20; firestore.rules), so the full history is kept for research (user decision: full history).
+rep("const MAX_EVENTS = 400;", "const MAX_EVENTS = 400;\nconst MAX_CHANGES = 20; // answer changes per question; firestore.rules has the same cap", "max_changes")
+rep('else if (o.mine != null && o.mine !== k) cls.push("dim");',
+    'else if (o.mine != null && o.mine !== k && !o.interactive) cls.push("dim");', "cards_no_dim_while_open")
+block("ACT.answer = async (el) => {\n", "\n  rerender();\n};\n",
+      "ACT.answer = async (el) => {\n"
+      "  const p = S.play; const r = p.room; const i = r.qIndex; const k = Number(el.dataset.i);\n"
+      "  if (r.status !== \"question\" || (p.submitting && p.submitting[i] != null)) return;\n"
+      "  const cur = myAnswer(i); const prev = p.myChoice && p.myChoice[i];\n"
+      "  if (cur && prev === k) return; // the same option again changes nothing\n"
+      "  const n = cur ? (cur.n || 0) + 1 : 0;\n"
+      "  if (n > MAX_CHANGES) return toast(`You can change an answer at most ${MAX_CHANGES} times.`);\n"
+      "  const mono = performance.now(); const localAt = now();\n"
+      "  if (localAt < pOpenLocal(r)) return; // reading phase: answers are locked (the database refuses them too)\n"
+      "  if (hostNowEst() - deadlineOf(r) > 250) { if (!cur) p.timedOut = i; return rerender(); }\n"
+      "  p.submitting = { ...(p.submitting || {}), [i]: k }; p.myChoice = { ...(p.myChoice || {}), [i]: k }; rerender();\n"
+      "  const ct = JSON.stringify(await seal(r.pubKey, { a: k, q: i, sid: p.sid })); // the rules require a string\n"
+      "  const m0 = p.monoOpen && p.monoOpen[i];\n"
+      "  const rec = { uid: S.uid, sid: p.sid, q: i, ct, srv: DB.serverTime(), mono: m0 != null ? Math.max(0, Math.round(mono - m0)) : null, localAt, dev: S.deviceId, ...(n ? { n } : {}) };\n"
+      "  // Each selection is its own create-only document: <uid>_<sid>_<q> first, then _c1, _c2, ... (firestore.rules).\n"
+      "  const path = `${P.answers(p.hostId)}/${S.uid}_${p.sid}_${i}${n ? \"_c\" + n : \"\"}`;\n"
+      "  pEvent(n ? \"answer_changed\" : \"answer_selected\", { q: i, opt: \"sealed\", ...(n ? { n } : {}) });\n"
+      "  try { await dset(path, rec); p.myAns = { ...(p.myAns || {}), [i]: { ...rec, srv: null } }; delete p.submitting[i]; pEvent(\"answer_submitted\", { q: i, ...(n ? { n } : {}) }); }\n"
+      "  catch (e) {\n"
+      "    delete p.submitting[i];\n"
+      "    const mine = await dget(path).catch(() => null);\n"
+      "    if (mine) { p.myAns = { ...(p.myAns || {}), [i]: mine }; return rerender(); }\n"
+      "    p.myChoice = { ...p.myChoice, [i]: prev }; if (prev == null) delete p.myChoice[i];\n"
+      "    if (e && e.code === \"permission_denied\") { if (hostNowEst() < openOf(r)) toast(\"Answers aren't open yet. Try again in a moment.\"); else if (cur) toast(\"Time's up. Your earlier answer counts.\"); else p.timedOut = i; return rerender(); }\n"
+      "    rerender(); throw e;\n"
+      "  }\n"
+      "  rerender();\n};\n", "answer_changeable")
+rep("function myAnswer(i) { const p = S.play; return p && p.myAns && p.myAns[i]; }",
+    "function myAnswer(i) { const p = S.play; return p && p.myAns && p.myAns[i]; }\n"
+    "/** This player's latest selection for question k: the first answer, then changes _c1, _c2, ... until one is missing. */\n"
+    "async function latestAnswer(room, k) {\n"
+    "  const base = `${P.answers(room.hostId)}/${S.uid}_${room.sid}_${k}`; let a = await dget(base); if (!a) return null;\n"
+    "  for (let n = 1; n <= MAX_CHANGES; n++) { const b = await dget(`${base}_c${n}`); if (!b) break; a = b; }\n"
+    "  return a;\n}", "latest_answer")
+block("  for (let k = 0; k <= (room.qIndex ?? -1); k++) dget(", ".catch(() => {});\n",
+      "  for (let k = 0; k <= (room.qIndex ?? -1); k++) latestAnswer(room, k).then((a) => { if (a && S.play && S.play.sid === room.sid) { S.play.myAns = { ...(S.play.myAns || {}), [k]: a }; if (S.view === \"play\") rerender(); } }).catch(() => {});\n",
+      "rejoin_latest")
+block("    if (mine || pending) body = `<div class=\"lockbox\">", "</p></div>`;\n",
+      "    const open = st === \"question\" && hostNowEst() - deadlineOf(r) <= 250;\n"
+      "    if ((mine || pending) && open) body = `<div class=\"qhead\"><div class=\"qprompt ${q.prompt.length > 180 ? \"small-p\" : \"\"}\">${esc(q.prompt)}${q.img ? `<img src=\"${blobUrl(q.img)}\" alt=\"Question image\">` : \"\"}</div>${ringHtml(q.T)}</div>${answerCards(q.options, { interactive: true, mine: choice })}<p class=\"muted small\" style=\"margin-top:10px\">${pending ? \"Sending…\" : \"Answer saved.\"} Tap another option to change it until time runs out; your last choice counts.</p>`;\n"
+      "    else if (mine || pending) body = `<div class=\"lockbox\"><div class=\"sw c${choice ?? 0}\" style=\"width:90px;height:90px;margin:0 auto;border-radius:20px\">${choice != null ? GLYPH[choice].replace(\"<svg\", '<svg style=\"width:52px;height:52px\"') : \"\"}</div><h1 style=\"margin-top:18px\">Your answer is in</h1><p class=\"muted\">Your last choice counts. Wait for the reveal.</p><p class=\"waiting-dots\"><span></span><span></span><span></span></p></div>`;\n",
+      "play_changeable")
+rep("Tap once to lock in your answer. Keys 1 to 4 also work.", "Tap to answer; you can change it until time runs out. Keys 1 to 4 also work.", "play_hint")
+rep("Each player gets one locked answer per question.", "Players can change their answer until time runs out; the last choice counts.", "launch_note")
+rep("const ans = {}; for (const d of qs.docs) { const a = d.data(); (ans[a.uid] = ans[a.uid] || {})[a.q] = a; } H.ans = ans;",
+    "const ans = {}, hist = {}; for (const d of qs.docs) { const a = d.data(); const n = a.n || 0; (hist[a.uid + \":\" + a.q] = hist[a.uid + \":\" + a.q] || [])[n] = a; const m = (ans[a.uid] = ans[a.uid] || {}); if (!m[a.q] || n > (m[a.q].n || 0)) m[a.q] = a; } H.ans = ans; H.hist = hist; // the highest n is the answer that counts",
+    "host_latest")
+rep("if (a && a.ct && !(key in H.dec)) {",
+    "H.decN = H.decN || {}; if (a && a.ct && H.decN[key] !== (a.n || 0)) { H.decN[key] = a.n || 0;", "host_dec_by_n")
+rep('if (!H.closing && (remain < -600 || (n > 0 && ans >= n))) { H.closing = true; closeQuestion(ans >= n && remain > 0 ? "all_answered" : "time_up").finally(() => { H.closing = false; }); }',
+    '// No early close when everyone has answered: answers can change until time runs out. The host can still close.\n'
+    '    if (!H.closing && remain < -600) { H.closing = true; closeQuestion("time_up").finally(() => { H.closing = false; }); }',
+    "no_close_all_answered")
+rep('ACT.hClose = () => closeQuestion("host_stopped");',
+    'ACT.hClose = () => closeQuestion("host_stopped");\n'
+    '/** Timing of one selection; the same rules as the counted answer (server time first, device delta as fallback). */\n'
+    'function timing(a, choice, openAt, Tm, correct) {\n'
+    '  let el, src, hostAt;\n'
+    '  if (a.srv != null) { hostAt = a.srv; el = hostAt - openAt; src = "server"; } else { el = a.mono ?? 0; src = "device_local"; hostAt = openAt + el; }\n'
+    '  const early = el < -250; el = Math.max(0, Math.round(el)); const to = !early && el > Tm + 250;\n'
+    '  return { el, src, hostAt, early, to, ok: !to && !early && choice === correct };\n'
+    '}\n'
+    '/** Every decryptable selection of one player for question i, in order; a ciphertext from another question or session is dropped. */\n'
+    'async function histOf(uid, i) {\n'
+    '  const H = S.host; H.decH = H.decH || {}; const out = [];\n'
+    '  for (const a of (H.hist[uid + ":" + i] || []).filter(Boolean)) {\n'
+    '    const key = uid + ":" + i + ":" + (a.n || 0);\n'
+    '    if (!(key in H.decH)) { try { const o = await unseal(H.priv, a.ct); H.decH[key] = o && o.q === i && o.sid === H.sid && o.a >= 0 && o.a <= 3 ? o.a : null; } catch { H.decH[key] = null; } }\n'
+    '    if (H.decH[key] != null) out.push({ a, choice: H.decH[key] });\n'
+    '  }\n'
+    '  return out;\n'
+    '}', "timing_hist")
+block("    let el = null, src = null, ok = false, pts = 0, to = true, hostAt = null, early = false;\n",
+      "full_explanation_viewed: null, reference_interactions: null, device_takeovers: takeovers });\n",
+      "    // Every selection is a submission row; the last one is the answer that counts (score, board, final_correct).\n"
+      "    const rows = a && choice != null ? (await histOf(uid, i)).map((h) => ({ h, ...timing(h.a, h.choice, openAt, Tm, q.correct) })) : [];\n"
+      "    const fin = rows[rows.length - 1] || null;\n"
+      "    let el = null, src = null, ok = false, pts = 0, to = true, hostAt = null, early = false;\n"
+      "    if (fin) {\n"
+      "      ({ el, src, ok, to, hostAt, early } = fin);\n"
+      "      pts = ok ? Math.round(500 + 500 * (1 - Math.min(el, Tm) / Tm)) : 0;\n"
+      "      if (!to && !early) { dist[fin.h.choice]++; rts.push(el); if (ok) correctN++; }\n"
+      "    }\n"
+      "    const tkState = (p.takeovers || []).some((x) => x.q === i) ? \"takeover_during_question\" : (p.takeovers || []).length ? \"takeover_earlier_in_session\" : \"none\";\n"
+      "    rows.forEach((x, j) => { const last = j === rows.length - 1; subs.push({ pid, uid, session_id: H.sid, question_id: q.id, question_key: q.qkey, q_index: i, exposure_number: expNo, selected_option: x.h.choice, correct: x.ok, timed_out: x.to,\n"
+      "      participant_local_submit_ms: x.h.a.localAt, clock_offset_ms: x.h.a.offset ?? null, clock_rtt_ms: x.h.a.rtt ?? null, answers_open_at_ms: openAt, submitted_at_host_ms: x.hostAt, host_observed_at_ms: j === 0 ? H.observed[uid + \":\" + i] || null : null,\n"
+      "      elapsed_ms: x.el, client_elapsed_ms: x.h.a.mono ?? null, submitted_before_open: x.early, timing_source: x.src, time_limit_s: T, score: last ? pts : 0, selection_index: j + 1, is_final_answer: last, device_id: x.h.a.dev || null, device_takeover_state: tkState }); });\n"
+      "    const takeovers = (p.takeovers || []).filter((x) => x.q === i).length;\n"
+      "    const first = rows[0] || null; const firstOk = rows.find((x) => x.ok) || null;\n"
+      "    exps.push({ exposure_id: H.sid + \":\" + i + \":\" + pid, pid, uid, session_id: H.sid, question_id: q.id, question_key: q.qkey, q_index: i, exposure_number: expNo, question_shown_at_ms: r.shownSrv ?? r.shownAt, answers_open_at_ms: openAt,\n"
+      "      first_submission_at_ms: first ? first.hostAt : null, first_attempt_correct: first ? first.ok : null, first_attempt_rt_ms: first ? first.el : null, n_submissions: rows.length,\n"
+      "      time_to_correct_ms: firstOk ? firstOk.el : null, final_correct: ok, timed_out_or_no_answer: !fin || to,\n"
+      "      full_explanation_viewed: null, reference_interactions: null, device_takeovers: takeovers });\n", "reveal_history")
+rep("for (const s of l.submissions) { if (!s.timed_out) { dist[s.selected_option]++;",
+    "for (const s of l.submissions.filter((x) => x.is_final_answer !== false)) { if (!s.timed_out) { dist[s.selected_option]++;", "derived_final_only")
+rep("const allSubs = X.logs.flatMap((l) => l.submissions);",
+    "const allSubs = X.logs.flatMap((l) => l.submissions.filter((x) => x.is_final_answer !== false));", "summary_final_only")
+rep("const s = l.submissions.find((x) => x.uid === part.uid);",
+    "const s = l.submissions.find((x) => x.uid === part.uid && x.is_final_answer !== false);", "report_final_only")
+rep('"time_limit_s", "score", "device_id", "device_takeover_state"]',
+    '"time_limit_s", "score", "selection_index", "is_final_answer", "device_id", "device_takeover_state"]', "cols_history")
+rep('schema: "algoarena-research-export", schema_version: 3,', 'schema: "algoarena-research-export", schema_version: 4,', "schema_4")
+rep("client_elapsed_ms is the device's own unlock-to-tap measurement.\\n`;",
+    "client_elapsed_ms is the device's own unlock-to-tap measurement.\\n"
+    "- schema_version 4: players may change their answer until time runs out. submissions has one row per selection "
+    "(selection_index from 1); is_final_answer marks the one that counts, and only it carries a score. In exposures, "
+    "first_* describe the first selection, n_submissions counts selections, time_to_correct_ms is the first correct "
+    "selection and final_correct the counted one. Sessions recorded before version 4 have one row per answer.\\n`;",
+    "readme_history")
+
 # File header and JSDoc overlay (comments only).
 rep("<!doctype html>\n", "<!doctype html>\n<!--\n"
     "  AlgoArena route B: the Live Classroom 2.1.1 page on GitHub Pages with Firebase (built by tools/build-from-2.1.1.py).\n\n"

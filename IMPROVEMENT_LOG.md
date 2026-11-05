@@ -159,3 +159,18 @@ No High findings left that can be fixed and verified here. Remaining Medium and 
 - Default answer time 20 s -> 10 s (user decision, 2026-11-04): build patch `default_t_10`; hosts can still set 5 to
   300 s and a question's own time limit wins. Sessions store their own T, so earlier exports are unchanged. The PRD
   names no default answer time, so it needs no change. Mock e2e checks the default (60/60).
+
+## Changeable answers (2026-11-04)
+- User decision: a player may change their answer until time runs out; the last choice counts. User decision: keep
+  the full history. Points and response time use the final selection's server time (if the first tap counted, a
+  player could tap anything at once and switch later for full speed points).
+- Rules: each selection is a create-only document, `<uid>_<sid>_<q>` then `_c1` .. `_c20`; change n needs change
+  n - 1 and the usual server time and answer window, so a change after time is up, a rewrite and a skipped number are
+  refused. Page (build patches): answer cards stay tappable with the current choice marked; the host keeps the
+  highest n, no longer closes the round early when everyone has answered (the Stop button still does), and writes
+  one submission row per selection (`selection_index`, `is_final_answer`, score only on the final row); exposures
+  take first_* from the first selection; dashboards and AI snapshots read final rows only. Export schema_version 4.
+- Verified: rules 25/25 plus the I1 property test, coverage 97 boolean expressions seen true and false; the old
+  rules fail the new change test. Browser e2e 67/67 (wrong then right on Q1: two rows, final scored, round stays
+  open after everyone answered and closes at time-up). I6 11/11 on the emulators with the real SDK. tsc 0; unit
+  55/55.

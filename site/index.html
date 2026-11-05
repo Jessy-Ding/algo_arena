@@ -259,6 +259,7 @@ const ARTIFACT_URL = location.origin + location.pathname; // route B: the page's
 const DEFAULT_T = 10; // seconds to answer once answers open
 const DEFAULT_READ = 5; // seconds the question is visible, locked, before answers open
 const MAX_EVENTS = 400;
+const MAX_CHANGES = 20; // answer changes per question; firestore.rules has the same cap
 
 /* ---------- small utilities ---------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -1070,7 +1071,7 @@ function updateRing(remainMs, T, quiet) {
 }
 function answerCards(opts, o = {}) {
   return `<div class="answers${o.locked ? " locked" : ""}">${opts.map((t, k) => {
-    const cls = ["ans", "c" + k]; if (o.correct != null) cls.push(k === o.correct ? "correct" : "dim"); else if (o.mine != null && o.mine !== k) cls.push("dim");
+    const cls = ["ans", "c" + k]; if (o.correct != null) cls.push(k === o.correct ? "correct" : "dim"); else if (o.mine != null && o.mine !== k && !o.interactive) cls.push("dim");
     if (o.mine === k) cls.push("mine");
     return `<button class="${cls.join(" ")}" ${o.interactive ? `data-act="answer" data-i="${k}"` : "disabled"} aria-label="Option ${LETTERS[k]}: ${esc(t)}"><span class="g">${GLYPH[k]}</span><span class="txt">${esc(t)}</span>${o.counts ? `<span class="count">${o.counts[k] || 0}</span>` : ""}${o.mine === k && o.correct == null ? '<span class="badge">Your answer</span>' : ""}</button>`;
   }).join("")}</div>`;
@@ -1126,7 +1127,7 @@ VIEWS.launch = () => {
   <h1 style="margin-top:14px">Host "${esc(s.meta.title)}"</h1><p class="muted">${s.qs.length} questions${setMeta(s.meta) ? ", " + setMeta(s.meta) : ""}.</p>
   <div class="panel stack"><label class="f">Answer time per question, in seconds<span class="hint">${per ? per + (per > 1 ? " questions have their" : " question has its") + " own time limit, which takes priority." : "Applies to every question in this set."}</span><input id="l_t" type="number" min="5" max="300" value="${DEFAULT_T}" style="max-width:160px"></label>
   <label class="f">Reading time before answers open, in seconds<span class="hint">Everyone sees the question and its options first. Answering unlocks when this countdown ends, and response time and points count from that moment. Enter 0 to open answers right away.</span><input id="l_r" type="number" min="0" max="60" value="${DEFAULT_READ}" style="max-width:160px"></label>
-  <div class="notice small">Scoring: a correct answer earns between 500 and 1000 points, more for answering sooner after answers open; a wrong answer or no answer earns 0. Streaks are shown for fun and never change the score. Each player gets one locked answer per question.</div>
+  <div class="notice small">Scoring: a correct answer earns between 500 and 1000 points, more for answering sooner after answers open; a wrong answer or no answer earns 0. Streaks are shown for fun and never change the score. Players can change their answer until time runs out; the last choice counts.</div>
   <div class="notice small">Players are told before joining that you will see their answers, timing, and an AI-generated learning report for this session.</div>
   <div class="row"><button class="btn primary big" data-act="createRoom">Create room</button></div></div></div></main>`;
 };
@@ -1165,7 +1166,7 @@ async function startHost() {
   const H = S.host; H.unsubs = [];
   H.unsubs.push(DB.doc(P.room(S.uid)).onSnapshot((s) => { const d = s.exists ? s.data() : null; if (!d || d.sid !== H.sid) return; if (!H.pendingWrite) H.room = d; hostChanged(); }, (e) => console.warn(e)));
   H.unsubs.push(DB.collection(P.answers(S.uid)).where("sid", "==", H.sid).onSnapshot((qs) => {
-    const ans = {}; for (const d of qs.docs) { const a = d.data(); (ans[a.uid] = ans[a.uid] || {})[a.q] = a; } H.ans = ans;
+    const ans = {}, hist = {}; for (const d of qs.docs) { const a = d.data(); const n = a.n || 0; (hist[a.uid + ":" + a.q] = hist[a.uid + ":" + a.q] || [])[n] = a; const m = (ans[a.uid] = ans[a.uid] || {}); if (!m[a.q] || n > (m[a.q].n || 0)) m[a.q] = a; } H.ans = ans; H.hist = hist; // the highest n is the answer that counts
     const t = now(); for (const [uid, m] of Object.entries(ans)) for (const k of Object.keys(m)) { const key = uid + ":" + k; if (!H.observed[key]) H.observed[key] = t; }
     hostChanged();
   }, (e) => console.warn(e)));
@@ -1188,7 +1189,7 @@ function hostChanged() {
 async function decryptCurrent(idx) {
   const H = S.host; const i = idx ?? H.room.qIndex; if (i < 0) return;
   for (const [uid, p] of H.players) { const a = ansOf(uid)[i]; const key = uid + ":" + i;
-    if (a && a.ct && !(key in H.dec)) { try { const o = await unseal(H.priv, a.ct); H.dec[key] = o && o.q === i && o.sid === H.sid && o.a >= 0 && o.a <= 3 ? o.a : null; } catch { H.dec[key] = null; } } }
+    H.decN = H.decN || {}; if (a && a.ct && H.decN[key] !== (a.n || 0)) { H.decN[key] = a.n || 0; try { const o = await unseal(H.priv, a.ct); H.dec[key] = o && o.q === i && o.sid === H.sid && o.a >= 0 && o.a <= 3 ? o.a : null; } catch { H.dec[key] = null; } } }
 }
 function answeredUids(i) { const H = S.host; return [...H.players.keys()].filter((u) => { const a = ansOf(u)[i]; return a && a.ct; }); }
 function hostTick() {
@@ -1199,7 +1200,8 @@ function hostTick() {
     if (phase === "read") { updateRing(openOf(r) - t, r.q.R || 1, true); return; }
     const remain = deadlineOf(r) - t; updateRing(remain, r.q.T);
     const n = H.players.size, ans = answeredUids(r.qIndex).length;
-    if (!H.closing && (remain < -600 || (n > 0 && ans >= n))) { H.closing = true; closeQuestion(ans >= n && remain > 0 ? "all_answered" : "time_up").finally(() => { H.closing = false; }); }
+    // No early close when everyone has answered: answers can change until time runs out. The host can still close.
+    if (!H.closing && remain < -600) { H.closing = true; closeQuestion("time_up").finally(() => { H.closing = false; }); }
   }
 }
 /** The local copy replaces server-time sentinels with hostNowEst() until the re-read returns the real server values. */
@@ -1230,6 +1232,23 @@ async function closeQuestion(reason) {
   hostEvent("answers_closed", { q: r.qIndex, reason });
 }
 ACT.hClose = () => closeQuestion("host_stopped");
+/** Timing of one selection; the same rules as the counted answer (server time first, device delta as fallback). */
+function timing(a, choice, openAt, Tm, correct) {
+  let el, src, hostAt;
+  if (a.srv != null) { hostAt = a.srv; el = hostAt - openAt; src = "server"; } else { el = a.mono ?? 0; src = "device_local"; hostAt = openAt + el; }
+  const early = el < -250; el = Math.max(0, Math.round(el)); const to = !early && el > Tm + 250;
+  return { el, src, hostAt, early, to, ok: !to && !early && choice === correct };
+}
+/** Every decryptable selection of one player for question i, in order; a ciphertext from another question or session is dropped. */
+async function histOf(uid, i) {
+  const H = S.host; H.decH = H.decH || {}; const out = [];
+  for (const a of (H.hist[uid + ":" + i] || []).filter(Boolean)) {
+    const key = uid + ":" + i + ":" + (a.n || 0);
+    if (!(key in H.decH)) { try { const o = await unseal(H.priv, a.ct); H.decH[key] = o && o.q === i && o.sid === H.sid && o.a >= 0 && o.a <= 3 ? o.a : null; } catch { H.decH[key] = null; } }
+    if (H.decH[key] != null) out.push({ a, choice: H.decH[key] });
+  }
+  return out;
+}
 async function loadExpoShard(shard) { const H = S.host; if (!H.expo[shard]) H.expo[shard] = clone((await dget(`${P.expo()}/s${shard}`)) || { m: {} }); return H.expo[shard]; }
 /**
  * Idempotent per question: when boardAsOf >= qIndex the board, exposure counts and research log are not written again.
@@ -1246,21 +1265,24 @@ ACT.hReveal = async (btn) => {
   for (const [uid, p] of H.players) {
     const pid = await pidOf(uid); const a = ansOf(uid)[i]; const choice = H.dec[uid + ":" + i];
     const ekey = pid + "|" + q.qkey; const expNo = already ? (ex.m[ekey] || 1) : (ex.m[ekey] || 0) + 1; if (!already) ex.m[ekey] = expNo;
+    // Every selection is a submission row; the last one is the answer that counts (score, board, final_correct).
+    const rows = a && choice != null ? (await histOf(uid, i)).map((h) => ({ h, ...timing(h.a, h.choice, openAt, Tm, q.correct) })) : [];
+    const fin = rows[rows.length - 1] || null;
     let el = null, src = null, ok = false, pts = 0, to = true, hostAt = null, early = false;
-    if (a && choice != null) {
-      if (a.srv != null) { hostAt = a.srv; el = hostAt - openAt; src = "server"; }
-      else { el = a.mono ?? 0; src = "device_local"; hostAt = openAt + el; }
-      early = el < -250; el = Math.max(0, Math.round(el)); to = !early && el > Tm + 250; ok = !to && !early && choice === q.correct;
+    if (fin) {
+      ({ el, src, ok, to, hostAt, early } = fin);
       pts = ok ? Math.round(500 + 500 * (1 - Math.min(el, Tm) / Tm)) : 0;
-      if (!to && !early) { dist[choice]++; rts.push(el); if (ok) correctN++; }
-      subs.push({ pid, uid, session_id: H.sid, question_id: q.id, question_key: q.qkey, q_index: i, exposure_number: expNo, selected_option: choice, correct: ok, timed_out: to,
-        participant_local_submit_ms: a.localAt, clock_offset_ms: a.offset ?? null, clock_rtt_ms: a.rtt ?? null, answers_open_at_ms: openAt, submitted_at_host_ms: hostAt, host_observed_at_ms: H.observed[uid + ":" + i] || null,
-        elapsed_ms: el, client_elapsed_ms: a.mono ?? null, submitted_before_open: early, timing_source: src, time_limit_s: T, score: pts, device_id: a.dev || null, device_takeover_state: (p.takeovers || []).some((x) => x.q === i) ? "takeover_during_question" : (p.takeovers || []).length ? "takeover_earlier_in_session" : "none" });
+      if (!to && !early) { dist[fin.h.choice]++; rts.push(el); if (ok) correctN++; }
     }
+    const tkState = (p.takeovers || []).some((x) => x.q === i) ? "takeover_during_question" : (p.takeovers || []).length ? "takeover_earlier_in_session" : "none";
+    rows.forEach((x, j) => { const last = j === rows.length - 1; subs.push({ pid, uid, session_id: H.sid, question_id: q.id, question_key: q.qkey, q_index: i, exposure_number: expNo, selected_option: x.h.choice, correct: x.ok, timed_out: x.to,
+      participant_local_submit_ms: x.h.a.localAt, clock_offset_ms: x.h.a.offset ?? null, clock_rtt_ms: x.h.a.rtt ?? null, answers_open_at_ms: openAt, submitted_at_host_ms: x.hostAt, host_observed_at_ms: j === 0 ? H.observed[uid + ":" + i] || null : null,
+      elapsed_ms: x.el, client_elapsed_ms: x.h.a.mono ?? null, submitted_before_open: x.early, timing_source: x.src, time_limit_s: T, score: last ? pts : 0, selection_index: j + 1, is_final_answer: last, device_id: x.h.a.dev || null, device_takeover_state: tkState }); });
     const takeovers = (p.takeovers || []).filter((x) => x.q === i).length;
+    const first = rows[0] || null; const firstOk = rows.find((x) => x.ok) || null;
     exps.push({ exposure_id: H.sid + ":" + i + ":" + pid, pid, uid, session_id: H.sid, question_id: q.id, question_key: q.qkey, q_index: i, exposure_number: expNo, question_shown_at_ms: r.shownSrv ?? r.shownAt, answers_open_at_ms: openAt,
-      first_submission_at_ms: a && choice != null ? hostAt : null, first_attempt_correct: a && choice != null ? ok : null, first_attempt_rt_ms: a && choice != null ? el : null, n_submissions: a && choice != null ? 1 : 0,
-      time_to_correct_ms: ok ? el : null, final_correct: ok, timed_out_or_no_answer: !(a && choice != null) || to,
+      first_submission_at_ms: first ? first.hostAt : null, first_attempt_correct: first ? first.ok : null, first_attempt_rt_ms: first ? first.el : null, n_submissions: rows.length,
+      time_to_correct_ms: firstOk ? firstOk.el : null, final_correct: ok, timed_out_or_no_answer: !fin || to,
       full_explanation_viewed: null, reference_interactions: null, device_takeovers: takeovers });
     if (!already) { const b = board[uid] || { s: 0, st: 0, c: 0, n: 0, ft: 0 }; board[uid] = { s: b.s + pts, st: ok ? b.st + 1 : 0, c: b.c + (ok ? 1 : 0), n: b.n + (a && choice != null && !to && !early ? 1 : 0), ft: (b.ft || 0) + (ok ? el : 0), prev: b.s, last: { q: i, ok, pts, ans: choice ?? null, t: el, to, early } }; }
   }
@@ -1430,7 +1452,7 @@ async function enterRoom(room, consented) {
   S.play.unsubs.push(DB.doc(pubPath).onSnapshot((s) => { if (s.exists && S.play) { S.play.me = s.data(); } }, () => {}));
   await joinNamed(room.code, false); syncClock(5);
   /* Rejoining mid-game: fetch this participant's own answers so locked-in questions stay locked. */
-  for (let k = 0; k <= (room.qIndex ?? -1); k++) dget(`${P.answers(room.hostId)}/${S.uid}_${room.sid}_${k}`).then((a) => { if (a && S.play && S.play.sid === room.sid) { S.play.myAns = { ...(S.play.myAns || {}), [k]: a }; if (S.view === "play") rerender(); } }).catch(() => {});
+  for (let k = 0; k <= (room.qIndex ?? -1); k++) latestAnswer(room, k).then((a) => { if (a && S.play && S.play.sid === room.sid) { S.play.myAns = { ...(S.play.myAns || {}), [k]: a }; if (S.view === "play") rerender(); } }).catch(() => {});
   startTicker(playTick); S.resumePlay = null; go("play");
 }
 function onPlayRoom(d) {
@@ -1482,6 +1504,12 @@ async function flushEvents() {
   const cur = (p.me && p.me.events) || []; try { await dupd(P.pub(S.uid), { events: [...cur, ...buf].slice(-MAX_EVENTS) }); } catch (e) { p.evBuf = [...buf, ...p.evBuf]; }
 }
 function myAnswer(i) { const p = S.play; return p && p.myAns && p.myAns[i]; }
+/** This player's latest selection for question k: the first answer, then changes _c1, _c2, ... until one is missing. */
+async function latestAnswer(room, k) {
+  const base = `${P.answers(room.hostId)}/${S.uid}_${room.sid}_${k}`; let a = await dget(base); if (!a) return null;
+  for (let n = 1; n <= MAX_CHANGES; n++) { const b = await dget(`${base}_c${n}`); if (!b) break; a = b; }
+  return a;
+}
 function playTick() {
   const p = S.play; if (!p || S.view !== "play") return; const r = p.room;
   if (r.status === "question" && !myAnswer(r.qIndex) && !p.submitting[r.qIndex]) {
@@ -1495,22 +1523,28 @@ function playTick() {
 }
 ACT.answer = async (el) => {
   const p = S.play; const r = p.room; const i = r.qIndex; const k = Number(el.dataset.i);
-  if (r.status !== "question" || myAnswer(i) || (p.submitting && p.submitting[i] != null)) return;
+  if (r.status !== "question" || (p.submitting && p.submitting[i] != null)) return;
+  const cur = myAnswer(i); const prev = p.myChoice && p.myChoice[i];
+  if (cur && prev === k) return; // the same option again changes nothing
+  const n = cur ? (cur.n || 0) + 1 : 0;
+  if (n > MAX_CHANGES) return toast(`You can change an answer at most ${MAX_CHANGES} times.`);
   const mono = performance.now(); const localAt = now();
   if (localAt < pOpenLocal(r)) return; // reading phase: answers are locked (the database refuses them too)
-  if (hostNowEst() - deadlineOf(r) > 250) { p.timedOut = i; return rerender(); }
+  if (hostNowEst() - deadlineOf(r) > 250) { if (!cur) p.timedOut = i; return rerender(); }
   p.submitting = { ...(p.submitting || {}), [i]: k }; p.myChoice = { ...(p.myChoice || {}), [i]: k }; rerender();
   const ct = JSON.stringify(await seal(r.pubKey, { a: k, q: i, sid: p.sid })); // the rules require a string
   const m0 = p.monoOpen && p.monoOpen[i];
-  const rec = { uid: S.uid, sid: p.sid, q: i, ct, srv: DB.serverTime(), mono: m0 != null ? Math.max(0, Math.round(mono - m0)) : null, localAt, dev: S.deviceId };
-  const path = `${P.answers(p.hostId)}/${S.uid}_${p.sid}_${i}`;
-  pEvent("answer_selected", { q: i, opt: "sealed" });
-  try { await dset(path, rec); p.myAns = { ...(p.myAns || {}), [i]: { ...rec, srv: null } }; pEvent("answer_submitted", { q: i }); }
+  const rec = { uid: S.uid, sid: p.sid, q: i, ct, srv: DB.serverTime(), mono: m0 != null ? Math.max(0, Math.round(mono - m0)) : null, localAt, dev: S.deviceId, ...(n ? { n } : {}) };
+  // Each selection is its own create-only document: <uid>_<sid>_<q> first, then _c1, _c2, ... (firestore.rules).
+  const path = `${P.answers(p.hostId)}/${S.uid}_${p.sid}_${i}${n ? "_c" + n : ""}`;
+  pEvent(n ? "answer_changed" : "answer_selected", { q: i, opt: "sealed", ...(n ? { n } : {}) });
+  try { await dset(path, rec); p.myAns = { ...(p.myAns || {}), [i]: { ...rec, srv: null } }; delete p.submitting[i]; pEvent("answer_submitted", { q: i, ...(n ? { n } : {}) }); }
   catch (e) {
     delete p.submitting[i];
     const mine = await dget(path).catch(() => null);
     if (mine) { p.myAns = { ...(p.myAns || {}), [i]: mine }; return rerender(); }
-    if (e && e.code === "permission_denied") { if (hostNowEst() < openOf(r)) toast("Answers aren't open yet. Try again in a moment."); else p.timedOut = i; return rerender(); }
+    p.myChoice = { ...p.myChoice, [i]: prev }; if (prev == null) delete p.myChoice[i];
+    if (e && e.code === "permission_denied") { if (hostNowEst() < openOf(r)) toast("Answers aren't open yet. Try again in a moment."); else if (cur) toast("Time's up. Your earlier answer counts."); else p.timedOut = i; return rerender(); }
     rerender(); throw e;
   }
   rerender();
@@ -1525,10 +1559,12 @@ VIEWS.play = () => {
   else if (st === "question" || st === "closed") {
     const q = r.q; const mine = myAnswer(r.qIndex); const pending = p.submitting && p.submitting[r.qIndex] != null && !mine; const choice = p.myChoice && p.myChoice[r.qIndex];
     const timedOut = p.timedOut === r.qIndex || st === "closed";
-    if (mine || pending) body = `<div class="lockbox"><div class="sw c${choice ?? 0}" style="width:90px;height:90px;margin:0 auto;border-radius:20px">${choice != null ? GLYPH[choice].replace("<svg", '<svg style="width:52px;height:52px"') : ""}</div><h1 style="margin-top:18px">${pending ? "Sending…" : "Answer locked in"}</h1><p class="muted">Your answer counts once and can't be changed. Wait for the reveal.</p><p class="waiting-dots"><span></span><span></span><span></span></p></div>`;
+    const open = st === "question" && hostNowEst() - deadlineOf(r) <= 250;
+    if ((mine || pending) && open) body = `<div class="qhead"><div class="qprompt ${q.prompt.length > 180 ? "small-p" : ""}">${esc(q.prompt)}${q.img ? `<img src="${blobUrl(q.img)}" alt="Question image">` : ""}</div>${ringHtml(q.T)}</div>${answerCards(q.options, { interactive: true, mine: choice })}<p class="muted small" style="margin-top:10px">${pending ? "Sending…" : "Answer saved."} Tap another option to change it until time runs out; your last choice counts.</p>`;
+    else if (mine || pending) body = `<div class="lockbox"><div class="sw c${choice ?? 0}" style="width:90px;height:90px;margin:0 auto;border-radius:20px">${choice != null ? GLYPH[choice].replace("<svg", '<svg style="width:52px;height:52px"') : ""}</div><h1 style="margin-top:18px">Your answer is in</h1><p class="muted">Your last choice counts. Wait for the reveal.</p><p class="waiting-dots"><span></span><span></span><span></span></p></div>`;
     else if (timedOut) body = `<div class="lockbox"><h1>Time's up</h1><p class="muted">No answer this round. Get ready for the next one.</p></div>`;
     else if (now() < pOpenLocal(r)) body = `<div class="qhead"><div class="qprompt ${q.prompt.length > 180 ? "small-p" : ""}">${esc(q.prompt)}${q.img ? `<img src="${blobUrl(q.img)}" alt="Question image">` : ""}</div>${ringHtml(q.R || 0, "reading")}</div>${answerCards(q.options, { locked: true })}<p class="readnote">Read the question and the options. Answers open when the countdown ends.</p>`;
-    else body = `<div class="qhead"><div class="qprompt ${q.prompt.length > 180 ? "small-p" : ""}">${esc(q.prompt)}${q.img ? `<img src="${blobUrl(q.img)}" alt="Question image">` : ""}</div>${ringHtml(q.T)}</div>${answerCards(q.options, { interactive: true })}<p class="muted small" style="margin-top:10px">Tap once to lock in your answer. Keys 1 to 4 also work.</p>`;
+    else body = `<div class="qhead"><div class="qprompt ${q.prompt.length > 180 ? "small-p" : ""}">${esc(q.prompt)}${q.img ? `<img src="${blobUrl(q.img)}" alt="Question image">` : ""}</div>${ringHtml(q.T)}</div>${answerCards(q.options, { interactive: true })}<p class="muted small" style="margin-top:10px">Tap to answer; you can change it until time runs out. Keys 1 to 4 also work.</p>`;
   } else if (st === "reveal") {
     const rv = r.reveal; const b = (r.board || {})[S.uid]; const last = b && b.last; const { me, n } = myRank(r); const q = r.q;
     const mine = last ? last.ans : null;
@@ -1579,7 +1615,7 @@ function sessDerived(ctx) {
   const parts = ctx.meta.participants || []; const byUid = new Map(parts.map((p) => [p.uid, { ...p, s: 0, c: 0, a: 0, rts: [], tk: 0 }]));
   const perQ = ctx.logs.map((l) => {
     const q = ctx.qs[l.q_index] || {}; const dist = [0, 0, 0, 0]; const rts = []; let ok = 0;
-    for (const s of l.submissions) { if (!s.timed_out) { dist[s.selected_option]++; rts.push(s.elapsed_ms); } if (s.correct) ok++; const P0 = byUid.get(s.uid); if (P0) { P0.s += s.score; if (s.correct) P0.c++; if (!s.timed_out) { P0.a++; P0.rts.push(s.elapsed_ms); } } }
+    for (const s of l.submissions.filter((x) => x.is_final_answer !== false)) { if (!s.timed_out) { dist[s.selected_option]++; rts.push(s.elapsed_ms); } if (s.correct) ok++; const P0 = byUid.get(s.uid); if (P0) { P0.s += s.score; if (s.correct) P0.c++; if (!s.timed_out) { P0.a++; P0.rts.push(s.elapsed_ms); } } }
     const n = l.exposures.length;
     return { i: l.q_index, q, n, answered: rts.length, correct: ok, acc: n ? ok / n : null, dist, med: median(rts), mean: mean(rts), T: l.time_limit_s, correctOpt: l.correct_option };
   });
@@ -1601,7 +1637,7 @@ function rtChart(perQ) {
 VIEWS.session = () => {
   const X = S.sess; if (!X) return `<main><div class="wrap"><p class="muted">Loading session…</p></div></main>`;
   const m = X.meta; const { perQ, people } = sessDerived(X);
-  const allSubs = X.logs.flatMap((l) => l.submissions); const allExp = X.logs.flatMap((l) => l.exposures);
+  const allSubs = X.logs.flatMap((l) => l.submissions.filter((x) => x.is_final_answer !== false)); const allExp = X.logs.flatMap((l) => l.exposures);
   const acc = allExp.length ? allExp.filter((e) => e.first_attempt_correct).length / allExp.length : null;
   const rts = allSubs.filter((s) => !s.timed_out).map((s) => s.elapsed_ms);
   const aiN = Object.keys(X.ai).filter((k) => k !== "_class"); const aiReady = aiN.filter((k) => X.ai[k].status === "ready").length;
@@ -1678,16 +1714,16 @@ const COLS = {
   sessions: ["session_id", "mode", "host_pid", "question_set_id", "set_title", "course", "week", "topic", "ordered_question_ids", "ordered_question_keys", "created_ms", "start_ms", "end_ms", "participant_count", "questions_played", "timer_default_s", "timer_per_question_s", "reading_time_s", "scoring_formula", "streak_affects_score", "app_version", "content_hash"],
   questions: ["session_id", "q_index", "question_id", "question_key", "bank_id", "chapter_alignment", "provenance", "topic", "subtype", "difficulty", "source", "time_limit_s", "correct_option", "prompt", "option_a", "option_b", "option_c", "option_d", "has_image", "n_references"],
   exposures: ["exposure_id", "session_id", "pid", "question_id", "question_key", "q_index", "exposure_number", "question_shown_at_ms", "answers_open_at_ms", "first_submission_at_ms", "first_attempt_correct", "first_attempt_rt_ms", "n_submissions", "time_to_correct_ms", "final_correct", "timed_out_or_no_answer", "full_explanation_viewed", "reference_interactions", "reference_interactions_after_session", "device_takeovers"],
-  submissions: ["session_id", "pid", "question_id", "question_key", "q_index", "exposure_number", "selected_option", "correct", "timed_out", "participant_local_submit_ms", "clock_offset_ms", "clock_rtt_ms", "answers_open_at_ms", "submitted_at_host_ms", "host_observed_at_ms", "elapsed_ms", "client_elapsed_ms", "submitted_before_open", "timing_source", "time_limit_s", "score", "device_id", "device_takeover_state"],
+  submissions: ["session_id", "pid", "question_id", "question_key", "q_index", "exposure_number", "selected_option", "correct", "timed_out", "participant_local_submit_ms", "clock_offset_ms", "clock_rtt_ms", "answers_open_at_ms", "submitted_at_host_ms", "host_observed_at_ms", "elapsed_ms", "client_elapsed_ms", "submitted_before_open", "timing_source", "time_limit_s", "score", "selection_index", "is_final_answer", "device_id", "device_takeover_state"],
   events: ["session_id", "actor", "type", "at_ms", "q_index", "detail"],
   per_question: ["session_id", "q_index", "question_id", "exposures", "answered", "correct", "accuracy", "dist_a", "dist_b", "dist_c", "dist_d", "median_rt_ms", "mean_rt_ms"],
 };
 function readme(incNames) {
-  return `# AlgoArena research export\n\nExported ${new Date().toISOString()} by AlgoArena ${APP.version}.\n\n## Identity\n\nParticipants are identified by \`pid\`, a pseudonym: the first 12 hex characters of SHA-256(host-private salt + account id). The same person keeps the same pid across this host's sessions. Emails and sign-in tokens are never exported.${incNames ? " Display names were included at the exporter's request; treat these files as identifiable." : " Display names are excluded."}\n\n## Files\n\n- sessions.csv: one row per session, with timer, reading time and scoring configuration, and content_hash (a hash of the question content, answers, explanations and references used).\n- questions.csv: question content snapshot as played (content is stored separately from behavior).\n- participants.csv: pid, join time, consent time.\n- exposures.csv: one row per participant per question shown (raw evidence plus first-attempt fields). Live Classroom allows one scored submission per exposure.\n- submissions.csv: one row per answer, with raw timestamps.\n- events.csv: auditable event log (question shown, answer selected or submitted, correct answer revealed, reference opened, reconnect, device takeover, session completed).\n- derived_per_question.csv and derived_per_participant.csv: metrics computed from the raw rows above.\n\n## Timestamp semantics\n\n${Object.entries(TIMESTAMP_SEMANTICS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}\n\n## Notes\n\n- exposure_number counts this pseudonymous participant's exposures to the same question content (question_key, a hash of prompt, image and options) across this host's sessions.\n- AI-generated learning reports are interpretations and are not part of this export.\n- reference_opened events carry phase: live (opened on the reveal screen) or post (opened from the participant's review after the game). Events that reach a participant's record after the session ended (post-game opens, and events still buffered on a device when the host ended the game) are collected when the host opens the session dashboard or exports; they are lost if the participant has since joined another game.\n- schema_version 2 (AlgoArena 2.1) adds the reading phase. Rows from earlier sessions get answers_open_at_ms = question_shown_at_ms and submitted_before_open = false.\n- schema_version 3 (AlgoArena 3, Firebase): timing fields use the Firestore server clock; elapsed_ms includes network delay from the device; client_elapsed_ms is the device's own unlock-to-tap measurement.\n`;
+  return `# AlgoArena research export\n\nExported ${new Date().toISOString()} by AlgoArena ${APP.version}.\n\n## Identity\n\nParticipants are identified by \`pid\`, a pseudonym: the first 12 hex characters of SHA-256(host-private salt + account id). The same person keeps the same pid across this host's sessions. Emails and sign-in tokens are never exported.${incNames ? " Display names were included at the exporter's request; treat these files as identifiable." : " Display names are excluded."}\n\n## Files\n\n- sessions.csv: one row per session, with timer, reading time and scoring configuration, and content_hash (a hash of the question content, answers, explanations and references used).\n- questions.csv: question content snapshot as played (content is stored separately from behavior).\n- participants.csv: pid, join time, consent time.\n- exposures.csv: one row per participant per question shown (raw evidence plus first-attempt fields). Live Classroom allows one scored submission per exposure.\n- submissions.csv: one row per answer, with raw timestamps.\n- events.csv: auditable event log (question shown, answer selected or submitted, correct answer revealed, reference opened, reconnect, device takeover, session completed).\n- derived_per_question.csv and derived_per_participant.csv: metrics computed from the raw rows above.\n\n## Timestamp semantics\n\n${Object.entries(TIMESTAMP_SEMANTICS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}\n\n## Notes\n\n- exposure_number counts this pseudonymous participant's exposures to the same question content (question_key, a hash of prompt, image and options) across this host's sessions.\n- AI-generated learning reports are interpretations and are not part of this export.\n- reference_opened events carry phase: live (opened on the reveal screen) or post (opened from the participant's review after the game). Events that reach a participant's record after the session ended (post-game opens, and events still buffered on a device when the host ended the game) are collected when the host opens the session dashboard or exports; they are lost if the participant has since joined another game.\n- schema_version 2 (AlgoArena 2.1) adds the reading phase. Rows from earlier sessions get answers_open_at_ms = question_shown_at_ms and submitted_before_open = false.\n- schema_version 3 (AlgoArena 3, Firebase): timing fields use the Firestore server clock; elapsed_ms includes network delay from the device; client_elapsed_ms is the device's own unlock-to-tap measurement.\n- schema_version 4: players may change their answer until time runs out. submissions has one row per selection (selection_index from 1); is_final_answer marks the one that counts, and only it carries a score. In exposures, first_* describe the first selection, n_submissions counts selections, time_to_correct_ms is the first correct selection and final_correct the counted one. Sessions recorded before version 4 have one row per answer.\n`;
 }
 async function doExport(sids, fmt, incNames) {
   const d = await buildExport(sids, incNames); const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-"); const base = sids.length === 1 ? `algoarena-${sids[0]}` : `algoarena-sessions-${stamp}`;
-  if (fmt === "json") return saveFile(base + ".json", JSON.stringify({ schema: "algoarena-research-export", schema_version: 3, exported_at: new Date().toISOString(), app_version: APP.version, identity: incNames ? "pseudonymous ids plus display names" : "pseudonymous ids only", timestamp_semantics: TIMESTAMP_SEMANTICS, ...d, derived_metrics: { per_question: d.per_question, per_participant: d.per_participant }, per_question: undefined, per_participant: undefined }, null, 2));
+  if (fmt === "json") return saveFile(base + ".json", JSON.stringify({ schema: "algoarena-research-export", schema_version: 4, exported_at: new Date().toISOString(), app_version: APP.version, identity: incNames ? "pseudonymous ids plus display names" : "pseudonymous ids only", timestamp_semantics: TIMESTAMP_SEMANTICS, ...d, derived_metrics: { per_question: d.per_question, per_participant: d.per_participant }, per_question: undefined, per_participant: undefined }, null, 2));
   const pcols = ["session_id", "pid", ...(incNames ? ["display_name"] : []), "joined_at_ms", "consent_at_ms"]; const ppcols = ["session_id", "pid", ...(incNames ? ["display_name"] : []), "score", "rank", "correct", "answered", "median_rt_ms", "device_takeovers"];
   const zip = makeZip([{ name: "README.md", data: readme(incNames) }, { name: "sessions.csv", data: csv(d.sessions, COLS.sessions) }, { name: "questions.csv", data: csv(d.questions, COLS.questions) }, { name: "participants.csv", data: csv(d.participants, pcols) },
     { name: "exposures.csv", data: csv(d.exposures, COLS.exposures) }, { name: "submissions.csv", data: csv(d.submissions, COLS.submissions) }, { name: "events.csv", data: csv(d.events, COLS.events) },
@@ -1700,7 +1736,7 @@ ACT.exportAll = async (el) => { const sids = (S.sessions || []).filter((s) => s.
 /* ===================== AI Learning Coach ===================== */
 const repId = (sid, uid) => (sid + "_" + uid).replace(/[^A-Za-z0-9_\-.~:@+]/g, "_");
 function personalSnapshot(X, part) {
-  const rows = X.logs.map((l) => { const q = X.qs[l.q_index] || {}; const s = l.submissions.find((x) => x.uid === part.uid);
+  const rows = X.logs.map((l) => { const q = X.qs[l.q_index] || {}; const s = l.submissions.find((x) => x.uid === part.uid && x.is_final_answer !== false);
     return { n: l.q_index + 1, topic: q.topic || "", subtype: q.subtype || "", difficulty: q.difficulty || "", prompt: (q.prompt || "(image-only question)").slice(0, 300), correct_answer: q.options ? q.options[q.correct] : "",
       your_answer: s && !s.timed_out ? q.options[s.selected_option] : null, outcome: !s ? "no_answer" : s.timed_out ? "timed_out" : s.correct ? "correct" : "incorrect",
       response_time_s: s && !s.timed_out ? +(s.elapsed_ms / 1000).toFixed(1) : null, time_limit_s: l.time_limit_s, feedback_on_your_answer: s && !s.correct && !s.timed_out ? (q.optFeedback || [])[s.selected_option] || "" : "" }; });

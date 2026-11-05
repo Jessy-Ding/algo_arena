@@ -15,7 +15,8 @@ rules_version = '2';
 //  - Rooms are public to signed-in users (they hold no correct answers before reveal); only the host writes them.
 //  - Answers are separate create-only documents. The rules check that the timestamp is the server's own time,
 //    that the room is open for answers at that server time, and that the answer is for the current question.
-//    This makes response times server-authoritative without a Cloud Function.
+//    This makes response times server-authoritative without a Cloud Function. A changed answer is another such
+//    document, so every selection and its server time stay on record and the last one counts.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -37,18 +38,28 @@ service cloud.firestore {
                && request.time >= r.shownSrv + msDur(int(r.readS) * 1000)
                && request.time <= r.shownSrv + msDur(int(r.readS) * 1000 + int(r.q.T) * 1000 + 250));
     }
-    // Invariant I1: the answer carries the server's own time and lands inside the answer window.
+    // A change n >= 1 needs the selection before it: the first answer for n == 1, change n - 1 otherwise.
+    function previousExists(hostId, base, n) {
+      return (n == 1 && exists(/databases/$(database)/documents/rooms/$(hostId)/answers/$(base)))
+        || (n > 1 && exists(/databases/$(database)/documents/rooms/$(hostId)/answers/$(base + '_c' + string(n - 1))));
+    }
+    // Invariant I1: every selection carries the server's own time and lands inside the answer window. A player may
+    // change their answer until the window closes: each change is a new create-only document <base>_c<n> (n 1..20),
+    // so the history cannot be rewritten and the host counts the highest n.
     function validAnswer(hostId, aid) {
       let r = roomOf(hostId);
       let d = request.resource.data;
+      let base = request.auth.uid + '_' + r.sid + '_' + string(r.qIndex);
+      let n = d.get('n', 0);
       return r.status == 'question'
-        && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offset', 'rtt', 'dev'])
+        && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offset', 'rtt', 'dev', 'n'])
         && d.keys().hasAll(['uid', 'sid', 'q', 'ct', 'srv'])
         && d.uid == request.auth.uid
         && d.sid == r.sid
         && d.q == r.qIndex
         && d.ct is string && d.ct.size() < 4096
-        && aid == request.auth.uid + '_' + r.sid + '_' + string(r.qIndex)
+        && n is int && n >= 0 && n <= 20
+        && ((n == 0 && aid == base) || (n > 0 && aid == base + '_c' + string(n) && previousExists(hostId, base, n)))
         && d.srv == request.time
         && inAnswerWindow(r);
     }
@@ -76,7 +87,7 @@ service cloud.firestore {
         allow write: if signedIn() && request.auth.uid == hostId;
       }
 
-      // One document per participant per question; id is <uid>_<sid>_<qIndex>.
+      // One document per selection: <uid>_<sid>_<qIndex> for the first, <uid>_<sid>_<qIndex>_c<n> for change n.
       match /answers/{aid} {
         allow read: if signedIn() && (request.auth.uid == hostId || aid.matches('^' + request.auth.uid + '_.*'));
         allow create: if signedIn() && validAnswer(hostId, aid);

@@ -192,31 +192,53 @@ with sync_playwright() as pw:
     opened = page.evaluate("() => Date.now()")
     check("players unlock at the server's open time (within 0.6 s)", abs(opened - (ms(r["shownSrv"]) + 3000)) < 600, str(opened - ms(r["shownSrv"]) - 3000))
     check("database refuses a client-chosen timestamp", direct_answer(A, 0, srv_server=False) == "permission_denied")
-    sleep(1.0); A.click(f'[data-act="answer"][data-i="{C[0]}"]')
-    sleep(1.0); B.click(f'[data-act="answer"][data-i="{(C[0] + 1) % 4}"]')
-    wait_answers(sid, 2, 0); wait_status("closed")
+    sleep(1.0); A.click(f'[data-act="answer"][data-i="{(C[0] + 1) % 4}"]')
+    A.wait_for_selector("text=Tap another option to change it", timeout=3000)
+    check("after answering, a player can still tap the other options", A.locator('[data-act="answer"]').count() == 4 and A.locator(".ans.mine").count() == 1)
+    sleep(0.6); A.click(f'[data-act="answer"][data-i="{C[0]}"]')
+    sleep(0.4); B.click(f'[data-act="answer"][data-i="{(C[0] + 1) % 4}"]')
+    wait_answers(sid, 2, 0)
+    for _ in range(80):
+        if get(f"rooms/H/answers/A_{sid}_0_c1"):
+            break
+        sleep(0.05)
+    check("a change is stored as a new document, the first one kept", get(f"rooms/H/answers/A_{sid}_0") is not None and (get(f"rooms/H/answers/A_{sid}_0_c1") or {}).get("n") == 1)
+    sleep(1.0)
+    check("everyone has answered, yet the round stays open until time runs out", get("rooms/H")["status"] == "question")
+    rc = wait_status("closed", 20)
+    check("the round closes when time is up", rc["closed"]["reason"] == "time_up", str(rc["closed"]))
+    A.wait_for_selector("text=Your answer is in", timeout=4000)
+    check("once time is up the player's answer is final", A.locator('[data-act="answer"]').count() == 0)
     H.click('[data-act="hReveal"]'); wait_status("reveal")
-    log = get(f"data/users/H/profile/sessions/{sid}/log/q0000"); s = {x["uid"]: x for x in log["submissions"]}
+    log = get(f"data/users/H/profile/sessions/{sid}/log/q0000")
+    rowsA = [x for x in log["submissions"] if x["uid"] == "A"]
+    s = {x["uid"]: x for x in log["submissions"] if x["is_final_answer"]}
+    check("each selection is a submission row; only the final one counts",
+          [x["selection_index"] for x in rowsA] == [1, 2] and [x["is_final_answer"] for x in rowsA] == [False, True]
+          and not rowsA[0]["correct"] and rowsA[0]["score"] == 0 and rowsA[1]["correct"], str([(x["selected_option"], x["correct"], x["score"]) for x in rowsA]))
+    eA = next(x for x in log["exposures"] if x["uid"] == "A")
+    check("the exposure records the first attempt, the number of selections and the final result",
+          eA["first_attempt_correct"] is False and eA["n_submissions"] == 2 and eA["final_correct"] is True and eA["time_to_correct_ms"] == s["A"]["elapsed_ms"], str(eA))
     check("timing source is the server for both players", s["A"]["timing_source"] == "server" and s["B"]["timing_source"] == "server")
-    check("A elapsed ~1 s from open on the server clock", 700 <= s["A"]["elapsed_ms"] <= 1900, str(s["A"]["elapsed_ms"]))
+    check("A's final answer elapsed ~1.6 s from open on the server clock", 1200 <= s["A"]["elapsed_ms"] <= 2600, str(s["A"]["elapsed_ms"]))
     check("B elapsed ~2 s despite a -5 s device clock", 1500 <= s["B"]["elapsed_ms"] <= 3000, str(s["B"]["elapsed_ms"]))
-    check("client-measured elapsed recorded alongside", all(isinstance(x["client_elapsed_ms"], int) and abs(x["client_elapsed_ms"] - x["elapsed_ms"]) < 700 for x in s.values()), str([(x["client_elapsed_ms"], x["elapsed_ms"]) for x in s.values()]))
+    check("client-measured elapsed recorded alongside", all(isinstance(x["client_elapsed_ms"], int) and abs(x["client_elapsed_ms"] - x["elapsed_ms"]) < 700 for x in log["submissions"]), str([(x["client_elapsed_ms"], x["elapsed_ms"]) for x in log["submissions"]]))
     # The app uses JS Math.round (half up); Python's round() is half-to-even and disagreed whenever elapsed % 30 == 15.
-    check("A's score follows the server elapsed time", s["A"]["correct"] and s["A"]["score"] == math.floor(500 + 500 * (1 - s["A"]["elapsed_ms"] / 15000) + 0.5), f'{s["A"]["score"]} at {s["A"]["elapsed_ms"]} ms')
+    check("A's score follows the final answer's server elapsed time", s["A"]["correct"] and s["A"]["score"] == math.floor(500 + 500 * (1 - s["A"]["elapsed_ms"] / 15000) + 0.5), f'{s["A"]["score"]} at {s["A"]["elapsed_ms"]} ms')
     check("log uses the server open time", log["answers_open_at_ms"] - log["shown_at_ms"] == 3000 and log["shown_at_ms"] == ms(r["shownSrv"]))
     A.wait_for_selector(".feedback-big", timeout=4000)
     check("A sees Correct", "Correct" in A.inner_text(".feedback-big"))
 
-    # Q2: open early, one answer only
+    # Q2: open early; the host stops answers by hand
     H.click('[data-act="hNext"]'); r2 = wait_status("question")
     B.wait_for_selector(".answers.locked", timeout=3000); sleep(0.8)
     H.click('[data-act="hOpenNow"]'); B.wait_for_selector('[data-act="answer"]', timeout=3000)
     r2 = get("rooms/H")
     check("open-now stores a server timestamp earlier than shown + 3 s", r2.get("openNowSrv") and ms(r2["openNowSrv"]) - ms(r2["shownSrv"]) < 2500)
     sleep(1.0); B.click(f'[data-act="answer"][data-i="{C[1]}"]'); wait_answers(sid, 1, 1)
-    check("database refuses a second answer to the same question", direct_answer(B, 1) == "permission_denied")
+    check("database refuses rewriting a selection", direct_answer(B, 1) == "permission_denied")
     A.wait_for_selector('[data-act="answer"]', timeout=3000); A.click(f'[data-act="answer"][data-i="{(C[1] + 1) % 4}"]')
-    wait_answers(sid, 2, 1); wait_status("closed"); H.click('[data-act="hReveal"]'); wait_status("reveal")
+    wait_answers(sid, 2, 1); H.click('[data-act="hClose"]'); wait_status("closed"); H.click('[data-act="hReveal"]'); wait_status("reveal")
     log2 = get(f"data/users/H/profile/sessions/{sid}/log/q0001"); s2 = {x["uid"]: x for x in log2["submissions"]}
     check("B scored from the early open (~1 s)", s2["B"]["correct"] and 600 <= s2["B"]["elapsed_ms"] <= 2200, str(s2["B"]["elapsed_ms"]))
     check("database refuses answers while the room is not taking them", direct_answer(A, 1) == "permission_denied")
@@ -225,7 +247,7 @@ with sync_playwright() as pw:
     H.click('[data-act="hNext"]'); wait_status("question")
     A.wait_for_selector('[data-act="answer"]', timeout=6000); B.wait_for_selector('[data-act="answer"]', timeout=6000)
     A.click(f'[data-act="answer"][data-i="{C[2]}"]'); B.click(f'[data-act="answer"][data-i="{C[2]}"]')
-    wait_answers(sid, 2, 2); wait_status("closed"); H.click('[data-act="hReveal"]'); wait_status("reveal")
+    wait_answers(sid, 2, 2); H.click('[data-act="hClose"]'); wait_status("closed"); H.click('[data-act="hReveal"]'); wait_status("reveal")
     A.wait_for_selector('.refs [data-act="openRef"]', timeout=4000); A.click('.refs [data-act="openRef"]')
     page.evaluate("() => { __FB.aiFailNext = 1; }")  # the first AI call gets HTTP 529
     sleep(1.5); H.click('[data-act="hNext"]'); wait_status("ended", 15)
@@ -285,7 +307,10 @@ with sync_playwright() as pw:
     H.click('[data-act="openSession"]'); H.wait_for_selector("text=Research export", timeout=6000); sleep(1.0)
     ex = H.evaluate("() => buildExport([S.sess.sid], false)")
     check("export: reading time, server timing, client elapsed", ex["sessions"][0]["reading_time_s"] == 3 and all(x["timing_source"] == "server" and "client_elapsed_ms" in x for x in ex["submissions"]))
-    check("export has 6 submissions and 6 exposures", len(ex["submissions"]) == 6 and len(ex["exposures"]) == 6)
+    finals = [x for x in ex["submissions"] if x["is_final_answer"]]
+    check("export has 7 submission rows (A changed once), 6 of them final, and 6 exposures",
+          len(ex["submissions"]) == 7 and len(finals) == 6 and len(ex["exposures"]) == 6,
+          str((len(ex["submissions"]), len(finals), len(ex["exposures"]))))
 
     # sign out
     A.click('[data-act="home"]'); A.wait_for_selector('[data-act="signOut"]', timeout=5000); A.click('[data-act="signOut"]')
