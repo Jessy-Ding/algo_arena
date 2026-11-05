@@ -1,8 +1,8 @@
 # Surviving mutants after round 2 (StrykerJS 8.7.1, local run, 2026-10-29)
 
 Baseline from the round-1 tests: 77.15% (341 killed, 101 survived; `mutation-baseline.json`).
-After the round-2 tests in `functions/test/coach-core.test.mjs`: 97.29% (430 killed, 12 survived; `mutation-final.json`,
-`mutation-final.html`). Each of the 12 survivors is argued equivalent below: no input reachable through `runCoach`
+After the round-2 tests in `functions/test/coach-core.test.mjs`: 97.29% (430 killed, 12 survived; `mutation-final.json`;
+the HTML view of the same run was removed on 2026-11-04, see below). Each of the 12 survivors is argued equivalent below: no input reachable through `runCoach`
 and the Admin SDK can tell the mutant from the original. "Equivalent" is my judgment from reading the code; the
 argument for each is given so it can be checked.
 
@@ -42,3 +42,7 @@ All 12 were rerun with the emulator suite (`functions/test/emulator/`, real fire
 as the test command: none was killed (`verify/evidence/round3/wiring/mutation-emulator.json.gz`). That is consistent
 with the arguments above, in particular 5 (a missing document's `get()` returns `undefined`) and 9 to 12 (merge and
 replace give the same quota documents).
+
+The HTML report (`mutation-final.html.gz`) was removed on 2026-11-04 at the owner's request, because the
+Prism.js syntax highlighter bundled in it lists Gherkin keywords in Chinese among other languages and the repository
+keeps no Chinese text. It only displayed `mutation-final.json`, which is unchanged and holds every result above.
