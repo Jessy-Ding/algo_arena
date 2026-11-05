@@ -172,7 +172,7 @@ with sync_playwright() as pw:
     check("the answer time defaults to 10 s", H.input_value("#l_t") == "10", H.input_value("#l_t"))
     launch = H.inner_text("main")
     check("the launch screen shows the scoring formula, one case per line, and no consent notice",
-          "score =" in launch and "if wrong or no answer" in launch and "Players are told before joining" not in launch
+          "score =" in launch and "if wrong or no answer" in launch and "Players are told before joining" not in launch and "Streaks" not in launch
           and H.evaluate("() => [...document.querySelectorAll('.notice span')].filter((s) => /^(500 \\+|0$)/.test(s.textContent)).every((s) => s.getClientRects().length === 1)"))
     if os.environ.get("E2E_SHOTS"):
         H.locator(".notice").first.screenshot(path=os.path.join(os.environ["E2E_SHOTS"], "launch-scoring.png"))

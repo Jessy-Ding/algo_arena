@@ -334,8 +334,7 @@ rep("Scoring: a correct answer earns between 500 and 1000 points, more for answe
     '<svg viewBox="0 0 12 100" preserveAspectRatio="none" style="display:block;width:10px;height:calc(100% - 6px);align-self:center" aria-hidden="true"><path d="M10 2 C5 2 6 8 6 18 L6 40 C6 46 4 50 1 50 C4 50 6 54 6 60 L6 82 C6 92 5 98 10 98" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>'
     '<div style="display:grid;grid-template-columns:max-content max-content;column-gap:28px;row-gap:4px">'
     '<span>500 + 500 * (1 &#x2212; <i>t</i>/<i>T</i>)</span><span class="muted">if correct</span><span>0</span><span class="muted">if wrong or no answer</span></div></div></div>'
-    '<div class="muted" style="font-size:.78rem"><i>t</i>: seconds from answers opening to your final choice. <i>T</i>: answer time per question. The score is rounded to a whole number.</div>'
-    '<div style="margin-top:8px">Streaks are shown for fun and never change the score. Players can change their answer until time runs out; the last choice counts.</div>',
+    '<div class="muted" style="font-size:.78rem"><i>t</i>: seconds from answers opening to your final choice. <i>T</i>: answer time per question. The score is rounded to a whole number.</div>',
     "launch_scoring_formula")
 # The host's launch screen no longer repeats the consent notice (user decision, 2026-11-04); players still see and
 # accept it on the join screen and in the lobby.
