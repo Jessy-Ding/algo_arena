@@ -142,6 +142,23 @@ owner and approved before the build patch is written.
 - A set with pending drafts can be edited and saved, but "Launch" is disabled until every draft is accepted or
   discarded.
 
+As built (2026-11-05; mock approved by the owner the same day; build patches in `tools/build-from-2.1.1.py`, platform
+capability `claude.use("draft")` in `site/platform-firebase.js`):
+
+- Drafts are documents in `data/users/{uid}/profile/sets/{setId}/drafts`; the set's `drafts` field counts them, and
+  both "Host this set live" and the Home list's "Host live" are disabled while it is above zero (the launch action
+  checks again).
+- The button is shown when `C.draft.allowed()` finds the host in `meta/aiHosts` or `meta/admins`, the same check the
+  function makes.
+- Before the first draft of a page load the form says "You can draft up to 50 questions a day": clients cannot read
+  `aiQuota`. After a draft it shows the function's `quotaLeft` ("48 of 50 questions left today").
+- A draft made from source text also shows the sentence it quotes from the source.
+- Edit opens the existing question editor ("Edit AI draft", "Save and accept"). `editedBeforeAccept` is true when any
+  player-visible field (prompt, image, options, key, feedback, explanation, references, topic, subtype, difficulty,
+  time limit, source) differs from the draft.
+- The function's own error message is shown (for example the daily limit), not the page's storage-quota message.
+- Deleting a set deletes its drafts; duplicating a set does not copy them.
+
 ## 9 Quota and cost
 
 - Counter `aiQuota/{uid}_g_{day}`, cap 50 questions per host per day (UTC day, `dayKey`). Reserved in full before the
@@ -169,7 +186,8 @@ ai: {
 ```
 
 - `provenance` gains: "Drafted by <model> on <date> (prompt <version>); verified by <verifierModel>: <status>;
-  reviewed and accepted by the host on <date>." Existing text is kept, as `bankSaveQ` does.
+  reviewed and accepted by the host on <date>." (", edited" follows "reviewed" when the host changed the draft).
+  Existing text is kept, as `bankSaveQ` does.
 - `questions.csv` gains `origin`, `ai_model`, `ai_prompt_version` and `ai_edited`; the data dictionary in the export
   README is updated. Session `contentHash` already covers question content.
 - `question_key` keeps its content formula (`qkeyOf`): the same content is the same item whoever wrote it.
@@ -206,6 +224,15 @@ Evidence for the server side (2026-11-05, Node 26 locally; CI runs Node 22):
   `deps.js` 92.82%. Most survivors left are constant strings and error details inside verifier calls whose failure is
   deliberately swallowed (the draft becomes `unverified`).
 
+Evidence for the page side (2026-11-05):
+- `test/e2e` (`build_app.py`, then `e2e_b.py`): 93 of 93 checks pass, 18 of them new. They cover the form, a quota
+  refusal, the request fields, the review order and notes, the hosting block, accept, edit, discard, the provenance of
+  accepted drafts, and the schema 5 export columns. The harness answers `draftQuestions` with
+  `test/e2e/qgen-fixture.json`, which `functions/test/qgen-fixture.mjs` produces with the real `runDraft`; a unit test
+  fails if the two drift apart, and another checks that the page's module and subtype lists match the function's.
+- `verify/i6/i6_oracle.py` on the Auth and Firestore emulators: 11 of 11 planned clicks recorded exactly once.
+- Unit tests 94 of 94; `tsc` clean.
+
 ## 13 Release order
 
 1. Owner approves the prompts (Appendix B): done 2026-11-04.
@@ -215,7 +242,8 @@ Evidence for the server side (2026-11-05, Node 26 locally; CI runs Node 22):
    functions:draftQuestions` on 2026-11-05 created the function and granted its service account access to both
    secrets; `coach` was not redeployed. A signed-out call returns not_granted. The first real draft (the live check)
    runs once the page side exists.
-3. Review-list mock approved; site build patch; e2e green; publish.
+3. Review-list mock approved (2026-11-05); site build patch written; e2e green. Publishing the site needs the
+   owner's OK; the first real draft on the live site is the live check.
 4. PRD change (Appendix A) as a pull request on `main`.
 
 ## 14 Relation to the Route 2 pack

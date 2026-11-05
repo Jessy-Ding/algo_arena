@@ -460,6 +460,175 @@ block("function playTick() {\n", "\n}\n",
       "  if (answered && remain <= -300 && p.finalShown !== i) { p.finalShown = i; rerender(); }\n"
       "}\n", "tick_after_answer")
 
+# AI question drafts (v1.1, docs/ai-question-generation.md; review-list mock approved by the owner on 2026-11-05).
+# Drafts from the draftQuestions function wait in sets/{id}/drafts; the host accepts, edits or discards each one, and a
+# set with drafts cannot be hosted. Accepted questions carry origin "ai_draft" and the drafting record in `ai`.
+rep("const C = { db: null, user: null, room: null, assets: null, sample: null, downloads: null };",
+    "const C = { db: null, user: null, room: null, assets: null, sample: null, downloads: null, draft: null };", "qgen_caps")
+rep('Promise.all(["room", "assets", "sample", "downloads"].map((n) => claude.use(n).then((x) => { C[n] = x; }).catch(() => {}))).then(() => rerender());',
+    'Promise.all(["room", "assets", "sample", "downloads", "draft"].map((n) => claude.use(n).then((x) => { C[n] = x; }).catch(() => {})))\n'
+    '    .then(async () => { S.canDraft = C.draft ? await C.draft.allowed().catch(() => false) : false; rerender(); });', "qgen_boot")
+rep("  setQ: (id) => `data/users/${S.uid}/profile/sets/${id}/q`,\n",
+    "  setQ: (id) => `data/users/${S.uid}/profile/sets/${id}/q`,\n"
+    "  setD: (id) => `data/users/${S.uid}/profile/sets/${id}/drafts`,\n", "qgen_path")
+rep("  return { id, meta, qs: qs.map((q) => ({ ...clone(q), id: q._id })) };",
+    "  const drafts = (await dlist(P.setD(id))).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));\n"
+    "  return { id, meta, qs: qs.map((q) => ({ ...clone(q), id: q._id })), drafts };", "qgen_loadset")
+rep('<button class="btn primary" data-act="launch" data-id="${E.id}" ${E.qs.length ? "" : "disabled"}>Host this set live</button>',
+    '<button class="btn primary" data-act="launch" data-id="${E.id}" ${!E.qs.length ? "disabled" : E.drafts.length ? `disabled title="Accept or discard the ${E.drafts.length} AI draft${E.drafts.length === 1 ? "" : "s"} first"` : ""}>Host this set live</button>',
+    "qgen_launch_btn")
+rep('  <div class="row" style="margin-bottom:12px"><h2 style="margin:0">Questions (${E.qs.length})</h2><span class="spacer"></span><button class="btn primary" data-act="addQ">Add question</button><button class="btn" data-act="importQ">Import JSON</button>',
+    '  ${draftsPanel(E)}\n'
+    '  <div class="row" style="margin-bottom:12px"><h2 style="margin:0">Questions (${E.qs.length})</h2><span class="spacer"></span><button class="btn primary" data-act="addQ">Add question</button>'
+    '${S.canDraft ? \'<button class="btn" data-act="draftOpen">Draft with AI</button>\' : ""}<button class="btn" data-act="importQ">Import JSON</button>',
+    "qgen_set_buttons")
+rep('<button class="btn primary sm" data-act="launch" data-id="${s._id}" ${s.count ? "" : "disabled title=\\"Add questions first\\""}>Host live</button>',
+    '<button class="btn primary sm" data-act="launch" data-id="${s._id}" ${!s.count ? "disabled title=\\"Add questions first\\"" : s.drafts ? "disabled title=\\"Review the AI drafts first\\"" : ""}>Host live</button>',
+    "qgen_home_launch")
+rep('const set = await loadSet(el.dataset.id); if (!set.qs.length) return toast("Add questions to this set first.");',
+    'const set = await loadSet(el.dataset.id); if (!set.qs.length) return toast("Add questions to this set first.");\n'
+    '  if (set.drafts.length) return toast("Accept or discard the AI drafts in this set before hosting it.");', "qgen_launch_guard")
+rep("ACT.addQ = () => { S.qdraftBank = false; S.qdraft = normQ(", "ACT.addQ = () => { S.qdraftBank = false; S.qdraftFrom = null; S.qdraft = normQ(", "qgen_addq")
+rep("ACT.editQ = (el) => { S.qdraftBank = false; const i", "ACT.editQ = (el) => { S.qdraftBank = false; S.qdraftFrom = null; const i", "qgen_editq")
+rep("ACT.bankNewQ = () => { S.qdraftBank = true; S.qdraft", "ACT.bankNewQ = () => { S.qdraftBank = true; S.qdraftFrom = null; S.qdraft", "qgen_banknewq")
+rep("if (i < 0) return; S.qdraftBank = true; S.qdraft = clone(S.bank[i]);", "if (i < 0) return; S.qdraftBank = true; S.qdraftFrom = null; S.qdraft = clone(S.bank[i]);", "qgen_bankeditq")
+rep('<h2 style="margin:0">${S.qdraftBank ? (S.qdraftIndex < 0 ? "New bank question"',
+    '<h2 style="margin:0">${S.qdraftFrom ? "Edit AI draft" : S.qdraftBank ? (S.qdraftIndex < 0 ? "New bank question"', "qgen_editor_title")
+rep('<div class="row"><button class="btn primary big" data-act="saveQ">Save question</button></div></div></div>',
+    '<div class="row"><button class="btn primary big" data-act="saveQ">${S.qdraftFrom ? "Save and accept" : "Save question"}</button></div></div></div>', "qgen_editor_save")
+rep("  if (S.qdraftBank) return bankSaveQ(q);\n", "  if (S.qdraftBank) return bankSaveQ(q);\n  if (S.qdraftFrom) return acceptDraft(S.qdraftFrom, q);\n", "qgen_saveq")
+rep('title: (src.meta.title || "Set") + " (copy)", createdAt: now(), updatedAt: now(), count: src.qs.length }',
+    'title: (src.meta.title || "Set") + " (copy)", createdAt: now(), updatedAt: now(), count: src.qs.length, drafts: 0 }', "qgen_dupset")
+rep("const qs = await dlist(P.setQ(el.dataset.id)); await pool(qs.map((q) => () => ddel(`${P.setQ(el.dataset.id)}/${q._id}`)), 6);",
+    "const qs = await dlist(P.setQ(el.dataset.id)); await pool(qs.map((q) => () => ddel(`${P.setQ(el.dataset.id)}/${q._id}`)), 6);\n"
+    "  const ds = await dlist(P.setD(el.dataset.id)); await pool(ds.map((d) => () => ddel(`${P.setD(el.dataset.id)}/${d._id}`)), 6);", "qgen_delset")
+rep(".qcard .opt.right{background:color-mix(in srgb,var(--ok) 20%,transparent);font-weight:700}",
+    ".qcard .opt.right{background:color-mix(in srgb,var(--ok) 20%,transparent);font-weight:700}\n"
+    ".vstat{font-weight:700}.vstat.bad{color:var(--bad)}.vstat.warn{color:var(--warn)}.vstat.ok{color:var(--ok)}\n"
+    ".why{margin:8px 0 0;padding-left:18px;font-size:.88rem;color:var(--muted)}", "qgen_css")
+# Research export: questions.csv says which questions began as AI drafts (schema_version 5).
+rep("has_image: !!q.img, n_references: (q.refs || []).length }));",
+    "has_image: !!q.img, n_references: (q.refs || []).length, origin: q.origin || \"human\", ai_model: (q.ai && q.ai.model) || \"\",\n"
+    "      ai_prompt_version: (q.ai && q.ai.promptVersions && q.ai.promptVersions.draft) || \"\", ai_edited: q.ai ? !!q.ai.editedBeforeAccept : \"\" }));", "qgen_export_row")
+rep('"has_image", "n_references"],', '"has_image", "n_references", "origin", "ai_model", "ai_prompt_version", "ai_edited"],', "qgen_export_cols")
+rep('schema: "algoarena-research-export", schema_version: 4,', 'schema: "algoarena-research-export", schema_version: 5,', "schema_5")
+rep("Sessions recorded before version 4 have one row per answer.\\n`;",
+    "Sessions recorded before version 4 have one row per answer.\\n"
+    "- schema_version 5 (v1.1): questions.csv adds origin (human, or ai_draft for a question an AI drafted and the host "
+    "accepted), ai_model, ai_prompt_version and ai_edited (whether the host edited the draft before accepting it). "
+    "question_key is unchanged, so the same content keeps one key whoever wrote it. Questions from earlier sessions read "
+    "as origin human.\\n`;", "readme_qgen")
+rep("/* ===================== Live Classroom: host ===================== */\n",
+    r'''/* ===================== AI question drafts (v1.1) ===================== */
+// Must match MODULES and SUBTYPES in functions/qgen-core.js (checked by functions/test/qgen-core.test.mjs).
+const DRAFT_MODULES = ["Module 1 (Foundations)", "Module 2 (Sorting and Order Statistics)", "Module 3 (Advanced Design and Analysis Techniques)",
+  "Module 4 (Graph Algorithms)", "Module 5 (Selected Topics)", "Module 6 (NP-Completeness)"];
+const DRAFT_SUBTYPES = ["complexity", "definition", "proof", "behavior", "loop-count", "recurrence"];
+const AUDIT_LABEL = { explanation: "Explanation", distractor: "Distractor", feedback_leak: "Feedback leak", feedback_wrong: "Feedback error", difficulty: "Difficulty", wording: "Wording" };
+const FLAG_NOTE = { duplicate: "Matches a question already in this set or the built-in bank.", near_duplicate: "Similar to a question in this set or the built-in bank; check it is not a repeat." };
+function draftStatus(d) {
+  const v = d.verify || {}; const issues = d.auditIssues || [];
+  const why = v.reason ? ` <span class="muted">Its reasoning: "${esc(v.reason)}"</span>` : "";
+  if (v.status === "disagree") return `<span class="vstat bad">The checker chose ${esc(v.choice)}, not the marked ${LETTERS[d.question.correct]}.</span>${why}`;
+  if (v.status === "ambiguous") return `<span class="vstat bad">The checker found more than one defensible answer, or none.</span>${why}`;
+  if (v.status === "issues") return `<span class="vstat warn">The checker agrees with the answer but noted ${issues.length} issue${issues.length === 1 ? "" : "s"}.</span> <span class="muted">${esc(issues.map((x) => `${AUDIT_LABEL[x.check] || x.check}: ${x.note}`).join("; "))}</span>`;
+  if (v.status === "agree") return `<span class="vstat ok">The checker agrees.</span>`;
+  return `<span class="vstat warn">Not checked: the checker was unavailable.</span>`;
+}
+function draftCard(d, i) {
+  const q = d.question; const flags = (d.flags || []).map((f) => FLAG_NOTE[f]).filter(Boolean).join(" ");
+  return `<div class="qcard" data-draft="${esc(d._id)}"><div class="row"><b>Draft ${i + 1}</b><span class="muted small">${[q.topic, q.subtype, q.difficulty].filter(Boolean).map(esc).join(", ")}</span><span class="spacer"></span>
+  <button class="btn sm primary" data-act="draftAccept" data-id="${esc(d._id)}">Accept</button><button class="btn sm" data-act="draftEdit" data-id="${esc(d._id)}">Edit</button><button class="btn sm danger" data-act="draftDiscard" data-id="${esc(d._id)}">Discard</button></div>
+  <div class="small" style="margin-top:6px">${draftStatus(d)}${flags ? ` <span class="muted">${esc(flags)}</span>` : ""}</div>
+  <div style="margin-top:6px;white-space:pre-wrap">${esc(q.prompt)}</div>
+  <div class="opts">${q.options.map((o, k) => `<div class="opt ${k === q.correct ? "right" : ""}">${LETTERS[k]}. ${esc(o)}</div>`).join("")}</div>
+  <ul class="why">${(d.rationales || []).map((r, k) => (k === q.correct || !r ? "" : `<li>${LETTERS[k]}: ${esc(r)}</li>`)).join("")}</ul>
+  ${q.explanation ? `<p class="muted small" style="margin:8px 0 0">Explanation: ${esc(q.explanation)}</p>` : ""}${d.sourceQuote ? `<p class="muted small" style="margin:4px 0 0">From your source: "${esc(d.sourceQuote)}"</p>` : ""}</div>`;
+}
+function draftsPanel(E) {
+  if (!E.drafts || !E.drafts.length) return "";
+  return `<div class="row" style="margin-bottom:12px"><h2 style="margin:0">AI drafts to review (${E.drafts.length})</h2><span class="spacer"></span><span class="muted small">Hosting is off until every draft is accepted or discarded.</span></div>
+  <div class="list" style="margin-bottom:22px">${E.drafts.map(draftCard).join("")}</div>`;
+}
+const draftGo = (n) => `Draft ${n} question${Number(n) === 1 ? "" : "s"}`;
+ACT.draftOpen = () => { S.draftForm = S.draftForm || { module: DRAFT_MODULES[0], count: 3, difficulty: "mixed", subtype: "", chapter: "", focus: "", sourceText: "" }; openDialog(draftDialog); };
+function draftDialog() {
+  const f = S.draftForm; const busy = !!S.drafting;
+  const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? "selected" : ""}>${esc(label)}</option>`;
+  const left = S.draftQuotaLeft == null ? "You can draft up to 50 questions a day." : `${S.draftQuotaLeft} of 50 questions left today.`;
+  return `<div class="dialog" style="max-width:620px"><h2 style="margin-top:0">Draft questions with AI</h2>
+  <p class="muted small">Drafts are written by Claude Sonnet 5.5 and checked by a second model. Nothing is added to this set until you accept it. ${left}</p>
+  <div class="fgrid">
+   <label class="f">Module<select id="d_module">${DRAFT_MODULES.map((m) => opt(m, m, f.module)).join("")}</select></label>
+   <label class="f">How many<select id="d_count">${[1, 2, 3, 4, 5].map((n) => opt(n, n, f.count)).join("")}</select></label>
+   <label class="f">Difficulty<select id="d_diff">${[["mixed", "Mixed"], ["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"]].map(([v, l]) => opt(v, l, f.difficulty)).join("")}</select></label>
+   <label class="f">Subtype<select id="d_sub">${[["", "Any"], ...DRAFT_SUBTYPES.map((x) => [x, x])].map(([v, l]) => opt(v, l, f.subtype)).join("")}</select></label>
+   <label class="f">CLRS chapter <span class="hint">optional</span><input id="d_ch" type="number" min="1" max="40" value="${esc(f.chapter)}"></label>
+  </div>
+  <label class="f" style="margin-top:12px">Focus <span class="hint">optional, up to 200 characters</span><input id="d_focus" maxlength="200" value="${esc(f.focus)}"></label>
+  <label class="f" style="margin-top:12px">Source text <span class="hint">optional, plain text, up to 12,000 characters; sent to Claude only</span><textarea id="d_src" rows="4" maxlength="12000">${esc(f.sourceText)}</textarea></label>
+  <div class="row" style="margin-top:16px"><span class="spacer"></span>${busy ? '<span class="muted small">Drafting and checking can take a minute or two.</span>' : '<button class="btn ghost" data-act="close">Cancel</button>'}<button class="btn primary" id="d_go" data-act="draftRun" ${busy ? "disabled" : ""}>${busy ? "Drafting…" : draftGo(f.count)}</button></div></div>`;
+}
+document.addEventListener("change", (e) => { if (e.target && e.target.id === "d_count" && !S.drafting) { const b = $("#d_go"); if (b) b.textContent = draftGo(e.target.value); } });
+function readDraftForm() {
+  const f = S.draftForm; f.module = $("#d_module").value; f.count = Number($("#d_count").value); f.difficulty = $("#d_diff").value; f.subtype = $("#d_sub").value;
+  f.chapter = $("#d_ch").value.trim(); f.focus = $("#d_focus").value.trim(); f.sourceText = $("#d_src").value; return f;
+}
+ACT.draftRun = async () => {
+  const E = S.edit; if (!E || !C.draft || S.drafting) return; const f = readDraftForm();
+  const chapter = f.chapter === "" ? null : Number(f.chapter);
+  if (chapter !== null && !(Number.isInteger(chapter) && chapter >= 1 && chapter <= 40)) return toast("The chapter must be a whole number from 1 to 40.");
+  S.drafting = true; S.dialogLocked = true; rerender();
+  let r;
+  // The function's own message (quota, access, upstream failure) is shown as is; errMsg() would misread quota_exceeded as storage.
+  try { r = await C.draft.run({ module: f.module, count: f.count, setId: E.id, focus: f.focus, chapter, difficulty: f.difficulty, subtype: f.subtype || null, sourceText: f.sourceText }); }
+  catch (e) { S.drafting = false; S.dialogLocked = false; rerender(); return toast(e.message || "AI drafting failed.", 6000); }
+  S.drafting = false; S.dialogLocked = false; S.draftQuotaLeft = r.quotaLeft;
+  const start = E.drafts.length ? Math.max(...E.drafts.map((d) => d.order ?? 0)) + 1 : 0;
+  const docs = r.drafts.map((d, k) => ({ ...d, ai: r.ai, order: start + k, createdAt: now(), _id: "d" + rid(9) }));
+  await pool(docs.map((d) => () => { const { _id, ...doc } = d; return dset(`${P.setD(E.id)}/${_id}`, doc); }), 6);
+  E.drafts.push(...docs);
+  await dupd(`${P.sets()}/${E.id}`, { drafts: E.drafts.length, updatedAt: now() });
+  S.dialog = null; rerender();
+  toast(r.delivered ? `${r.delivered} draft${r.delivered === 1 ? "" : "s"} ready to review.${r.dropped ? ` ${r.dropped} could not be drafted and ${r.dropped === 1 ? "was" : "were"} not counted against today's limit.` : ""}`
+    : "No usable drafts came back; nothing was counted against today's limit.", 6000);
+};
+/** Accepts a draft, or the host's edit of it (from the question editor), into the set. */
+async function acceptDraft(id, editedQ) {
+  const E = S.edit; const d = E.drafts.find((x) => x._id === id); if (!d) return;
+  const q = editedQ || { ...clone(d.question), id: "q" + rid(9) };
+  const errs = validateQ(q); if (errs.length) return toast("This question " + errs.join("; ") + ". Edit it before accepting.");
+  const keys = ["prompt", "img", "options", "correct", "optFeedback", "explanation", "refs", "topic", "subtype", "difficulty", "timeLimit", "source"];
+  const edited = !!editedQ && keys.some((k) => JSON.stringify(editedQ[k] ?? null) !== JSON.stringify(d.question[k] ?? null));
+  const ai = d.ai || {}; const v = d.verify || {}; const status = v.status || "unverified"; const day = new Date().toISOString().slice(0, 10);
+  q.origin = "ai_draft";
+  // Rationales and checker notes stay here, on the host's copy; the room only ever receives prompt, image and options.
+  q.ai = { model: ai.model || "", verifierModel: ai.verifierModel || "", promptVersions: ai.promptVersions || {}, generatedAt: ai.generatedAt || null,
+    requestSha256: ai.requestSha256 || "", verify: { status, choice: v.choice || null }, auditIssues: (d.auditIssues || []).map((x) => x.check),
+    distractorRationales: Object.fromEntries(LETTERS.map((L, k) => [L, (d.rationales || [])[k] || ""])), editedBeforeAccept: edited, acceptedAt: now(), acceptedBy: S.uid };
+  const made = ai.generatedAt ? new Date(ai.generatedAt).toISOString().slice(0, 10) : day;
+  const note = `Drafted by ${ai.model || "an AI model"} on ${made} (prompt ${(ai.promptVersions || {}).draft || "unknown"}); verified by ${ai.verifierModel || "a second model"}: ${status}; reviewed${edited ? ", edited" : ""} and accepted by the host on ${day}.`;
+  q.provenance = [q.provenance, note].filter(Boolean).join(" ");
+  const order = E.qs.length ? Math.max(...E.qs.map((x) => x.order ?? 0)) + 1 : 0;
+  await dset(`${P.setQ(E.id)}/${q.id}`, qDoc(q, order)); q.order = order; E.qs.push(q);
+  await ddel(`${P.setD(E.id)}/${id}`); E.drafts = E.drafts.filter((x) => x._id !== id);
+  await dupd(`${P.sets()}/${E.id}`, { count: E.qs.length, drafts: E.drafts.length, updatedAt: now() });
+  S.dialog = null; S.qdraftFrom = null; toast(edited ? "Edited draft added to the set." : "Draft added to the set."); rerender();
+}
+ACT.draftAccept = (el) => acceptDraft(el.dataset.id, null);
+ACT.draftEdit = (el) => {
+  const d = S.edit.drafts.find((x) => x._id === el.dataset.id); if (!d) return;
+  S.qdraftBank = false; S.qdraftFrom = d._id; S.qdraft = { ...clone(d.question), id: "q" + rid(9) }; S.qdraftIndex = -1; openDialog(qEditor);
+};
+ACT.draftDiscard = async (el) => {
+  const E = S.edit; if (!(await askConfirm("Discard this AI draft? It is deleted and not added to the set.", "Discard", true))) return;
+  await ddel(`${P.setD(E.id)}/${el.dataset.id}`); E.drafts = E.drafts.filter((x) => x._id !== el.dataset.id);
+  await dupd(`${P.sets()}/${E.id}`, { drafts: E.drafts.length, updatedAt: now() }); toast("Draft discarded."); rerender();
+};
+
+/* ===================== Live Classroom: host ===================== */
+''', "qgen_block")
+
 # File header and JSDoc overlay (comments only).
 rep("<!doctype html>\n", "<!doctype html>\n<!--\n"
     "  AlgoArena route B: the Live Classroom 2.1.1 page on GitHub Pages with Firebase (built by tools/build-from-2.1.1.py).\n\n"

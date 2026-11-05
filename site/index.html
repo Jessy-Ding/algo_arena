@@ -222,6 +222,8 @@ td.wrap-cell{white-space:normal;min-width:240px}
 .qcard .opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:.92rem}
 .qcard .opt{padding:6px 10px;border-radius:8px;background:var(--surface-2)}
 .qcard .opt.right{background:color-mix(in srgb,var(--ok) 20%,transparent);font-weight:700}
+.vstat{font-weight:700}.vstat.bad{color:var(--bad)}.vstat.warn{color:var(--warn)}.vstat.ok{color:var(--ok)}
+.why{margin:8px 0 0;padding-left:18px;font-size:.88rem;color:var(--muted)}
 .opted{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:12px;border-radius:12px;background:var(--surface-2)}
 .sw{width:30px;height:30px;border-radius:8px;display:grid;place-items:center}
 .sw svg{width:18px;height:18px;fill:#fff}
@@ -508,13 +510,14 @@ const S = {
   bank: null, lib: null, sets: null, sessions: null, joined: null,
   host: null, play: null, sess: null,
 };
-const C = { db: null, user: null, room: null, assets: null, sample: null, downloads: null };
+const C = { db: null, user: null, room: null, assets: null, sample: null, downloads: null, draft: null };
 let DB = null;
 const P = {
   profile: () => `data/users/${S.uid}/profile`,
   device: () => `data/users/${S.uid}/device`,
   sets: () => `data/users/${S.uid}/profile/sets`,
   setQ: (id) => `data/users/${S.uid}/profile/sets/${id}/q`,
+  setD: (id) => `data/users/${S.uid}/profile/sets/${id}/drafts`,
   sessions: () => `data/users/${S.uid}/profile/sessions`,
   sLog: (sid) => `data/users/${S.uid}/profile/sessions/${sid}/log`,
   sContent: (sid) => `data/users/${S.uid}/profile/sessions/${sid}/content`,
@@ -622,7 +625,8 @@ async function boot() {
   if (!S.uid) return go("gate", { reason: "signin" });
   [S.isAdmin, S.isOwner, S.canWrite] = await Promise.all([user.canEdit().catch(() => false), user.isOwner().catch(() => false), user.can("data.write").catch(() => null)]);
   if (S.canWrite === false) return go("gate", { reason: "viewonly" });
-  Promise.all(["room", "assets", "sample", "downloads"].map((n) => claude.use(n).then((x) => { C[n] = x; }).catch(() => {}))).then(() => rerender());
+  Promise.all(["room", "assets", "sample", "downloads", "draft"].map((n) => claude.use(n).then((x) => { C[n] = x; }).catch(() => {})))
+    .then(async () => { S.canDraft = C.draft ? await C.draft.allowed().catch(() => false) : false; rerender(); });
   try { S.profile = await dget(P.profile()); } catch (e) { return go("gate", { reason: "error", msg: errMsg(e) }); }
   await claimDevice();
   if (!S.profile || !S.profile.displayName) return go("name", {});
@@ -716,7 +720,7 @@ function homeSets() {
   const head = `<div class="row" style="margin-bottom:14px"><button class="btn primary" data-act="newSet">New question set</button><button class="btn ghost" data-act="importNewSet">Import JSON as a new set</button><span class="muted small">Sets are private to you. Course, week, and topic are optional.</span></div>`;
   if (!S.sets.length) return head + `<div class="empty"><h3>No question sets yet</h3><p>Create one from scratch, import JSON, or start from the built-in bank.</p><div class="row" style="justify-content:center"><button class="btn primary" data-act="newSet">New question set</button><button class="btn ghost" data-act="tab" data-tab="bank">Browse the built-in bank</button></div></div>`;
   return head + `<div class="list">${S.sets.map((s) => `<div class="item"><div class="grow"><div class="t">${esc(s.title || "Untitled set")}</div><div class="muted small">${setMeta(s) || "No course details"}${setMeta(s) ? "; " : ""}${s.count || 0} question${s.count === 1 ? "" : "s"}, updated ${fmtDate(s.updatedAt)}</div></div>
-    <button class="btn primary sm" data-act="launch" data-id="${s._id}" ${s.count ? "" : "disabled title=\"Add questions first\""}>Host live</button>
+    <button class="btn primary sm" data-act="launch" data-id="${s._id}" ${!s.count ? "disabled title=\"Add questions first\"" : s.drafts ? "disabled title=\"Review the AI drafts first\"" : ""}>Host live</button>
     <button class="btn sm" data-act="editSet" data-id="${s._id}">Edit</button><button class="btn sm ghost" data-act="dupSet" data-id="${s._id}">Duplicate</button><button class="btn sm danger" data-act="delSet" data-id="${s._id}">Delete</button></div>`).join("")}</div>`;
 }
 function homeSessions() {
@@ -753,7 +757,8 @@ ACT.libDel = async (el) => { const items = clone((S.lib && S.lib.items) || []).f
 async function loadSet(id) {
   const meta = await dget(`${P.sets()}/${id}`); if (!meta) throw new Error("That set no longer exists.");
   const qs = (await dlist(P.setQ(id))).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a._id).localeCompare(b._id));
-  return { id, meta, qs: qs.map((q) => ({ ...clone(q), id: q._id })) };
+  const drafts = (await dlist(P.setD(id))).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return { id, meta, qs: qs.map((q) => ({ ...clone(q), id: q._id })), drafts };
 }
 async function touchSet(id, count) { await dupd(`${P.sets()}/${id}`, { updatedAt: now(), count }); }
 ACT.newSet = async () => {
@@ -764,13 +769,14 @@ ACT.editSet = async (el) => { go("set", { id: el.dataset.id }); await openSetEdi
 async function openSetEditor(id) { S.edit = null; rerender(); S.edit = await loadSet(id); if (S.view === "set") rerender(); }
 ACT.dupSet = async (el) => {
   const src = await loadSet(el.dataset.id); const id = "set_" + rid(10);
-  await dset(`${P.sets()}/${id}`, { ...clone(src.meta), title: (src.meta.title || "Set") + " (copy)", createdAt: now(), updatedAt: now(), count: src.qs.length });
+  await dset(`${P.sets()}/${id}`, { ...clone(src.meta), title: (src.meta.title || "Set") + " (copy)", createdAt: now(), updatedAt: now(), count: src.qs.length, drafts: 0 });
   await writeQuestions(id, src.qs.map((q) => ({ ...q, id: "q" + rid(9) })));
   toast("Duplicated."); await loadHome();
 };
 ACT.delSet = async (el) => {
   const s = (S.sets || []).find((x) => x._id === el.dataset.id); if (!(await askConfirm(`Delete "${s ? s.title : "this set"}" and its questions? Past session records are kept.`, "Delete set", true))) return;
   const qs = await dlist(P.setQ(el.dataset.id)); await pool(qs.map((q) => () => ddel(`${P.setQ(el.dataset.id)}/${q._id}`)), 6);
+  const ds = await dlist(P.setD(el.dataset.id)); await pool(ds.map((d) => () => ddel(`${P.setD(el.dataset.id)}/${d._id}`)), 6);
   await ddel(`${P.sets()}/${el.dataset.id}`); toast("Set deleted."); await loadHome();
 };
 async function pool(fns, n) { const out = []; let i = 0; const run = async () => { while (i < fns.length) { const k = i++; out[k] = await fns[k](); } }; await Promise.all(Array.from({ length: Math.min(n, fns.length) }, run)); return out; }
@@ -780,13 +786,14 @@ VIEWS.set = () => {
   const E = S.edit; if (!E) return `<main><div class="wrap"><p class="muted">Loading set…</p></div></main>`;
   const m = E.meta;
   return `<main><div class="wrap">
-  <div class="row" style="margin-bottom:10px"><button class="btn sm ghost" data-act="home">Back to Home</button><span class="spacer"></span><button class="btn primary" data-act="launch" data-id="${E.id}" ${E.qs.length ? "" : "disabled"}>Host this set live</button></div>
+  <div class="row" style="margin-bottom:10px"><button class="btn sm ghost" data-act="home">Back to Home</button><span class="spacer"></span><button class="btn primary" data-act="launch" data-id="${E.id}" ${!E.qs.length ? "disabled" : E.drafts.length ? `disabled title="Accept or discard the ${E.drafts.length} AI draft${E.drafts.length === 1 ? "" : "s"} first"` : ""}>Host this set live</button></div>
   <h1>${esc(m.title || "Untitled set")}</h1>
   <div class="panel" style="margin-bottom:20px"><h3>Set details</h3><p class="muted small">Everything except the name is optional. Use whatever structure fits: course and week, a topic, or just a name like "Midterm review".</p>
     <div class="fgrid"><label class="f">Set name<input id="m_title" value="${esc(m.title)}"></label><label class="f">Course code<input id="m_course" value="${esc(m.course)}" placeholder="CS5800"></label><label class="f">Week<input id="m_week" value="${esc(m.week)}"></label><label class="f">Topic<input id="m_topic" value="${esc(m.topic)}"></label></div>
     <label class="f" style="margin-top:12px">Description<textarea id="m_desc">${esc(m.description)}</textarea></label>
     <div class="row" style="margin-top:12px"><button class="btn primary" data-act="saveMeta">Save details</button></div></div>
-  <div class="row" style="margin-bottom:12px"><h2 style="margin:0">Questions (${E.qs.length})</h2><span class="spacer"></span><button class="btn primary" data-act="addQ">Add question</button><button class="btn" data-act="importQ">Import JSON</button><button class="btn ghost" data-act="tabBank">Add from built-in bank</button></div>
+  ${draftsPanel(E)}
+  <div class="row" style="margin-bottom:12px"><h2 style="margin:0">Questions (${E.qs.length})</h2><span class="spacer"></span><button class="btn primary" data-act="addQ">Add question</button>${S.canDraft ? '<button class="btn" data-act="draftOpen">Draft with AI</button>' : ""}<button class="btn" data-act="importQ">Import JSON</button><button class="btn ghost" data-act="tabBank">Add from built-in bank</button></div>
   ${E.qs.length ? `<div class="list">${E.qs.map((q, i) => qCard(q, i, E.qs.length)).join("")}</div>` : `<div class="empty"><h3>This set has no questions yet</h3><p>Each question is single choice with four options and one correct answer.</p><button class="btn primary" data-act="addQ">Add the first question</button></div>`}
   </div></main>`;
 };
@@ -814,12 +821,12 @@ ACT.delQ = async (el) => {
 };
 
 /* ---------- question editor dialog ---------- */
-ACT.addQ = () => { S.qdraftBank = false; S.qdraft = normQ({ options: ["", "", "", ""], correct: -1 }, S.edit.qs.length); S.qdraftIndex = -1; openDialog(qEditor); };
-ACT.editQ = (el) => { S.qdraftBank = false; const i = Number(el.dataset.i); S.qdraft = clone(S.edit.qs[i]); S.qdraftIndex = i; openDialog(qEditor); };
+ACT.addQ = () => { S.qdraftBank = false; S.qdraftFrom = null; S.qdraft = normQ({ options: ["", "", "", ""], correct: -1 }, S.edit.qs.length); S.qdraftIndex = -1; openDialog(qEditor); };
+ACT.editQ = (el) => { S.qdraftBank = false; S.qdraftFrom = null; const i = Number(el.dataset.i); S.qdraft = clone(S.edit.qs[i]); S.qdraftIndex = i; openDialog(qEditor); };
 function qEditor() {
   const q = S.qdraft;
   const canUp = !!C.assets;
-  return `<div class="dialog" style="max-width:860px"><div class="row"><h2 style="margin:0">${S.qdraftBank ? (S.qdraftIndex < 0 ? "New bank question" : "Edit bank question") : S.qdraftIndex < 0 ? "New question" : "Edit question " + (S.qdraftIndex + 1)}</h2><span class="spacer"></span><button class="btn sm ghost" data-act="close">Cancel</button></div>
+  return `<div class="dialog" style="max-width:860px"><div class="row"><h2 style="margin:0">${S.qdraftFrom ? "Edit AI draft" : S.qdraftBank ? (S.qdraftIndex < 0 ? "New bank question" : "Edit bank question") : S.qdraftIndex < 0 ? "New question" : "Edit question " + (S.qdraftIndex + 1)}</h2><span class="spacer"></span><button class="btn sm ghost" data-act="close">Cancel</button></div>
   <div class="stack" style="margin-top:14px">
   <label class="f">Question prompt<span class="hint">Text, an image, or both.</span><textarea id="q_prompt" rows="4">${esc(q.prompt)}</textarea></label>
   <div class="row">${q.img ? `<img src="${blobUrl(q.img)}" alt="Prompt image" style="max-height:160px;border-radius:10px"><button class="btn sm danger" data-act="qImgDel">Remove image</button>` : ""}
@@ -836,7 +843,7 @@ function qEditor() {
    <label class="f">Difficulty<select id="q_diff">${["", "easy", "medium", "hard"].map((d) => `<option value="${d}" ${q.difficulty === d ? "selected" : ""}>${d || "Not set"}</option>`).join("")}</select></label>
    <label class="f">Time limit (seconds)<span class="hint">Blank uses the room default</span><input id="q_time" type="number" min="5" max="300" value="${q.timeLimit ?? ""}"></label>
    <label class="f">Source<input id="q_src" value="${esc(q.source)}" placeholder="Who wrote this item, e.g. course staff"></label></div>
-  <div class="row"><button class="btn primary big" data-act="saveQ">Save question</button></div></div></div>`;
+  <div class="row"><button class="btn primary big" data-act="saveQ">${S.qdraftFrom ? "Save and accept" : "Save question"}</button></div></div></div>`;
 }
 /** Every action that re-renders the question editor must call this first, or typed but unsaved edits are lost. */
 function readQForm() {
@@ -850,6 +857,7 @@ function readQForm() {
 ACT.saveQ = async () => {
   const q = readQForm(); const errs = validateQ(q); if (errs.length) return toast("This question " + errs.join("; ") + ".");
   if (S.qdraftBank) return bankSaveQ(q);
+  if (S.qdraftFrom) return acceptDraft(S.qdraftFrom, q);
   const E = S.edit; const order = S.qdraftIndex < 0 ? (E.qs.length ? Math.max(...E.qs.map((x) => x.order ?? 0)) + 1 : 0) : q.order;
   await dset(`${P.setQ(E.id)}/${q.id}`, qDoc(q, order)); q.order = order;
   if (S.qdraftIndex < 0) E.qs.push(q); else E.qs[S.qdraftIndex] = q;
@@ -999,8 +1007,8 @@ ACT.bankWrite = async () => {
    sessions hold their own copies, so an edit or a delete changes neither. */
 const bankDay = () => new Date().toISOString().slice(0, 10);
 async function bankCount() { const m = (await dget(P.bankMeta)) || {}; await dset(P.bankMeta, { ...m, count: S.bank.length, updatedAt: now() }); }
-ACT.bankNewQ = () => { S.qdraftBank = true; S.qdraft = normQ({ options: ["", "", "", ""], correct: -1 }, 0); S.qdraftIndex = -1; openDialog(qEditor); };
-ACT.bankEditQ = (el) => { const i = S.bank.findIndex((q) => q.id === el.dataset.id); if (i < 0) return; S.qdraftBank = true; S.qdraft = clone(S.bank[i]); S.qdraftIndex = i; openDialog(qEditor); };
+ACT.bankNewQ = () => { S.qdraftBank = true; S.qdraftFrom = null; S.qdraft = normQ({ options: ["", "", "", ""], correct: -1 }, 0); S.qdraftIndex = -1; openDialog(qEditor); };
+ACT.bankEditQ = (el) => { const i = S.bank.findIndex((q) => q.id === el.dataset.id); if (i < 0) return; S.qdraftBank = true; S.qdraftFrom = null; S.qdraft = clone(S.bank[i]); S.qdraftIndex = i; openDialog(qEditor); };
 async function bankSaveQ(q) {
   const isNew = S.qdraftIndex < 0;
   const order = isNew ? (S.bank.length ? Math.max(...S.bank.map((x) => x.order ?? 0)) + 1 : 0) : q.order ?? 0;
@@ -1114,9 +1122,117 @@ const COUNTED = new Set();
 function cnt(key, from, to) { if (COUNTED.has(key) || from === to) return Number(to).toLocaleString(); return `<span data-count-key="${esc(key)}" data-count-to="${to}" data-count-from="${from}">${Number(from).toLocaleString()}</span>`; }
 function runCountUps() { $$("[data-count-key]").forEach((el) => { if (COUNTED.has(el.dataset.countKey)) return; COUNTED.add(el.dataset.countKey); countUp(el, Number(el.dataset.countFrom), Number(el.dataset.countTo)); }); }
 
+/* ===================== AI question drafts (v1.1) ===================== */
+// Must match MODULES and SUBTYPES in functions/qgen-core.js (checked by functions/test/qgen-core.test.mjs).
+const DRAFT_MODULES = ["Module 1 (Foundations)", "Module 2 (Sorting and Order Statistics)", "Module 3 (Advanced Design and Analysis Techniques)",
+  "Module 4 (Graph Algorithms)", "Module 5 (Selected Topics)", "Module 6 (NP-Completeness)"];
+const DRAFT_SUBTYPES = ["complexity", "definition", "proof", "behavior", "loop-count", "recurrence"];
+const AUDIT_LABEL = { explanation: "Explanation", distractor: "Distractor", feedback_leak: "Feedback leak", feedback_wrong: "Feedback error", difficulty: "Difficulty", wording: "Wording" };
+const FLAG_NOTE = { duplicate: "Matches a question already in this set or the built-in bank.", near_duplicate: "Similar to a question in this set or the built-in bank; check it is not a repeat." };
+function draftStatus(d) {
+  const v = d.verify || {}; const issues = d.auditIssues || [];
+  const why = v.reason ? ` <span class="muted">Its reasoning: "${esc(v.reason)}"</span>` : "";
+  if (v.status === "disagree") return `<span class="vstat bad">The checker chose ${esc(v.choice)}, not the marked ${LETTERS[d.question.correct]}.</span>${why}`;
+  if (v.status === "ambiguous") return `<span class="vstat bad">The checker found more than one defensible answer, or none.</span>${why}`;
+  if (v.status === "issues") return `<span class="vstat warn">The checker agrees with the answer but noted ${issues.length} issue${issues.length === 1 ? "" : "s"}.</span> <span class="muted">${esc(issues.map((x) => `${AUDIT_LABEL[x.check] || x.check}: ${x.note}`).join("; "))}</span>`;
+  if (v.status === "agree") return `<span class="vstat ok">The checker agrees.</span>`;
+  return `<span class="vstat warn">Not checked: the checker was unavailable.</span>`;
+}
+function draftCard(d, i) {
+  const q = d.question; const flags = (d.flags || []).map((f) => FLAG_NOTE[f]).filter(Boolean).join(" ");
+  return `<div class="qcard" data-draft="${esc(d._id)}"><div class="row"><b>Draft ${i + 1}</b><span class="muted small">${[q.topic, q.subtype, q.difficulty].filter(Boolean).map(esc).join(", ")}</span><span class="spacer"></span>
+  <button class="btn sm primary" data-act="draftAccept" data-id="${esc(d._id)}">Accept</button><button class="btn sm" data-act="draftEdit" data-id="${esc(d._id)}">Edit</button><button class="btn sm danger" data-act="draftDiscard" data-id="${esc(d._id)}">Discard</button></div>
+  <div class="small" style="margin-top:6px">${draftStatus(d)}${flags ? ` <span class="muted">${esc(flags)}</span>` : ""}</div>
+  <div style="margin-top:6px;white-space:pre-wrap">${esc(q.prompt)}</div>
+  <div class="opts">${q.options.map((o, k) => `<div class="opt ${k === q.correct ? "right" : ""}">${LETTERS[k]}. ${esc(o)}</div>`).join("")}</div>
+  <ul class="why">${(d.rationales || []).map((r, k) => (k === q.correct || !r ? "" : `<li>${LETTERS[k]}: ${esc(r)}</li>`)).join("")}</ul>
+  ${q.explanation ? `<p class="muted small" style="margin:8px 0 0">Explanation: ${esc(q.explanation)}</p>` : ""}${d.sourceQuote ? `<p class="muted small" style="margin:4px 0 0">From your source: "${esc(d.sourceQuote)}"</p>` : ""}</div>`;
+}
+function draftsPanel(E) {
+  if (!E.drafts || !E.drafts.length) return "";
+  return `<div class="row" style="margin-bottom:12px"><h2 style="margin:0">AI drafts to review (${E.drafts.length})</h2><span class="spacer"></span><span class="muted small">Hosting is off until every draft is accepted or discarded.</span></div>
+  <div class="list" style="margin-bottom:22px">${E.drafts.map(draftCard).join("")}</div>`;
+}
+const draftGo = (n) => `Draft ${n} question${Number(n) === 1 ? "" : "s"}`;
+ACT.draftOpen = () => { S.draftForm = S.draftForm || { module: DRAFT_MODULES[0], count: 3, difficulty: "mixed", subtype: "", chapter: "", focus: "", sourceText: "" }; openDialog(draftDialog); };
+function draftDialog() {
+  const f = S.draftForm; const busy = !!S.drafting;
+  const opt = (v, label, cur) => `<option value="${esc(v)}" ${String(cur) === String(v) ? "selected" : ""}>${esc(label)}</option>`;
+  const left = S.draftQuotaLeft == null ? "You can draft up to 50 questions a day." : `${S.draftQuotaLeft} of 50 questions left today.`;
+  return `<div class="dialog" style="max-width:620px"><h2 style="margin-top:0">Draft questions with AI</h2>
+  <p class="muted small">Drafts are written by Claude Sonnet 5.5 and checked by a second model. Nothing is added to this set until you accept it. ${left}</p>
+  <div class="fgrid">
+   <label class="f">Module<select id="d_module">${DRAFT_MODULES.map((m) => opt(m, m, f.module)).join("")}</select></label>
+   <label class="f">How many<select id="d_count">${[1, 2, 3, 4, 5].map((n) => opt(n, n, f.count)).join("")}</select></label>
+   <label class="f">Difficulty<select id="d_diff">${[["mixed", "Mixed"], ["easy", "Easy"], ["medium", "Medium"], ["hard", "Hard"]].map(([v, l]) => opt(v, l, f.difficulty)).join("")}</select></label>
+   <label class="f">Subtype<select id="d_sub">${[["", "Any"], ...DRAFT_SUBTYPES.map((x) => [x, x])].map(([v, l]) => opt(v, l, f.subtype)).join("")}</select></label>
+   <label class="f">CLRS chapter <span class="hint">optional</span><input id="d_ch" type="number" min="1" max="40" value="${esc(f.chapter)}"></label>
+  </div>
+  <label class="f" style="margin-top:12px">Focus <span class="hint">optional, up to 200 characters</span><input id="d_focus" maxlength="200" value="${esc(f.focus)}"></label>
+  <label class="f" style="margin-top:12px">Source text <span class="hint">optional, plain text, up to 12,000 characters; sent to Claude only</span><textarea id="d_src" rows="4" maxlength="12000">${esc(f.sourceText)}</textarea></label>
+  <div class="row" style="margin-top:16px"><span class="spacer"></span>${busy ? '<span class="muted small">Drafting and checking can take a minute or two.</span>' : '<button class="btn ghost" data-act="close">Cancel</button>'}<button class="btn primary" id="d_go" data-act="draftRun" ${busy ? "disabled" : ""}>${busy ? "Drafting…" : draftGo(f.count)}</button></div></div>`;
+}
+document.addEventListener("change", (e) => { if (e.target && e.target.id === "d_count" && !S.drafting) { const b = $("#d_go"); if (b) b.textContent = draftGo(e.target.value); } });
+function readDraftForm() {
+  const f = S.draftForm; f.module = $("#d_module").value; f.count = Number($("#d_count").value); f.difficulty = $("#d_diff").value; f.subtype = $("#d_sub").value;
+  f.chapter = $("#d_ch").value.trim(); f.focus = $("#d_focus").value.trim(); f.sourceText = $("#d_src").value; return f;
+}
+ACT.draftRun = async () => {
+  const E = S.edit; if (!E || !C.draft || S.drafting) return; const f = readDraftForm();
+  const chapter = f.chapter === "" ? null : Number(f.chapter);
+  if (chapter !== null && !(Number.isInteger(chapter) && chapter >= 1 && chapter <= 40)) return toast("The chapter must be a whole number from 1 to 40.");
+  S.drafting = true; S.dialogLocked = true; rerender();
+  let r;
+  // The function's own message (quota, access, upstream failure) is shown as is; errMsg() would misread quota_exceeded as storage.
+  try { r = await C.draft.run({ module: f.module, count: f.count, setId: E.id, focus: f.focus, chapter, difficulty: f.difficulty, subtype: f.subtype || null, sourceText: f.sourceText }); }
+  catch (e) { S.drafting = false; S.dialogLocked = false; rerender(); return toast(e.message || "AI drafting failed.", 6000); }
+  S.drafting = false; S.dialogLocked = false; S.draftQuotaLeft = r.quotaLeft;
+  const start = E.drafts.length ? Math.max(...E.drafts.map((d) => d.order ?? 0)) + 1 : 0;
+  const docs = r.drafts.map((d, k) => ({ ...d, ai: r.ai, order: start + k, createdAt: now(), _id: "d" + rid(9) }));
+  await pool(docs.map((d) => () => { const { _id, ...doc } = d; return dset(`${P.setD(E.id)}/${_id}`, doc); }), 6);
+  E.drafts.push(...docs);
+  await dupd(`${P.sets()}/${E.id}`, { drafts: E.drafts.length, updatedAt: now() });
+  S.dialog = null; rerender();
+  toast(r.delivered ? `${r.delivered} draft${r.delivered === 1 ? "" : "s"} ready to review.${r.dropped ? ` ${r.dropped} could not be drafted and ${r.dropped === 1 ? "was" : "were"} not counted against today's limit.` : ""}`
+    : "No usable drafts came back; nothing was counted against today's limit.", 6000);
+};
+/** Accepts a draft, or the host's edit of it (from the question editor), into the set. */
+async function acceptDraft(id, editedQ) {
+  const E = S.edit; const d = E.drafts.find((x) => x._id === id); if (!d) return;
+  const q = editedQ || { ...clone(d.question), id: "q" + rid(9) };
+  const errs = validateQ(q); if (errs.length) return toast("This question " + errs.join("; ") + ". Edit it before accepting.");
+  const keys = ["prompt", "img", "options", "correct", "optFeedback", "explanation", "refs", "topic", "subtype", "difficulty", "timeLimit", "source"];
+  const edited = !!editedQ && keys.some((k) => JSON.stringify(editedQ[k] ?? null) !== JSON.stringify(d.question[k] ?? null));
+  const ai = d.ai || {}; const v = d.verify || {}; const status = v.status || "unverified"; const day = new Date().toISOString().slice(0, 10);
+  q.origin = "ai_draft";
+  // Rationales and checker notes stay here, on the host's copy; the room only ever receives prompt, image and options.
+  q.ai = { model: ai.model || "", verifierModel: ai.verifierModel || "", promptVersions: ai.promptVersions || {}, generatedAt: ai.generatedAt || null,
+    requestSha256: ai.requestSha256 || "", verify: { status, choice: v.choice || null }, auditIssues: (d.auditIssues || []).map((x) => x.check),
+    distractorRationales: Object.fromEntries(LETTERS.map((L, k) => [L, (d.rationales || [])[k] || ""])), editedBeforeAccept: edited, acceptedAt: now(), acceptedBy: S.uid };
+  const made = ai.generatedAt ? new Date(ai.generatedAt).toISOString().slice(0, 10) : day;
+  const note = `Drafted by ${ai.model || "an AI model"} on ${made} (prompt ${(ai.promptVersions || {}).draft || "unknown"}); verified by ${ai.verifierModel || "a second model"}: ${status}; reviewed${edited ? ", edited" : ""} and accepted by the host on ${day}.`;
+  q.provenance = [q.provenance, note].filter(Boolean).join(" ");
+  const order = E.qs.length ? Math.max(...E.qs.map((x) => x.order ?? 0)) + 1 : 0;
+  await dset(`${P.setQ(E.id)}/${q.id}`, qDoc(q, order)); q.order = order; E.qs.push(q);
+  await ddel(`${P.setD(E.id)}/${id}`); E.drafts = E.drafts.filter((x) => x._id !== id);
+  await dupd(`${P.sets()}/${E.id}`, { count: E.qs.length, drafts: E.drafts.length, updatedAt: now() });
+  S.dialog = null; S.qdraftFrom = null; toast(edited ? "Edited draft added to the set." : "Draft added to the set."); rerender();
+}
+ACT.draftAccept = (el) => acceptDraft(el.dataset.id, null);
+ACT.draftEdit = (el) => {
+  const d = S.edit.drafts.find((x) => x._id === el.dataset.id); if (!d) return;
+  S.qdraftBank = false; S.qdraftFrom = d._id; S.qdraft = { ...clone(d.question), id: "q" + rid(9) }; S.qdraftIndex = -1; openDialog(qEditor);
+};
+ACT.draftDiscard = async (el) => {
+  const E = S.edit; if (!(await askConfirm("Discard this AI draft? It is deleted and not added to the set.", "Discard", true))) return;
+  await ddel(`${P.setD(E.id)}/${el.dataset.id}`); E.drafts = E.drafts.filter((x) => x._id !== el.dataset.id);
+  await dupd(`${P.sets()}/${E.id}`, { drafts: E.drafts.length, updatedAt: now() }); toast("Draft discarded."); rerender();
+};
+
 /* ===================== Live Classroom: host ===================== */
 ACT.launch = async (el) => {
   const set = await loadSet(el.dataset.id); if (!set.qs.length) return toast("Add questions to this set first.");
+  if (set.drafts.length) return toast("Accept or discard the AI drafts in this set before hosting it.");
   const bad = set.qs.map((q, i) => [i, validateQ(q)]).filter(([, e]) => e.length);
   if (bad.length) return toast(`Question ${bad[0][0] + 1} ${bad[0][1].join("; ")}. Fix it before hosting.`);
   S.launchSet = set; go("launch", {});
@@ -1690,7 +1806,8 @@ async function buildExport(sids, incNames) {
     out.sessions.push({ session_id: sid, mode: m.mode, host_pid: hostPid, question_set_id: m.setId, set_title: m.setTitle, course: m.setMeta && m.setMeta.course, week: m.setMeta && m.setMeta.week, topic: m.setMeta && m.setMeta.topic,
       ordered_question_ids: m.qids.join(" "), ordered_question_keys: m.qkeys.join(" "), created_ms: m.createdAt, start_ms: m.startAt, end_ms: m.endAt, participant_count: m.participantCount, questions_played: X.logs.length,
       timer_default_s: m.timer.defaultT, timer_per_question_s: m.timer.perQuestion.map((x) => x ?? "").join(" "), reading_time_s: m.timer.readS ?? 0, scoring_formula: m.scoring.formula, streak_affects_score: false, app_version: m.appVersion, content_hash: m.contentHash || "" });
-    X.qs.forEach((q, i) => out.questions.push({ session_id: sid, q_index: i, question_id: q.id, question_key: q.qkey, bank_id: q.bankId || "", chapter_alignment: q.chapter ?? "", provenance: q.provenance || "", topic: q.topic, subtype: q.subtype, difficulty: q.difficulty, source: q.source, time_limit_s: q.timeLimit || m.timer.defaultT, correct_option: q.correct, prompt: q.prompt, option_a: q.options[0], option_b: q.options[1], option_c: q.options[2], option_d: q.options[3], has_image: !!q.img, n_references: (q.refs || []).length }));
+    X.qs.forEach((q, i) => out.questions.push({ session_id: sid, q_index: i, question_id: q.id, question_key: q.qkey, bank_id: q.bankId || "", chapter_alignment: q.chapter ?? "", provenance: q.provenance || "", topic: q.topic, subtype: q.subtype, difficulty: q.difficulty, source: q.source, time_limit_s: q.timeLimit || m.timer.defaultT, correct_option: q.correct, prompt: q.prompt, option_a: q.options[0], option_b: q.options[1], option_c: q.options[2], option_d: q.options[3], has_image: !!q.img, n_references: (q.refs || []).length, origin: q.origin || "human", ai_model: (q.ai && q.ai.model) || "",
+      ai_prompt_version: (q.ai && q.ai.promptVersions && q.ai.promptVersions.draft) || "", ai_edited: q.ai ? !!q.ai.editedBeforeAccept : "" }));
     for (const p of m.participants || []) out.participants.push({ session_id: sid, pid: p.pid, joined_at_ms: p.joinedAt, consent_at_ms: p.consentAt, ...(incNames ? { display_name: p.name } : {}) });
     const pev = [...(m.participantEvents || []), ...(m.lateEvents || [])];
     for (const l of X.logs) {
@@ -1710,18 +1827,18 @@ async function buildExport(sids, incNames) {
 }
 const COLS = {
   sessions: ["session_id", "mode", "host_pid", "question_set_id", "set_title", "course", "week", "topic", "ordered_question_ids", "ordered_question_keys", "created_ms", "start_ms", "end_ms", "participant_count", "questions_played", "timer_default_s", "timer_per_question_s", "reading_time_s", "scoring_formula", "streak_affects_score", "app_version", "content_hash"],
-  questions: ["session_id", "q_index", "question_id", "question_key", "bank_id", "chapter_alignment", "provenance", "topic", "subtype", "difficulty", "source", "time_limit_s", "correct_option", "prompt", "option_a", "option_b", "option_c", "option_d", "has_image", "n_references"],
+  questions: ["session_id", "q_index", "question_id", "question_key", "bank_id", "chapter_alignment", "provenance", "topic", "subtype", "difficulty", "source", "time_limit_s", "correct_option", "prompt", "option_a", "option_b", "option_c", "option_d", "has_image", "n_references", "origin", "ai_model", "ai_prompt_version", "ai_edited"],
   exposures: ["exposure_id", "session_id", "pid", "question_id", "question_key", "q_index", "exposure_number", "question_shown_at_ms", "answers_open_at_ms", "first_submission_at_ms", "first_attempt_correct", "first_attempt_rt_ms", "n_submissions", "time_to_correct_ms", "final_correct", "timed_out_or_no_answer", "full_explanation_viewed", "reference_interactions", "reference_interactions_after_session", "device_takeovers"],
   submissions: ["session_id", "pid", "question_id", "question_key", "q_index", "exposure_number", "selected_option", "correct", "timed_out", "participant_local_submit_ms", "clock_offset_ms", "clock_rtt_ms", "answers_open_at_ms", "submitted_at_host_ms", "host_observed_at_ms", "elapsed_ms", "client_elapsed_ms", "submitted_before_open", "timing_source", "time_limit_s", "score", "selection_index", "is_final_answer", "device_id", "device_takeover_state"],
   events: ["session_id", "actor", "type", "at_ms", "q_index", "detail"],
   per_question: ["session_id", "q_index", "question_id", "exposures", "answered", "correct", "accuracy", "dist_a", "dist_b", "dist_c", "dist_d", "median_rt_ms", "mean_rt_ms"],
 };
 function readme(incNames) {
-  return `# AlgoArena research export\n\nExported ${new Date().toISOString()} by AlgoArena ${APP.version}.\n\n## Identity\n\nParticipants are identified by \`pid\`, a pseudonym: the first 12 hex characters of SHA-256(host-private salt + account id). The same person keeps the same pid across this host's sessions. Emails and sign-in tokens are never exported.${incNames ? " Display names were included at the exporter's request; treat these files as identifiable." : " Display names are excluded."}\n\n## Files\n\n- sessions.csv: one row per session, with timer, reading time and scoring configuration, and content_hash (a hash of the question content, answers, explanations and references used).\n- questions.csv: question content snapshot as played (content is stored separately from behavior).\n- participants.csv: pid, join time, consent time.\n- exposures.csv: one row per participant per question shown (raw evidence plus first-attempt fields). Live Classroom allows one scored submission per exposure.\n- submissions.csv: one row per answer, with raw timestamps.\n- events.csv: auditable event log (question shown, answer selected or submitted, correct answer revealed, reference opened, reconnect, device takeover, session completed).\n- derived_per_question.csv and derived_per_participant.csv: metrics computed from the raw rows above.\n\n## Timestamp semantics\n\n${Object.entries(TIMESTAMP_SEMANTICS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}\n\n## Notes\n\n- exposure_number counts this pseudonymous participant's exposures to the same question content (question_key, a hash of prompt, image and options) across this host's sessions.\n- AI-generated learning reports are interpretations and are not part of this export.\n- reference_opened events carry phase: live (opened on the reveal screen) or post (opened from the participant's review after the game). Events that reach a participant's record after the session ended (post-game opens, and events still buffered on a device when the host ended the game) are collected when the host opens the session dashboard or exports; they are lost if the participant has since joined another game.\n- schema_version 2 (AlgoArena 2.1) adds the reading phase. Rows from earlier sessions get answers_open_at_ms = question_shown_at_ms and submitted_before_open = false.\n- schema_version 3 (AlgoArena 3, Firebase): timing fields use the Firestore server clock; elapsed_ms includes network delay from the device; client_elapsed_ms is the device's own unlock-to-tap measurement.\n- schema_version 4: players may change their answer until time runs out. submissions has one row per selection (selection_index from 1); is_final_answer marks the one that counts, and only it carries a score. In exposures, first_* describe the first selection, n_submissions counts selections, time_to_correct_ms is the first correct selection and final_correct the counted one. Sessions recorded before version 4 have one row per answer.\n`;
+  return `# AlgoArena research export\n\nExported ${new Date().toISOString()} by AlgoArena ${APP.version}.\n\n## Identity\n\nParticipants are identified by \`pid\`, a pseudonym: the first 12 hex characters of SHA-256(host-private salt + account id). The same person keeps the same pid across this host's sessions. Emails and sign-in tokens are never exported.${incNames ? " Display names were included at the exporter's request; treat these files as identifiable." : " Display names are excluded."}\n\n## Files\n\n- sessions.csv: one row per session, with timer, reading time and scoring configuration, and content_hash (a hash of the question content, answers, explanations and references used).\n- questions.csv: question content snapshot as played (content is stored separately from behavior).\n- participants.csv: pid, join time, consent time.\n- exposures.csv: one row per participant per question shown (raw evidence plus first-attempt fields). Live Classroom allows one scored submission per exposure.\n- submissions.csv: one row per answer, with raw timestamps.\n- events.csv: auditable event log (question shown, answer selected or submitted, correct answer revealed, reference opened, reconnect, device takeover, session completed).\n- derived_per_question.csv and derived_per_participant.csv: metrics computed from the raw rows above.\n\n## Timestamp semantics\n\n${Object.entries(TIMESTAMP_SEMANTICS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}\n\n## Notes\n\n- exposure_number counts this pseudonymous participant's exposures to the same question content (question_key, a hash of prompt, image and options) across this host's sessions.\n- AI-generated learning reports are interpretations and are not part of this export.\n- reference_opened events carry phase: live (opened on the reveal screen) or post (opened from the participant's review after the game). Events that reach a participant's record after the session ended (post-game opens, and events still buffered on a device when the host ended the game) are collected when the host opens the session dashboard or exports; they are lost if the participant has since joined another game.\n- schema_version 2 (AlgoArena 2.1) adds the reading phase. Rows from earlier sessions get answers_open_at_ms = question_shown_at_ms and submitted_before_open = false.\n- schema_version 3 (AlgoArena 3, Firebase): timing fields use the Firestore server clock; elapsed_ms includes network delay from the device; client_elapsed_ms is the device's own unlock-to-tap measurement.\n- schema_version 4: players may change their answer until time runs out. submissions has one row per selection (selection_index from 1); is_final_answer marks the one that counts, and only it carries a score. In exposures, first_* describe the first selection, n_submissions counts selections, time_to_correct_ms is the first correct selection and final_correct the counted one. Sessions recorded before version 4 have one row per answer.\n- schema_version 5 (v1.1): questions.csv adds origin (human, or ai_draft for a question an AI drafted and the host accepted), ai_model, ai_prompt_version and ai_edited (whether the host edited the draft before accepting it). question_key is unchanged, so the same content keeps one key whoever wrote it. Questions from earlier sessions read as origin human.\n`;
 }
 async function doExport(sids, fmt, incNames) {
   const d = await buildExport(sids, incNames); const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-"); const base = sids.length === 1 ? `algoarena-${sids[0]}` : `algoarena-sessions-${stamp}`;
-  if (fmt === "json") return saveFile(base + ".json", JSON.stringify({ schema: "algoarena-research-export", schema_version: 4, exported_at: new Date().toISOString(), app_version: APP.version, identity: incNames ? "pseudonymous ids plus display names" : "pseudonymous ids only", timestamp_semantics: TIMESTAMP_SEMANTICS, ...d, derived_metrics: { per_question: d.per_question, per_participant: d.per_participant }, per_question: undefined, per_participant: undefined }, null, 2));
+  if (fmt === "json") return saveFile(base + ".json", JSON.stringify({ schema: "algoarena-research-export", schema_version: 5, exported_at: new Date().toISOString(), app_version: APP.version, identity: incNames ? "pseudonymous ids plus display names" : "pseudonymous ids only", timestamp_semantics: TIMESTAMP_SEMANTICS, ...d, derived_metrics: { per_question: d.per_question, per_participant: d.per_participant }, per_question: undefined, per_participant: undefined }, null, 2));
   const pcols = ["session_id", "pid", ...(incNames ? ["display_name"] : []), "joined_at_ms", "consent_at_ms"]; const ppcols = ["session_id", "pid", ...(incNames ? ["display_name"] : []), "score", "rank", "correct", "answered", "median_rt_ms", "device_takeovers"];
   const zip = makeZip([{ name: "README.md", data: readme(incNames) }, { name: "sessions.csv", data: csv(d.sessions, COLS.sessions) }, { name: "questions.csv", data: csv(d.questions, COLS.questions) }, { name: "participants.csv", data: csv(d.participants, pcols) },
     { name: "exposures.csv", data: csv(d.exposures, COLS.exposures) }, { name: "submissions.csv", data: csv(d.submissions, COLS.submissions) }, { name: "events.csv", data: csv(d.events, COLS.events) },

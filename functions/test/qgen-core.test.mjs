@@ -615,3 +615,19 @@ test("verifier replies: only output_text inside message items counts; usage is s
   assert.equal(out.drafts[0].verify.status, "agree");
   assert.deepEqual([db.added[0].v.verifier_input_tokens, db.added[0].v.verifier_output_tokens], [14, 6]);
 });
+
+// ---------- contracts with the page (site/index.html) and its end-to-end test ----------
+
+test("test/e2e/qgen-fixture.json is the current runDraft output (regenerate with node functions/test/qgen-fixture.mjs)", async () => {
+  const { fixtureResult } = await import("./qgen-fixture.mjs");
+  const repo = new URL("../", findDoc(new URL("./", import.meta.url)));
+  assert.deepEqual(JSON.parse(readFileSync(new URL("test/e2e/qgen-fixture.json", repo), "utf8")), JSON.parse(JSON.stringify(await fixtureResult())));
+});
+
+test("the page's draft form offers exactly the modules and subtypes the function accepts", () => {
+  const repo = new URL("../", findDoc(new URL("./", import.meta.url)));
+  const page = readFileSync(new URL("site/index.html", repo), "utf8");
+  const list = (name) => JSON.parse(page.match(new RegExp(`const ${name} = (\\[[^\\]]*\\]);`))[1]);
+  assert.deepEqual(list("DRAFT_MODULES"), [...MODULES]);
+  assert.deepEqual(list("DRAFT_SUBTYPES"), [...SUBTYPES]);
+});

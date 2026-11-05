@@ -1,0 +1,110 @@
+{
+ "drafts": [
+  {
+   "question": {
+    "prompt": "After BUILD-MAX-HEAP runs on the array ⟨4, 1, 3, 2, 16⟩, which element is at index 1?",
+    "img": "",
+    "options": [
+     "16",
+     "4",
+     "3",
+     "2"
+    ],
+    "correct": 0,
+    "optFeedback": [
+     "Right: the maximum rises to the root.",
+     "The root is replaced as larger keys sift up.",
+     "Later MAX-HEAPIFY calls move it again.",
+     "In a max-heap the root holds the largest key."
+    ],
+    "explanation": "BUILD-MAX-HEAP sifts down from the last internal node, and the maximum, 16, ends at the root.",
+    "refs": [],
+    "topic": "Module 2 (Sorting and Order Statistics)",
+    "subtype": "behavior",
+    "difficulty": "easy",
+    "timeLimit": null,
+    "source": "AlgoArena AI draft",
+    "chapter": null
+   },
+   "qkey": "1eab76ffdb15666f",
+   "rationales": [
+    "",
+    "Assumes the root never moves.",
+    "Stops after the first MAX-HEAPIFY call.",
+    "Confuses a max-heap with a min-heap of the last half."
+   ],
+   "sourceQuote": "",
+   "flags": [],
+   "verify": {
+    "status": "disagree",
+    "choice": "B",
+    "confidence": "medium",
+    "ambiguous": false,
+    "reason": "The root keeps 4 because MAX-HEAPIFY only moves keys down."
+   },
+   "auditIssues": []
+  },
+  {
+   "question": {
+    "prompt": "What is the running time of BUILD-MAX-HEAP on an array of n elements, as CLRS proves?",
+    "img": "",
+    "options": [
+     "Θ(n)",
+     "Θ(n log n)",
+     "Θ(log n)",
+     "Θ(n²)"
+    ],
+    "correct": 0,
+    "optFeedback": [
+     "Right: most nodes are near the leaves, so the total height is linear.",
+     "That bound is valid but not tight.",
+     "That is a single MAX-HEAPIFY call.",
+     "Each sift-down costs at most the node's height."
+    ],
+    "explanation": "Summing the heights of all nodes gives O(n), and every element is touched, so Θ(n).",
+    "refs": [],
+    "topic": "Module 2 (Sorting and Order Statistics)",
+    "subtype": "complexity",
+    "difficulty": "easy",
+    "timeLimit": null,
+    "source": "AlgoArena AI draft",
+    "chapter": null
+   },
+   "qkey": "62874e5a489951ee",
+   "rationales": [
+    "",
+    "Multiplies n calls by the worst-case height without summing level by level.",
+    "Gives the cost of one MAX-HEAPIFY call.",
+    "Treats each sift-down as linear."
+   ],
+   "sourceQuote": "",
+   "flags": [
+    "near_duplicate"
+   ],
+   "verify": {
+    "status": "agree",
+    "choice": "A",
+    "confidence": "high",
+    "ambiguous": false,
+    "reason": "The sum of node heights is linear."
+   },
+   "auditIssues": []
+  }
+ ],
+ "ai": {
+  "model": "claude-sonnet-5-5",
+  "verifierModel": "gpt-6.1-terra",
+  "promptVersions": {
+   "draft": "qgen-draft-v1",
+   "repair": "qgen-repair-v1",
+   "solve": "qgen-solve-v1",
+   "audit": "qgen-audit-v1"
+  },
+  "generatedAt": 1793898000000,
+  "requestSha256": "5623011d2fc5af5a6af830e0a225e1cd8d0266985fe9c575ad29e39e48031ab5"
+ },
+ "requested": 2,
+ "delivered": 2,
+ "dropped": 0,
+ "quotaLeft": 48
+}

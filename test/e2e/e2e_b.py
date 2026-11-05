@@ -41,7 +41,8 @@ SEED = {"meta/admins": {"uids": ["H"]},
         "data/users/H/profile": {"displayName": "Host", "salt": "s" * 24, "createdAt": 1},
         "data/users/A/profile": {"displayName": "Alice", "salt": "a", "createdAt": 1},
         "data/users/B/profile": {"displayName": "Bob", "salt": "b", "createdAt": 1},
-        "data/users/H/profile/sets/set1": {"title": "Pilot set", "count": 3, "updatedAt": 2}}
+        "data/users/H/profile/sets/set1": {"title": "Pilot set", "count": 3, "updatedAt": 2},
+        "data/users/H/profile/sets/set2": {"title": "AI drafts", "count": 0, "updatedAt": 1}}
 for k, q in enumerate(Q):
     SEED[f"data/users/H/profile/sets/set1/q/q{k + 1}"] = {**q, "order": k}
 SEED["bank/bk1"] = {**bank(4), "order": 0}
@@ -128,6 +129,63 @@ with sync_playwright() as pw:
     check("a player who is not an approved host cannot upload", A.evaluate(up, ["x.png", "image/png", 10]) == "not_uploader")
     check("an SVG is refused as an unsupported type", H.evaluate(up, ["x.svg", "image/svg+xml", 10]) == "unsupported_type")
     check("a file over 20 MB is refused before upload", H.evaluate(up, ["big.mp4", "video/mp4", 20 * 1024 * 1024 + 1]) == "too_large")
+    H.click('[data-act="home"]'); H.wait_for_selector('[data-act="launch"][data-id="set1"]', timeout=6000)
+
+    # AI question drafts (v1.1): the form, the review list from a real runDraft result (qgen-fixture.json), accept,
+    # edit and discard, the hosting block while drafts are pending, and the provenance an accepted draft carries.
+    H.wait_for_function("() => S.canDraft === true", timeout=6000)
+    check("an approved host may draft with AI and a player may not", A.evaluate("() => S.canDraft") is False)
+    set2_docs = lambda sub: sorted((k, v) for k, v in page.evaluate("() => [...__FB.docs.entries()]") if k.startswith(f"data/users/H/profile/sets/set2/{sub}/"))
+    H.click('[data-act="editSet"][data-id="set2"]'); H.wait_for_selector('[data-act="draftOpen"]', timeout=6000)
+    H.click('[data-act="draftOpen"]'); H.wait_for_selector("#d_module", timeout=4000)
+    check("the draft form names the drafting model and the daily limit",
+          "Claude Sonnet 5.5" in H.inner_text(".dialog") and "up to 50 questions a day" in H.inner_text(".dialog"))
+    H.select_option("#d_module", "Module 2 (Sorting and Order Statistics)"); H.select_option("#d_count", "2")
+    check("the draft button follows the count", H.inner_text("#d_go") == "Draft 2 questions", H.inner_text("#d_go"))
+    H.fill("#d_focus", "heaps"); H.fill("#d_ch", "6")
+    page.evaluate("() => { __FB.draftFailNext = { code: 'quota_exceeded', message: 'The daily AI drafting limit (50 questions) leaves 0 for today.' }; }")
+    H.click("#d_go"); H.wait_for_selector(".toast", timeout=6000)
+    check("a quota refusal shows the function's message, not the storage-full one", "leaves 0 for today" in H.inner_text(".toast"), H.inner_text(".toast"))
+    H.wait_for_selector("#d_go:not([disabled])", timeout=4000)
+    H.click("#d_go"); H.wait_for_selector('[data-act="draftAccept"]', timeout=8000)
+    sent = page.evaluate("() => __FB.draftCalls[__FB.draftCalls.length - 1].data")
+    check("the page sends only the form's fields, never prompt text",
+          sent == {"module": "Module 2 (Sorting and Order Statistics)", "count": 2, "setId": "set2", "focus": "heaps", "chapter": 6, "difficulty": "mixed", "subtype": None, "sourceText": ""}, json.dumps(sent))
+    cards = H.eval_on_selector_all("[data-draft]", "els => els.map((e) => e.innerText)")
+    check("drafts are listed with the checker's disagreement first, with its reasoning",
+          len(cards) == 2 and "The checker chose B, not the marked A." in cards[0] and "Its reasoning" in cards[0], (cards or [""])[0][:160])
+    check("the agreed draft carries its near-duplicate note", "The checker agrees." in cards[1] and "check it is not a repeat" in cards[1])
+    why = H.evaluate("() => [...document.querySelectorAll('[data-draft]')[0].querySelectorAll('.why li')].map((li) => li.innerText)")
+    check("the host sees the misconception behind each wrong option, and none for the right one",
+          [w[:2] for w in why] == ["B:", "C:", "D:"] and why[0] == "B: Assumes the root never moves.", str(why))
+    check("hosting is off while drafts are pending", H.is_disabled('[data-act="launch"][data-id="set2"]'))
+    meta = get("data/users/H/profile/sets/set2")
+    check("drafts are stored under the set and counted in its metadata; the dialog closed",
+          len(set2_docs("drafts")) == 2 and meta.get("drafts") == 2 and H.query_selector("#d_module") is None and H.evaluate("() => S.draftQuotaLeft") == 48, str(meta))
+    ids = H.eval_on_selector_all("[data-draft]", "els => els.map((e) => e.dataset.draft)")
+    H.click(f'[data-act="draftAccept"][data-id="{ids[1]}"]'); H.wait_for_function("() => S.edit && S.edit.qs.length === 1", timeout=6000); sleep(0.4)
+    q = set2_docs("q")[0][1]
+    check("an accepted draft is stored with origin ai_draft and its drafting record",
+          q.get("origin") == "ai_draft" and q["ai"]["model"] == "claude-sonnet-5-5" and q["ai"]["verifierModel"] == "gpt-6.1-terra"
+          and q["ai"]["promptVersions"]["draft"] == "qgen-draft-v1" and q["ai"]["verify"]["status"] == "agree" and q["ai"]["editedBeforeAccept"] is False
+          and q["ai"]["distractorRationales"]["B"].startswith("Multiplies") and q["ai"]["acceptedBy"] == "H" and "distractor_rationales" not in q, json.dumps(q)[:300])
+    check("its provenance says who drafted, checked and accepted it",
+          "Drafted by claude-sonnet-5-5 on" in q.get("provenance", "") and "verified by gpt-6.1-terra: agree; reviewed and accepted by the host on" in q.get("provenance", ""), q.get("provenance", ""))
+    H.click(f'[data-act="draftEdit"][data-id="{ids[0]}"]'); H.wait_for_selector("#q_expl", timeout=4000)
+    check("editing a draft opens the question editor as 'Edit AI draft'", "Edit AI draft" in H.inner_text(".dialog h2") and H.inner_text('[data-act="saveQ"]') == "Save and accept")
+    H.fill("#q_expl", H.input_value("#q_expl") + " Checked by the host.")
+    H.click('[data-act="saveQ"]'); H.wait_for_function("() => S.edit && S.edit.qs.length === 2 && !S.edit.drafts.length", timeout=6000); sleep(0.4)
+    q2 = [v for k, v in set2_docs("q") if v["ai"]["verify"]["status"] == "disagree"][0]
+    check("an edited draft is marked editedBeforeAccept and says so in provenance",
+          q2["ai"]["editedBeforeAccept"] is True and "reviewed, edited and accepted" in q2["provenance"] and q2["explanation"].endswith("Checked by the host."))
+    meta = get("data/users/H/profile/sets/set2")
+    check("with no drafts left, the set can be hosted again", not H.is_disabled('[data-act="launch"][data-id="set2"]') and meta.get("drafts") == 0 and meta.get("count") == 2 and not set2_docs("drafts"), str(meta))
+    H.click('[data-act="draftOpen"]'); H.wait_for_selector("#d_go", timeout=4000)
+    check("the form shows the quota left after a draft", "48 of 50 questions left today" in H.inner_text(".dialog"))
+    H.click("#d_go"); H.wait_for_selector('[data-act="draftDiscard"]', timeout=8000)
+    for _ in range(2):
+        H.click('[data-act="draftDiscard"]'); H.wait_for_selector('[data-act="mOk"]', timeout=4000); H.click('[data-act="mOk"]'); sleep(0.5)
+    check("discarded drafts are deleted and never reach the set", not set2_docs("drafts") and len(set2_docs("q")) == 2 and get("data/users/H/profile/sets/set2").get("drafts") == 0)
     H.click('[data-act="home"]'); H.wait_for_selector('[data-act="launch"][data-id="set1"]', timeout=6000)
 
     # Built-in bank editing: admins add, edit and delete one question at a time; players see no controls.
@@ -341,6 +399,10 @@ with sync_playwright() as pw:
     check("export has 7 submission rows (A changed once), 6 of them final, and 6 exposures",
           len(ex["submissions"]) == 7 and len(finals) == 6 and len(ex["exposures"]) == 6,
           str((len(ex["submissions"]), len(finals), len(ex["exposures"]))))
+    cols = H.evaluate("() => COLS.questions")
+    check("export (schema 5): questions.csv says each question's origin; human-written ones read as human",
+          cols[-4:] == ["origin", "ai_model", "ai_prompt_version", "ai_edited"] and all(x["origin"] == "human" and x["ai_model"] == "" and x["ai_edited"] == "" for x in ex["questions"]),
+          str([(x["origin"], x["ai_model"], x["ai_edited"]) for x in ex["questions"]]))
     with page.expect_download() as dl:
         H.click('[data-act="aiBatch"]')
     with zipfile.ZipFile(dl.value.path()) as z:

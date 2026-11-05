@@ -29,6 +29,6 @@ needs the classroom.
 - AI question generation (v1.1): design agreed 2026-11-04 on branch `feature/ai-question-generation`, see
   docs/ai-question-generation.md; prompts (its Appendix B) approved 2026-11-04. Server side live 2026-11-05: the
   `draftQuestions` callable is deployed to algoarena-for-research (us-central1) with the owner's OK, alone (`coach`
-  untouched), and refuses a signed-out call with not_granted. No page calls it yet, and no real draft has run. Page
-  side waits for approval of the review-list mock. The PRD change (its Appendix A) goes to
+  untouched), and refuses a signed-out call with not_granted. Page side written 2026-11-05 on the branch (mock
+  approved; e2e 93/93, I6 pass), not published: needs the owner's OK. No real draft has run yet. The PRD change (its Appendix A) goes to
   `main` as a pull request.

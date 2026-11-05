@@ -23,4 +23,5 @@ export default {
   functionsRegion: "us-central1", // must match functions/index.js
   coach: true, // false hides AI reports (Spark plan, or the coach function is not deployed)
   assets: true, // false hides file uploads (no Cloud Storage bucket, which needs the Blaze plan)
+  draft: true, // false hides AI question drafting (the draftQuestions function is not deployed)
 };

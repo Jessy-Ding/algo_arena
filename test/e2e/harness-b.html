@@ -62,12 +62,29 @@ const deps = {
   refundQuota: async ({ uid, day: d, sid }) => { for (const k of [`aiQuota/${uid}_${d}`, ...(sid ? [`aiQuota/${uid}_s_${sid}`] : [])]) { const c = (FB.get(k) || {}).count || 0; FB.docs.set(k, { ...(FB.get(k) || {}), count: Math.max(0, c - 1) }); } },
   log: async (e) => { FB.docs.set(`aiLog/${Math.random().toString(36).slice(2)}`, e); },
 };
+// draftQuestions: the harness cannot load LangGraph, so it returns a result the real runDraft produced
+// (qgen-fixture.json, kept current by functions/test/qgen-core.test.mjs), after the same access check.
+const QGEN_FIXTURE = await (await fetch("qgen-fixture.json")).json();
+FB.draftCalls = []; FB.draftFailNext = null;
+async function draftQuestions(uid, data) {
+  if (!uid) throw Object.assign(new Error("Sign in first."), { code: "not_granted" });
+  if (!(await deps.isHost(uid))) throw Object.assign(new Error("AI drafting is available to approved hosts."), { code: "not_granted" });
+  if (!FB.get(`data/users/${uid}/profile/sets/${data.setId}`)) throw Object.assign(new Error("That question set is not one of yours."), { code: "not_granted" });
+  FB.draftCalls.push({ uid, data });
+  if (FB.draftFailNext) { const e = FB.draftFailNext; FB.draftFailNext = null; throw Object.assign(new Error(e.message), { code: e.code }); }
+  await new Promise((r) => setTimeout(r, 200));
+  return JSON.parse(JSON.stringify(QGEN_FIXTURE));
+}
 /**
  * @param {string} name
  * @param {?string} uid
  * @param {!Object} data
- * @return {!Promise<!Object>} The runCoach result.
- * @throws {!Error} not_granted for any function other than "coach"; runCoach errors propagate.
+ * @return {!Promise<!Object>} The runCoach or draftQuestions result.
+ * @throws {!Error} not_granted for any other function; runCoach and draftQuestions errors propagate.
  */
-FB.callFunction = async (name, uid, data) => { if (name !== "coach") throw Object.assign(new Error("no such function"), { code: "not_granted" }); await new Promise((r) => setTimeout(r, 30)); return runCoach({ uid, data, deps }); };
+FB.callFunction = async (name, uid, data) => {
+  if (name === "draftQuestions") return draftQuestions(uid, data);
+  if (name !== "coach") throw Object.assign(new Error("no such function"), { code: "not_granted" });
+  await new Promise((r) => setTimeout(r, 30)); return runCoach({ uid, data, deps });
+};
 </script></head><body></body></html>

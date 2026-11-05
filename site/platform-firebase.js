@@ -220,12 +220,46 @@ async function makeSample() {
   return sample;
 }
 
+/* ---------- draft capability: AI question drafts through the `draftQuestions` Cloud Function (v1.1) ---------- */
+let draftPromise = null;
+async function makeDraft() {
+  if (CONFIG.draft === false) return null;
+  const fnM = await import(SDK + "firebase-functions.js");
+  // The function may take up to 540 s (draft, one repair, verification); the client waits a little longer.
+  const call = fnM.httpsCallable(fnM.getFunctions(F.app, CONFIG.functionsRegion || "us-central1"), "draftQuestions", { timeout: 560000 });
+  return {
+    /**
+     * Same check as the function's (meta/aiHosts or meta/admins), so the page shows the button only to hosts the
+     * function will serve.
+     *
+     * @return {!Promise<boolean>}
+     */
+    allowed: async () => {
+      const listed = async (id) => { const s = await F.fsM.getDoc(F.fsM.doc(F.fdb, "meta/" + id)); return s.exists() && (s.data().uids || []).includes(F.user.uid); };
+      return (await listed("aiHosts").catch(() => false)) || (await listed("admins").catch(() => false));
+    },
+    /**
+     * @param {{module: string, count: number, setId: string, focus?: string, chapter?: ?number, difficulty?: string,
+     *     subtype?: ?string, sourceText?: string}} data
+     * @return {!Promise<!Object>} The function's result: {drafts, ai, requested, delivered, dropped, quotaLeft}.
+     * @throws {!Error} With `code` from the function's details.code (for example quota_exceeded), and its message.
+     */
+    run: async (data) => {
+      try { return (await call(data)).data; }
+      catch (e) {
+        const code = (e && e.details && e.details.code) || FN_CODES[e && e.code] || "upstream_error";
+        throw Object.assign(new Error((e && e.message) || "AI drafting failed."), { code, original: e });
+      }
+    },
+  };
+}
+
 /** Stands in for the claude.ai runtime global, so the page code runs unchanged. */
 W.claude = {
   /**
    * "downloads" works signed out; the others need a signed-in user.
    *
-   * @param {string} name "db", "user", "downloads", "assets" or "sample".
+   * @param {string} name "db", "user", "downloads", "assets", "sample" or "draft".
    * @return {!Promise<*>} The capability, or null when signed out, unavailable, or not provided (room).
    */
   use: async (name) => {
@@ -236,6 +270,7 @@ W.claude = {
     if (name === "user") return USER;
     if (name === "assets") return CONFIG.assets === false ? null : ASSETS;
     if (name === "sample") return (samplePromise = samplePromise || makeSample().catch((e) => { console.warn("AI reports unavailable:", e); return null; }));
+    if (name === "draft") return (draftPromise = draftPromise || makeDraft().catch((e) => { console.warn("AI drafting unavailable:", e); return null; }));
     return null;
   },
   /**
