@@ -14,8 +14,9 @@ Updated 2026-10-29. One line per milestone, in order. A milestone is done only w
 | M8 | Classroom calibration and load at 120 and 240 | confidence that a full class of 120 works | NOT DONE | needs you on the classroom network | you + Claude |
 | M9 | Research-ready: IRB approval, usability test with 5 students, pilot | data counts for the study | NOT DONE | university and instructor | you |
 
-Where we are: M6 done, so the app is usable in class without AI reports. Blaze is on. Next: M7 (AI reports) once you
-set the Anthropic spend limit and the secret; M8 needs the classroom.
+Where we are: M6 done, so the app is usable in class; image uploads are live. Next: M7 needs one live AI report (the
+structured-output fix 353d46d is deployed but not yet proven against Anthropic); M8 needs the classroom.
+
 ## Done outside the milestones
 - Question images and reference files upload to Cloud Storage (2026-11-04): live, approved hosts only. See
   IMPROVEMENT_LOG.md.
