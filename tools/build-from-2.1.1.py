@@ -324,6 +324,23 @@ block("    if (mine || pending) body = `<div class=\"lockbox\">", "</p></div>`;\
       "play_changeable")
 rep("Tap once to lock in your answer. Keys 1 to 4 also work.", "Tap to answer; you can change it until time runs out. Keys 1 to 4 also work.", "play_hint")
 rep("Each player gets one locked answer per question.", "Players can change their answer until time runs out; the last choice counts.", "launch_note")
+# Scoring shown as a formula (user decision, 2026-11-04): one line per case under a brace, t and T explained one
+# size smaller below. Plain HTML and an inline SVG brace render the same on every device (MathML stretches the brace
+# only where a math font is installed). Same formula as hReveal: correct and in time earns round(500 + 500 * (1 - t/T)).
+rep("Scoring: a correct answer earns between 500 and 1000 points, more for answering sooner after answers open; a wrong answer or no answer earns 0. "
+    "Streaks are shown for fun and never change the score. Players can change their answer until time runs out; the last choice counts.",
+    '<b>Scoring</b><div style="overflow-x:auto;margin:8px 0 2px"><div style="display:inline-grid;grid-template-columns:auto 10px auto;column-gap:8px;font-size:1.15rem;white-space:nowrap">'
+    '<span style="align-self:center">score =</span>'
+    '<svg viewBox="0 0 12 100" preserveAspectRatio="none" style="display:block;width:10px;height:calc(100% - 6px);align-self:center" aria-hidden="true"><path d="M10 2 C5 2 6 8 6 18 L6 40 C6 46 4 50 1 50 C4 50 6 54 6 60 L6 82 C6 92 5 98 10 98" fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>'
+    '<div style="display:grid;grid-template-columns:max-content max-content;column-gap:28px;row-gap:4px">'
+    '<span>500 + 500 * (1 &#x2212; <i>t</i>/<i>T</i>)</span><span class="muted">if correct</span><span>0</span><span class="muted">if wrong or no answer</span></div></div></div>'
+    '<div class="muted" style="font-size:.78rem"><i>t</i>: seconds from answers opening to your final choice. <i>T</i>: answer time per question. The score is rounded to a whole number.</div>'
+    '<div style="margin-top:8px">Streaks are shown for fun and never change the score. Players can change their answer until time runs out; the last choice counts.</div>',
+    "launch_scoring_formula")
+# The host's launch screen no longer repeats the consent notice (user decision, 2026-11-04); players still see and
+# accept it on the join screen and in the lobby.
+rep('  <div class="notice small">Players are told before joining that you will see their answers, timing, and an AI-generated learning report for this session.</div>\n',
+    "", "launch_no_consent_notice")
 rep("const ans = {}; for (const d of qs.docs) { const a = d.data(); (ans[a.uid] = ans[a.uid] || {})[a.q] = a; } H.ans = ans;",
     "const ans = {}, hist = {}; for (const d of qs.docs) { const a = d.data(); const n = a.n || 0; (hist[a.uid + \":\" + a.q] = hist[a.uid + \":\" + a.q] || [])[n] = a; const m = (ans[a.uid] = ans[a.uid] || {}); if (!m[a.q] || n > (m[a.q].n || 0)) m[a.q] = a; } H.ans = ans; H.hist = hist; // the highest n is the answer that counts",
     "host_latest")

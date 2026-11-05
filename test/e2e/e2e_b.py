@@ -13,7 +13,7 @@ Created: October 29, 2026 · San Francisco, California, USA
 License: This project is licensed under the MIT License — see LICENSE.md for details.
 Copyright © 2026 Yikang (Richard) Liu.
 """
-import json, math, re, sys, http.server, threading, functools
+import json, math, os, re, sys, http.server, threading, functools
 from playwright.sync_api import sync_playwright
 
 from pathlib import Path
@@ -170,6 +170,12 @@ with sync_playwright() as pw:
     H.click('[data-act="launch"][data-id="set1"]'); H.wait_for_selector("#l_r")
     check("the reading time defaults to 5 s", H.input_value("#l_r") == "5", H.input_value("#l_r"))
     check("the answer time defaults to 10 s", H.input_value("#l_t") == "10", H.input_value("#l_t"))
+    launch = H.inner_text("main")
+    check("the launch screen shows the scoring formula, one case per line, and no consent notice",
+          "score =" in launch and "if wrong or no answer" in launch and "Players are told before joining" not in launch
+          and H.evaluate("() => [...document.querySelectorAll('.notice span')].filter((s) => /^(500 \\+|0$)/.test(s.textContent)).every((s) => s.getClientRects().length === 1)"))
+    if os.environ.get("E2E_SHOTS"):
+        H.locator(".notice").first.screenshot(path=os.path.join(os.environ["E2E_SHOTS"], "launch-scoring.png"))
     H.fill("#l_t", "15"); H.fill("#l_r", "3")
     H.click('[data-act="createRoom"]'); H.wait_for_selector(".bigcode", timeout=8000)
     code = H.inner_text(".bigcode").strip()

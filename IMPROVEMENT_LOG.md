@@ -174,3 +174,7 @@ No High findings left that can be fixed and verified here. Remaining Medium and 
   rules fail the new change test. Browser e2e 67/67 (wrong then right on Q1: two rows, final scored, round stays
   open after everyone answered and closes at time-up). I6 11/11 on the emulators with the real SDK. tsc 0; unit
   55/55.
+- Launch screen (user decisions, 2026-11-04): the host-side consent notice is removed (players still accept it on
+  the join screen and see it in the lobby); scoring is shown as a formula, one case per line under a brace, with t
+  and T explained one size smaller (plain HTML and an inline SVG brace, since MathML needs a math font to stretch
+  the brace). Mock e2e checks the formula, one line per case, and the missing notice (68/68).
