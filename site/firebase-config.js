@@ -21,5 +21,5 @@ export default {
     appId: "1:14590331156:web:a0773cb34ab68ae0169a01",
   },
   functionsRegion: "us-central1", // must match functions/index.js
-  coach: false, // Spark plan: AI reports stay hidden until Blaze and the coach function are deployed
+  coach: true, // false hides AI reports (Spark plan, or the coach function is not deployed)
 };

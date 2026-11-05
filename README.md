@@ -15,8 +15,8 @@ Stage B2 (this package): AI learning reports through a Cloud Function. See IMPRO
 ## Decisions
 
 - Base: AlgoArena Live Classroom 2.1.1 (frozen claude.ai Artifact version), not v1.
-- Hosting: GitHub Pages (static). Backend: Firebase on the free Spark plan with `coach: false` until the Blaze plan is
-  decided; Blaze is needed only for the AI coach function.
+- Hosting: GitHub Pages (static). Backend: Firebase on the Blaze plan with the AI coach function deployed and
+  `coach: true`; on the free Spark plan, set `coach: false` and everything except AI reports works.
 - Sign-in: Google accounts (Firebase Authentication), so one student keeps one pseudonymous research id across sessions and devices.
 - Database: Cloud Firestore. The 2.1.1 code already uses a Firestore-style document API, so it ports through an adapter.
 - AI Learning Coach: kept, through a Cloud Function that holds the Anthropic API key (stage B2).
