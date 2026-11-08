@@ -1,6 +1,6 @@
 # AlgoArena route B: status
 
-Updated 2026-10-29. One line per milestone, in order. A milestone is done only with the evidence named.
+Updated 2026-11-08. One line per milestone, in order. A milestone is done only with the evidence named.
 
 | # | Milestone | What you can do once it is done | Status | Evidence or blocker | Owner |
 |---|---|---|---|---|---|
@@ -14,8 +14,8 @@ Updated 2026-10-29. One line per milestone, in order. A milestone is done only w
 | M8 | Classroom calibration and load at 120 and 240 | confidence that a full class of 120 works | NOT DONE | needs you on the classroom network | you + Claude |
 | M9 | Research-ready: IRB approval, usability test with 5 students, pilot | data counts for the study | NOT DONE | university and instructor | you |
 
-Where we are: M6 done, so the app is usable in class; image uploads are live. M7 is done: AI reports work live. Next: M8
-needs the classroom.
+Where we are: M6 done, so the app is usable in class; image uploads are live. M7 is done: AI reports work live. AI
+question drafting (v1.1) is live for admins and AI hosts. Next: M8 needs the classroom.
 
 ## Done outside the milestones
 - Question images and reference files upload to Cloud Storage (2026-11-04): live, approved hosts only. See
@@ -24,11 +24,18 @@ needs the classroom.
 - Defaults: answer time 10 s, reading time 5 s (live).
 - Answers can change until time runs out; the last one counts and every selection is recorded (2026-11-04): rules
   deployed and site live; tested on the emulators and in the browser mock, not yet in a real two-device game.
+- Phone widths (2026-11-05, 6c9b24c): the header, list rows and large buttons fit 315 to 414 px screens without
+  sideways scrolling; the wordmark keeps its text and drops its mark at 420 px or less. Live.
+- AI question drafting (v1.1), live 2026-11-05; design in docs/ai-question-generation.md. Admins and AI hosts draft up
+  to 5 questions at a time and 50 a day with claude-sonnet-5-5; gpt-6.1-terra solves each one blind and audits it,
+  flagging but never fixing; the host accepts, edits or discards each draft, and hosting stays off until all are
+  reviewed. Releases, each published with the owner's OK and CI green: f6d02a5 (page side); 478d945 and af38bad
+  (review card: one paragraph per checker issue, "Answer reasoning" label, one Explanations block; the dialog names
+  GPT-6.1 Terra); 94935d7 (one Module and chapter list with CLRS 3rd edition chapters, Module 7 (Data Structures),
+  prompt qgen-draft-v2; the `draftQuestions` function was deployed first). `coach` and the rules were not changed.
+- Admins (2026-11-05): two more admins added at the owner's request; meta/admins now holds 3 uids.
 
 ## Backlog (not scheduled)
-- AI question generation (v1.1): design agreed 2026-11-04 on branch `feature/ai-question-generation`, see
-  docs/ai-question-generation.md; prompts (its Appendix B) approved 2026-11-04. Server side live 2026-11-05: the
-  `draftQuestions` callable is deployed to algoarena-for-research (us-central1) with the owner's OK, alone (`coach`
-  untouched), and refuses a signed-out call with not_granted. Page side written 2026-11-05 on the branch (mock
-  approved; e2e 93/93, I6 pass), not published: needs the owner's OK. No real draft has run yet. The PRD change (its Appendix A) goes to
-  `main` as a pull request.
+- AI drafting cost check: the owner's live drafts of 2026-11-05 used qgen-draft-v1. Read the aiLog `qgen` token counts
+  of a qgen-draft-v2 draft and correct design doc section 9.
+- The v1.1 PRD wording (design doc Appendix A) goes to `main` as a pull request.
