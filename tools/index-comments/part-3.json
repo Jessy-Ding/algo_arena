@@ -1,0 +1,26 @@
+[
+ {
+  "anchor": "function rankList(board, names) {",
+  "comment": "/** Ties break on lower ft (summed elapsed ms of correct answers), then on name. */"
+ },
+ {
+  "anchor": "async function pidOf(uid) { const H = S.host; H.pids = H.pids || {}; if (!H.pids[uid]) H.pids[uid] = \"P-\" + (await sha256hex((S.profile.salt || \"\") + \":\" + uid)).slice(0, 12); return H.pids[uid]; }",
+  "comment": "/** Pseudonymous research id salted with the host's profile salt; finishSession() repeats this formula inline, so the two must stay identical. */"
+ },
+ {
+  "anchor": "async function qkeyOf(q) { return (await sha256hex([q.prompt, q.img, ...q.options].join(\"\\u241e\"))).slice(0, 16); }",
+  "comment": "/** Keyed on content rather than id, so a question copied into another set (copies get new ids) still counts as a repeat exposure. */"
+ },
+ {
+  "anchor": "async function decryptCurrent(idx) {",
+  "comment": "/** A sealed answer counts only if its embedded question index and session id match, so a ciphertext replayed from another question or session is discarded. */"
+ },
+ {
+  "anchor": "async function hostWrite(patch) {",
+  "comment": "/** The local copy replaces server-time sentinels with hostNowEst() until the re-read returns the real server values. */"
+ },
+ {
+  "anchor": "ACT.hReveal = async (btn) => {",
+  "comment": "/**\n * Idempotent per question: when boardAsOf >= qIndex the board, exposure counts and research log are not written again.\n * Elapsed time prefers the server timestamp (a.srv) and falls back to the device's monotonic delta (a.mono).\n */"
+ }
+]

@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "command",
+  "commandRunner": { "command": "bash test/emulator/run.sh" },
+  "inPlace": true,
+  "mutate": [
+    "coach-core.js:193-193",
+    "coach-core.js:200-200",
+    "coach-core.js:203-203",
+    "deps.js:31-31",
+    "deps.js:49-49",
+    "deps.js:53-53",
+    "deps.js:80-82"
+  ],
+  "reporters": ["clear-text", "json", "html"],
+  "jsonReporter": { "fileName": "reports/mutation-emulator/mutation.json" },
+  "htmlReporter": { "fileName": "reports/mutation-emulator/mutation.html" },
+  "timeoutMS": 180000,
+  "concurrency": 1,
+  "coverageAnalysis": "off",
+  "thresholds": { "high": 85, "low": 70, "break": null }
+}

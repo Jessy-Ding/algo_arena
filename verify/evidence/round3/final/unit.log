@@ -1,0 +1,65 @@
+
+> test
+> node --test test/*.test.mjs
+
+✔ signed-out callers are refused (3.708125ms)
+✔ users who are neither hosts nor recent players are refused (10.07925ms)
+✔ a player whose session is older than 3 days is refused (0.353833ms)
+✔ a forged player record is refused when the host's session does not list the user (0.2885ms)
+✔ a player record pointing at a session that does not exist is refused (0.243083ms)
+✔ bad input is refused before any quota is used (0.353333ms)
+✔ the request to Anthropic has the right shape and model for the tier (26.456458ms)
+✔ default tier uses the default model (4.194583ms)
+✔ players get the participant cap, then quota_exceeded (1.974875ms)
+✔ hosts get the host cap (0.892667ms)
+✔ hosts can also be listed in meta/aiHosts (0.720208ms)
+✔ upstream failures map to page codes and give the quota unit back (1.126375ms)
+✔ network errors map to upstream_error and refund (0.223875ms)
+✔ an empty completion maps to empty_completion and refunds (0.219375ms)
+✔ max_tokens stop is reported as truncated (0.886042ms)
+✔ the call log has sizes and a hash, never the prompt or reply (2.286625ms)
+✔ refunds never take the counter below zero (0.553834ms)
+✔ session cap formula (0.073084ms)
+✔ a host gets 2 x participants + 1 calls per session, then quota_exceeded naming the session limit (3.324458ms)
+✔ each session has its own cap (8.519833ms)
+✔ a host call without a session id is refused (0.238875ms)
+✔ a malformed session id is refused (0.113667ms)
+✔ a host cannot charge another host's session (0.103916ms)
+✔ no AI calls before the session ends (0.106958ms)
+✔ a failed upstream call gives back both the daily and the session unit (0.169375ms)
+✔ the daily guard still applies to hosts across sessions (0.163209ms)
+✔ a player may name only the session they played in (1.103542ms)
+✔ personal reports force the learning_report tool and return its input as JSON text (0.702167ms)
+✔ class summaries force the class_summary tool (0.372292ms)
+✔ an unknown report kind is refused (0.120458ms)
+✔ a tool-mode reply without the tool call is empty_completion and refunds (0.170417ms)
+✔ requests without a kind stay plain text (0.569625ms)
+✔ day keys are UTC calendar dates (0.092541ms)
+✔ each tier maps to its fixed model id (0.707917ms)
+✔ the fixed system prompt names the coach, its two tasks and the out-of-scope reply (0.13125ms)
+✔ report schemas are closed objects with bounded lists of strings (0.2545ms)
+✔ a prompt of exactly the maximum length is accepted (1.600375ms)
+✔ session ids must be whole strings of safe characters (0.211875ms)
+✔ signed-out callers are refused before input is checked (0.109625ms)
+✔ HTTP 403 and 413 map like 401 and 400 (0.270458ms)
+✔ the session-limit message states the cap and the player count (1.842167ms)
+✔ a host session without a participant list allows one call (0.691208ms)
+✔ another host's session id is refused as not yours, not as unfinished (0.285916ms)
+✔ the request is a JSON POST with a timeout signal (0.647292ms)
+✔ without AbortSignal (older runtimes) the request is sent without a signal (0.324167ms)
+✔ the reply's model is reported when the API names one, else the requested model (1.210042ms)
+✔ plain replies concatenate only text blocks, with no separator (0.790125ms)
+✔ report replies use only a tool_use block for the named tool, and only an object input (1.503083ms)
+✔ player calls are logged with the participant role and no session (0.866416ms)
+✔ a player record without a host or without a session never qualifies (0.290625ms)
+✔ a player session exactly 3 days old still qualifies (0.508792ms)
+✔ a failed player call gives back the daily unit (0.220916ms)
+✔ a refund decrements the counters by one and keeps the other fields (2.440958ms)
+ℹ tests 53
+ℹ suites 0
+ℹ pass 53
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 315.684084

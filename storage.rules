@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// AlgoArena route B (GitHub Pages + Firebase): Cloud Storage security rules for question images and reference files.
+//
+// Author: Yikang (Richard) Liu, M.S. Candidate in Computer Science, Khoury College of Computer Sciences,
+//     Northeastern University
+// Version: 1.0
+// Created: November 4, 2026 · San Francisco, California, USA
+//
+// License: This project is licensed under the MIT License — see LICENSE.md for details.
+// Copyright © 2026 Yikang (Richard) Liu.
+//
+// Security model:
+//  - Files live at assets/{uid}/{fileId}. Only approved hosts (uids in Firestore meta/admins or meta/aiHosts) may
+//    create them, only in their own folder, at most 20 MB, and only the types the question editor offers.
+//  - Anyone with a file's link may read it: <img> and <video> tags cannot send a sign-in token. The file id is random,
+//    and listing is refused, so a file is found only through a question that names it.
+//  - Files are never changed or deleted from the page; an edited question gets a new file.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function listed(doc) {
+      return firestore.exists(/databases/(default)/documents/meta/$(doc))
+        && request.auth.uid in firestore.get(/databases/(default)/documents/meta/$(doc)).data.uids;
+    }
+
+    match /assets/{uid}/{fileId} {
+      allow get: if true;
+      // resource == null: the emulator evaluates an upload over an existing file as create, not update.
+      allow create: if request.auth != null && request.auth.uid == uid && resource == null
+        && request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg|gif|webp)|application/pdf|video/(mp4|webm)|text/(plain|markdown)')
+        && (listed('admins') || listed('aiHosts'));
+    }
+  }
+}

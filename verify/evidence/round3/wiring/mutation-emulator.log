@@ -1,0 +1,93 @@
+[32m22:05:48 (55107) INFO ProjectReader[39m Found 2 of 14 file(s) to be mutated.
+[32m22:05:48 (55107) INFO Instrumenter[39m Instrumented 2 source file(s) with 54 mutant(s)
+[32m22:05:48 (55107) INFO ConcurrencyTokenProvider[39m Creating 1 test runner process(es).
+[32m22:05:49 (55107) INFO Sandbox[39m In place mode is enabled, Stryker will be overriding YOUR files. Find your backup at: .stryker-tmp/backup-UZGzM5
+[32m22:05:49 (55107) INFO DryRunExecutor[39m Starting initial test run (command test runner with "off" coverage analysis). This may take a while.
+[32m22:06:04 (55107) INFO DryRunExecutor[39m Initial test run succeeded. Ran 1 tests in 15 seconds (net 15359 ms, overhead 0 ms).
+
+All tests
+  ✓ All tests (killed 40)
+
+[Survived] ArrowFunction
+coach-core.js:193:35
+-       json = await res.json().catch(() => null);
++       json = await res.json().catch(() => undefined);
+
+[Survived] ConditionalExpression
+coach-core.js:200:9
+-       if (m.refund) await deps.refundQuota(quota);
++       if (true) await deps.refundQuota(quota);
+
+[Survived] ArrayDeclaration
+coach-core.js:203:44
+-     const blocks = (json && json.content) || [];
++     const blocks = (json && json.content) || ["Stryker was here"];
+
+[Survived] ArrayDeclaration
+deps.js:31:114
+-     const uidsIn = async (path, uid) => { const s = await db.doc(path).get(); return s.exists && (s.get("uids") || []).includes(uid); };
++     const uidsIn = async (path, uid) => { const s = await db.doc(path).get(); return s.exists && (s.get("uids") || ["Stryker was here"]).includes(uid); };
+
+[Survived] ConditionalExpression
+deps.js:49:55
+-         const p = await db.doc(`pub/${uid}`).get(); if (!p.exists) return false;
++         const p = await db.doc(`pub/${uid}`).get(); if (false) return false;
+
+[Survived] MethodExpression
+deps.js:53:14
+-         return (sess.get("participants") || []).some((x) => x && x.uid === uid) ? { sid } : false;
++         return (sess.get("participants") || []).every(x => x && x.uid === uid) ? { sid } : false;
+
+[Survived] ArrayDeclaration
+deps.js:53:43
+-         return (sess.get("participants") || []).some((x) => x && x.uid === uid) ? { sid } : false;
++         return (sess.get("participants") || ["Stryker was here"]).some((x) => x && x.uid === uid) ? { sid } : false;
+
+[Survived] ObjectLiteral
+deps.js:53:81
+-         return (sess.get("participants") || []).some((x) => x && x.uid === uid) ? { sid } : false;
++         return (sess.get("participants") || []).some((x) => x && x.uid === uid) ? {} : false;
+
+[Survived] ObjectLiteral
+deps.js:80:37
+-         if (dUsed >= dailyCap) return { ok: false, limit: "daily" };
++         if (dUsed >= dailyCap) return {};
+
+[Survived] StringLiteral
+deps.js:80:57
+-         if (dUsed >= dailyCap) return { ok: false, limit: "daily" };
++         if (dUsed >= dailyCap) return { ok: false, limit: "" };
+
+[Survived] ObjectLiteral
+deps.js:81:70
+-         tx.set(dRef, { uid, day, count: dUsed + 1, updatedAt: now() }, { merge: true });
++         tx.set(dRef, { uid, day, count: dUsed + 1, updatedAt: now() }, {});
+
+[Survived] BooleanLiteral
+deps.js:81:79
+-         tx.set(dRef, { uid, day, count: dUsed + 1, updatedAt: now() }, { merge: true });
++         tx.set(dRef, { uid, day, count: dUsed + 1, updatedAt: now() }, { merge: false });
+
+[Survived] ObjectLiteral
+deps.js:82:97
+-         if (sRef) tx.set(sRef, { uid, sid, count: sUsed + 1, cap: sessionCap, updatedAt: now() }, { merge: true });
++         if (sRef) tx.set(sRef, { uid, sid, count: sUsed + 1, cap: sessionCap, updatedAt: now() }, {});
+
+[Survived] BooleanLiteral
+deps.js:82:106
+-         if (sRef) tx.set(sRef, { uid, sid, count: sUsed + 1, cap: sessionCap, updatedAt: now() }, { merge: true });
++         if (sRef) tx.set(sRef, { uid, sid, count: sUsed + 1, cap: sessionCap, updatedAt: now() }, { merge: false });
+
+Ran 1.00 tests per mutant on average.
+---------------|------------------|----------|-----------|------------|----------|----------|
+               | % Mutation score |          |           |            |          |          |
+File           |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+---------------|--------|---------|----------|-----------|------------|----------|----------|
+All files      |  74.07 |   74.07 |       40 |         0 |         14 |        0 |        0 |
+ coach-core.js |  66.67 |   66.67 |        6 |         0 |          3 |        0 |        0 |
+ deps.js       |  75.56 |   75.56 |       34 |         0 |         11 |        0 |        0 |
+---------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m22:19:24 (55107) INFO JsonReporter[39m Your report can be found at: file:///Users/richardlau/Desktop/%20Algo_Arena/algoarena-b/functions/reports/mutation-emulator/mutation.json
+[32m22:19:24 (55107) INFO HtmlReporter[39m Your report can be found at: file:///Users/richardlau/Desktop/%20Algo_Arena/algoarena-b/functions/reports/mutation-emulator/mutation.html
+[32m22:19:24 (55107) INFO MutationTestExecutor[39m Done in 13 minutes 36 seconds.
+[32m22:19:24 (55107) INFO Sandbox[39m Resetting your original files from .stryker-tmp/backup-UZGzM5.

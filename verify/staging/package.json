@@ -1,0 +1,9 @@
+{
+  "name": "algoarena-staging-driver",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "firebase": "^10.12.2",
+    "firebase-admin": "^12.1.0"
+  }
+}

@@ -1,0 +1,100 @@
+i  emulators: Starting emulators: firestore
+i  emulators: Detected demo project ID "demo-algoarena", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail.
+i  firestore: downloading cloud-firestore-emulator-v1.22.0.jar...
+
+i  firestore: Firestore Emulator logging to firestore-debug.log
+✔  firestore: Firestore Emulator was started in standard edition.
+✔  firestore: Firestore Emulator UI websocket is running on 9150.
+i  Running script: bash test/rules/run-with-coverage.sh
+
+> test
+> node --test rules.test.mjs properties.test.mjs
+
+[2026-10-30T02:02:21.498Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x2c232949 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:02:21.627Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x2c232954 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+✖ I1 holds for generated cases (reference model vs emulator) (728.345167ms)
+✔ signed-out users read nothing (630.557792ms)
+[2026-10-30T02:02:21.587Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd49 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L47, false for 'update' @ L47
+✔ own data is private (75.7255ms)
+[2026-10-30T02:02:21.649Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd4c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L52:23 for 'create' @ L52, evaluation error at L52:23 for 'update' @ L52, false for 'create' @ L52
+✔ bank: everyone signed in reads, only admins write (83.091625ms)
+[2026-10-30T02:02:21.709Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd51 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L61
+✔ only the host writes its room (52.100959ms)
+✔ answer accepted inside the window with the server timestamp (31.85675ms)
+[2026-10-30T02:02:21.788Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd56 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+✔ answer rejected during the reading phase (33.202625ms)
+✔ answer accepted during reading once the host opened answers early (24.964375ms)
+[2026-10-30T02:02:21.840Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd5a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+✔ answer rejected after the deadline (26.685166ms)
+[2026-10-30T02:02:21.864Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd5c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+✔ answer rejected when the room is not taking answers (24.082167ms)
+[2026-10-30T02:02:21.886Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd5e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+✔ answer rejected with a client-chosen timestamp (22.336042ms)
+[2026-10-30T02:02:21.913Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd60 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:02:21.926Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd61 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:02:21.937Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd62 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:02:21.948Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd63 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:02:21.959Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd64 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+✔ answer rejected for another user, question, session or id (72.668ms)
+[2026-10-30T02:02:21.994Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd67 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+✔ one answer per question: a second write is refused (34.675417ms)
+✔ answers are readable by the host and their author only (87.679958ms)
+[2026-10-30T02:02:22.152Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd75 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L81, false for 'update' @ L81
+✔ public record: readable by its owner and the host it names (70.307875ms)
+[2026-10-30T02:02:22.203Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd7b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L66, false for 'update' @ L66
+✔ report deliveries: recipient and host only, even before the report exists (51.016167ms)
+[2026-10-30T02:02:22.232Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd7f error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+[2026-10-30T02:02:22.249Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd81 error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+✔ AI quota counters and the AI call log are closed to clients (45.628291ms)
+[2026-10-30T02:02:22.266Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd83 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:23 for 'create' @ L56, evaluation error at L56:23 for 'update' @ L56, false for 'create' @ L56
+[2026-10-30T02:02:22.276Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x7b06dd84 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:23 for 'create' @ L56, evaluation error at L56:23 for 'update' @ L56, false for 'update' @ L56
+✔ only admins can change the AI host list or the admin list (36.784166ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 17
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1658.618417
+
+✖ failing tests:
+
+test at properties.test.mjs:27:1
+✖ I1 holds for generated cases (reference model vs emulator) (728.345167ms)
+  Error: Property failed after 2 tests
+  { seed: -120928020, path: "1:0:0:0:0:0:0:0:0", endOnFailure: true }
+  Counterexample: [{"status":"question","writerIsAuthor":false,"idMatches":false,"sid":"S","q":0,"roomQ":0,"serverTime":false,"extraKey":false,"window":"before","openEarly":false,"readS":0,"T":5,"exists":true}]
+  Shrunk 8 time(s)
+  Got FirebaseError: Firestore has already been started and its settings can no longer be changed. You can only modify settings before calling any other methods on a Firestore object.
+  
+  Hint: Enable verbose mode in order to have the list of all failing values encountered during the run
+      at buildError (file:///Users/richardlau/Desktop/%20Algo_Arena/algoarena-b/test/rules/node_modules/fast-check/lib/esm/check/runner/utils/RunDetailsFormatter.js:126:15)
+      at asyncThrowIfFailed (file:///Users/richardlau/Desktop/%20Algo_Arena/algoarena-b/test/rules/node_modules/fast-check/lib/esm/check/runner/utils/RunDetailsFormatter.js:143:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+⚠  Script exited unsuccessfully (code 1)
+i  emulators: Shutting down emulators.
+i  firestore: Stopping Firestore Emulator
+i  hub: Stopping emulator hub
+i  logging: Stopping Logging Emulator
+
+Error: Script "bash test/rules/run-with-coverage.sh" exited with code 1

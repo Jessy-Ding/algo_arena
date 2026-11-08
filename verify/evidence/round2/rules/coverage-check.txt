@@ -1,0 +1,76 @@
+L13  ok             {"false": 17, "true": 912}                       request.auth != null
+L15  ok             {"true": 15, "false": 2}                         signedIn
+L15  ok             {"error": 10, "false": 3, "true": 4}             signedIn() && exists(/databases/$(database)/documents/meta/admins
+L15  ok             {"error": 10, "false": 5, "true": 2}             signedIn() && exists(/databases/$(database)/documents/meta/admins) && request.auth.uid in get(/datab
+L16  ok             {"error": 10, "false": 1, "true": 4, "empty": 2} exists(/databases/$(database)/documents/meta/admins
+L17  ok             {"error": 10, "empty": 3, "true": 2, "false": 2} request.auth.uid in get(/databases/$(database)/documents/meta/admins).data.uids
+L24  ok             {"error": 418, "false": 53, "true": 12}          (r.get('openNowSrv', null) != null && request.time >= r.openNowSrv && request.time <= r.openNowSrv +
+L24  ok             {"error": 418, "true": 26, "false": 39}          (r.get('openNowSrv', null) != null && request.time >= r.openNowSrv && request.time <= r.openNowSrv +
+L24  ok             {"error": 418, "false": 33, "true": 32}          r.get('openNowSrv', null) != null
+L24  ok             {"error": 418, "false": 46, "true": 19}          r.get('openNowSrv', null) != null && request.time >= r.openNowSrv
+L25  ok             {"error": 418, "empty": 33, "true": 19, "false": 13} request.time >= r.openNowSrv
+L26  ok             {"error": 418, "empty": 46, "true": 12, "false": 7} request.time <= r.openNowSrv + msDur(int(r.q.T) * 1000 + 250
+L27  ok             {"error": 418, "true": 14, "false": 39, "empty": 12} (r.get('openNowSrv', null) == null && request.time >= r.shownSrv + msDur(int(r.readS) * 1000) && req
+L27  ok             {"error": 418, "true": 33, "empty": 12, "false": 20} r.get('openNowSrv', null) == null
+L27  ok             {"error": 418, "true": 26, "false": 27, "empty": 12} r.get('openNowSrv', null) == null && request.time >= r.shownSrv + msDur(int(r.readS) * 1000
+L28  ok             {"error": 418, "true": 26, "false": 7, "empty": 32} request.time >= r.shownSrv + msDur(int(r.readS) * 1000
+L29  ok             {"error": 418, "true": 14, "empty": 39, "false": 12} request.time <= r.shownSrv + msDur(int(r.readS) * 1000 + int(r.q.T) * 1000 + 250
+L32  ok             {"error": 418, "true": 26, "false": 419}         let r = roomOf(hostId); let d = request.resource.data; return r.status == 'question' && d.keys().has
+L33  ok             {"error": 418, "true": 26, "false": 419}         let d = request.resource.data; return r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q',
+L34  ok             {"error": 520, "true": 243, "false": 100}        r.status == 'question'
+L34  ok             {"error": 504, "true": 200, "false": 159}        r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 504, "true": 199, "false": 160}        r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 485, "true": 167, "false": 211}        r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 485, "true": 131, "false": 247}        r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 485, "true": 75, "false": 303}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 485, "true": 74, "false": 304}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 485, "true": 73, "false": 305}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 485, "true": 65, "false": 313}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 418, "true": 65, "false": 380}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 418, "true": 26, "false": 419}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L35  ok             {"error": 418, "true": 286, "empty": 100, "false": 59} d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offset', 'rtt', 'dev'
+L36  ok             {"error": 418, "true": 285, "empty": 159, "false": 1} d.keys().hasAll(['uid', 'sid', 'q', 'ct', 'srv'
+L37  ok             {"error": 418, "true": 234, "empty": 160, "false": 51} d.uid == request.auth.uid
+L38  ok             {"error": 485, "true": 131, "empty": 211, "false": 36} d.sid == r.sid
+L39  ok             {"error": 485, "true": 75, "empty": 247, "false": 56} d.q == r.qIndex
+L40  ok             {"error": 418, "true": 141, "empty": 303, "false": 1} d.ct is string
+L40  ok             {"error": 418, "true": 140, "empty": 304, "false": 1} d.ct.size() < 4096
+L41  ok             {"error": 485, "true": 65, "empty": 305, "false": 8} aid == request.auth.uid + '_' + r.sid + '_' + string(r.qIndex
+L42  ok             {"error": 418, "true": 65, "empty": 313, "false": 67} d.srv == request.time
+L43  ok             {"error": 418, "true": 26, "false": 39, "empty": 380} inAnswerWindow(r
+L47  ok             {"true": 6, "false": 3}                          signedIn
+L47  ok             {"true": 3, "false": 6}                          signedIn() && request.auth.uid == uid
+L47  ok             {"true": 3, "false": 3, "empty": 3}              request.auth.uid == uid
+L51  ok             {"false": 1, "true": 1}                          signedIn
+L52  ok             {"error": 4, "false": 3, "true": 1}              isAdmin
+L56  ok             {"error": 6, "false": 2, "true": 1}              isAdmin
+L60  ok             {"false": 1, "true": 1}                          signedIn
+L61  ok             {"true": 2, "false": 2}                          signedIn
+L61  ok             {"false": 3, "true": 1}                          signedIn() && request.auth.uid == hostId
+L61  ok             {"false": 1, "true": 1, "empty": 2}              request.auth.uid == hostId
+L65  ok             {"true": 4, "false": 1}                          signedIn
+L65  ok             {"true": 3, "false": 2}                          signedIn() && (request.auth.uid == hostId || rid.matches('^.*_' + request.auth.uid + '$'
+L65  ok             {"true": 3, "false": 1, "empty": 1}              (request.auth.uid == hostId || rid.matches('^.*_' + request.auth.uid + '$'
+L65  ok             {"false": 3, "true": 1, "empty": 1}              request.auth.uid == hostId
+L65  ok             {"true": 2, "empty": 2, "false": 1}              rid.matches('^.*_' + request.auth.uid + '$'
+L66  ok             {"true": 4, "false": 2}                          signedIn
+L66  ok             {"false": 4, "true": 2}                          signedIn() && request.auth.uid == hostId
+L66  ok             {"false": 2, "empty": 2, "true": 2}              request.auth.uid == hostId
+L71  ok             {"true": 5, "false": 1}                          signedIn
+L71  ok             {"true": 3, "false": 2, "error": 1}              signedIn() && (request.auth.uid == hostId || aid.matches('^' + request.auth.uid + '_.*'
+L71  ok             {"true": 3, "false": 1, "error": 1, "empty": 1}  (request.auth.uid == hostId || aid.matches('^' + request.auth.uid + '_.*'
+L71  ok             {"false": 3, "true": 2, "empty": 1}              request.auth.uid == hostId
+L71  ok             {"true": 1, "empty": 3, "false": 1, "error": 1}  aid.matches('^' + request.auth.uid + '_.*'
+L72  ok             {"true": 863, "false": 1}                        signedIn
+L72  ok             {"error": 418, "true": 26, "false": 420}         signedIn() && validAnswer(hostId, aid
+L72  ok             {"error": 418, "true": 26, "false": 419, "empty": 1} validAnswer(hostId, aid
+L80  ok             {"true": 7, "false": 1}                          signedIn
+L80  ok             {"true": 3, "error": 3, "false": 2}              signedIn() && (request.auth.uid == uid || resource.data.host == request.auth.uid
+L80  ok             {"true": 3, "error": 3, "false": 1, "empty": 1}  (request.auth.uid == uid || resource.data.host == request.auth.uid
+L80  ok             {"true": 1, "false": 4, "error": 2, "empty": 1}  request.auth.uid == uid
+L80  ok             {"empty": 2, "error": 3, "true": 2, "false": 1}  resource.data.host == request.auth.uid
+L81  ok             {"true": 4, "false": 2}                          signedIn
+L81  ok             {"false": 4, "true": 2}                          signedIn() && request.auth.uid == uid
+L81  ok             {"false": 2, "empty": 2, "true": 2}              request.auth.uid == uid
+
+reports merged: 2; boolean expressions: 74; missing true or false: 0; allow lines with a non-literal condition never evaluated: none

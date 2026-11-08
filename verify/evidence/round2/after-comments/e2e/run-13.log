@@ -1,0 +1,45 @@
+PASS signed-out users see 'Sign in with Google'
+PASS after sign-in the host reaches Home
+PASS B's server-clock offset estimate corrects its -5 s skew  [5002]
+PASS host sees both players (pub query filtered by host)
+PASS room has a server timestamp for the question
+PASS both players locked during reading
+PASS database refuses an answer written during reading
+PASS players unlock at the server's open time (within 0.6 s)  [404]
+PASS database refuses a client-chosen timestamp
+PASS timing source is the server for both players
+PASS A elapsed ~1 s from open on the server clock  [1484]
+PASS B elapsed ~2 s despite a -5 s device clock  [2533]
+PASS client-measured elapsed recorded alongside  [[(1461, 1484), (2511, 2533)]]
+PASS A's score follows the server elapsed time  [951 at 1484 ms]
+PASS log uses the server open time
+PASS A sees Correct
+PASS open-now stores a server timestamp earlier than shown + 3 s
+PASS database refuses a second answer to the same question
+PASS B scored from the early open (~1 s)  [1136]
+PASS database refuses answers while the room is not taking them
+PASS A's review lists 3 questions
+PASS other players' answers are unreadable to A
+PASS personal reports ready for both players and the class report ready  [{'A': 'ready', 'B': 'ready', '_class': 'ready'}]
+PASS report provenance records the model  [claude-sonnet-5-5]
+PASS A receives the report on the end screen
+PASS every Anthropic call is made server-side with the secret key and the fixed system prompt  [4]
+PASS no prompt sent to the AI contains a display name
+PASS report calls force structured output (learning_report and class_summary)  [['class_summary', 'learning_report']]
+PASS personal prompts carry the 400-word budget
+PASS a forged player record does not unlock AI calls  [not_granted]
+PASS the failed call was retried and its quota unit returned  [quota 3, calls 4]
+PASS the session counter matches the successful calls and its cap is 2 x 2 players + 1  [{'uid': 'H', 'sid': 'Smvucxfir6o79', 'count': 3, 'cap': 5}]
+PASS the host can use the rest of the session allowance, then is stopped; calls without a session are refused  [['ok', 'ok', 'quota_exceeded', 'quota_exceeded', 'quota_exceeded', 'quota_exceeded', 'invalid_argument']]
+PASS call log has one entry per success and no student text
+PASS clients cannot read quota counters
+PASS players get 3 AI calls a day, then quota_exceeded  [['ok', 'ok', 'ok', 'quota_exceeded']]
+PASS an unparseable AI reply is not retried (one call, then the report fails)  [{'bad': 'SyntaxError', 'badCalls': 1, 'longCalls': 1, 'words': 374}]
+PASS a long report is shortened locally to 400 words or fewer without a second call  [{'bad': 'SyntaxError', 'badCalls': 1, 'longCalls': 1, 'words': 374}]
+PASS export: reading time, server timing, client elapsed
+PASS export has 6 submissions and 6 exposures
+PASS sign out returns to the sign-in screen
+PASS no uncaught errors  [[]]
+PASS no unexpected console errors or warnings  [[]]
+
+43/43 checks passed

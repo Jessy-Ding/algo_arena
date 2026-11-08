@@ -1,0 +1,30 @@
+[
+ {
+  "anchor": "function roomCode() {",
+  "comment": "/** Alphabet drops I, O, 0 and 1 so codes are easy to read aloud and type. */"
+ },
+ {
+  "anchor": "function b64(buf) { const u = new Uint8Array(buf); let s = \"\"; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }",
+  "comment": "/** Converts in 32 KiB chunks to stay under the engine's argument-count limit for String.fromCharCode.apply on large buffers. */"
+ },
+ {
+  "anchor": "function mdInline(s) {",
+  "comment": "/** Escapes first and then inserts only fixed tags, with hrefs limited to http(s), so the result is safe to assign as innerHTML. */"
+ },
+ {
+  "anchor": "function parseJsLiteral(src, i0) {",
+  "comment": "/** Reads a JS object or array literal without eval, so QUESTION_BANK can be loaded from an uploaded original index.html; template expressions are rejected. */"
+ },
+ {
+  "anchor": "  room: (h) => `rooms/${h}`, rep: (h) => `rooms/${h}/r`, pub: (u) => `pub/${u}`, answers: (h) => `rooms/${h}/answers`,",
+  "comment": "/** rep(h) holds sealed AI-report deliveries keyed by repId(sid, uid); pub(u) is the player's single public record, overwritten when they join another game. */"
+ },
+ {
+  "anchor": "function serial(path, fn) {",
+  "comment": "/** Per-path write queue: a failed write does not block later ones, and every queued write is refused once this device is displaced. */"
+ },
+ {
+  "anchor": "async function claimDevice() {",
+  "comment": "/** One active device per account: the last claim wins, and a displaced device has its writes refused by serial() and leaves the live game. */"
+ }
+]

@@ -1,0 +1,13 @@
+date: 2026-10-30T04:47:31Z
+commit: b601d215b2b492084ff676f6fd0768f3ffd88844
+node: v26.11.0
+java: openjdk version "25.0.2" 2026-01-20
+python: Python 3.13.11
+firebase-tools: 15.33.0
+emulator: cloud-firestore-emulator-v1.22.0.jar
+stryker: 8.7.1
+fast-check: 3.23.2
+rules-unit-testing: 3.0.4
+firebase-admin: 12.7.0
+firebase-functions: 5.1.1
+playwright: 1.57.0

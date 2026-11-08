@@ -1,0 +1,101 @@
+i  emulators: Starting emulators: auth, functions, firestore
+i  emulators: Detected demo project ID "demo-algoarena", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail.
+i  firestore: Firestore Emulator logging to firestore-debug.log
+✔  firestore: Firestore Emulator was started in standard edition.
+✔  firestore: Firestore Emulator UI websocket is running on 9150.
+i  functions: Watching "/Users/richardlau/Desktop/ Algo_Arena/algoarena-b/functions" for Cloud Functions...
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+⚠  functions: Your requested "node" version "20" doesn't match your global version "26". Using node@26 from host.
+Serving at port 8081
+
+✔  functions: Loaded functions definitions from source: coach.
+✔  functions[us-central1-coach]: http function initialized (http://127.0.0.1:5001/demo-algoarena/us-central1/coach).
+i  Running script: node --test --test-concurrency=1 functions/test/emulator/coach.emulator.test.mjs
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"MISSING"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 12.770458ms
+✔ a signed-out call is refused (4106.284875ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 188.358125ms
+✔ a host's call for an ended session returns the model text and charges one daily and one session unit (267.786792ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 37.794167ms
+✔ the upstream request carries the key from the secret and forces the report tool (49.469583ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 32.568292ms
+✔ the call log stores sizes and a hash, never the prompt or the reply (96.148542ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 42.437083ms
+✔ an upstream 529 maps to rate_limited and refunds both quota units (64.911625ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 37.768958ms
+✔ an unreadable 200 reply is empty_completion and refunds both quota units (58.233166ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 25.782125ms
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 25.515ms
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 44.840542ms
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 30.096375ms
+✔ a host is stopped at 2 x participants + 1 calls per session (151.743834ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 16.344584ms
+✔ a host cannot get reports for a session that has not ended (31.655875ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 65.435209ms
+✔ an admin who is not on the AI host list is treated as a host (81.549ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 96.52575ms
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 34.18125ms
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 36.175042ms
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 24.867417ms
+✔ a player listed in the host's session gets 3 calls a day, then quota_exceeded (289.643292ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 18.638041ms
+✔ a player cannot name a session they did not play in (30.741708ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 16.183125ms
+✔ a self-written pub record without a matching session listing does not unlock calls (28.79475ms)
+i  functions: Beginning execution of "us-central1-coach"
+>  {"verifications":{"app":"MISSING","auth":"VALID"},"logging.googleapis.com/labels":{"firebase-log-type":"callable-request-verification"},"severity":"DEBUG","message":"Callable request verification passed"}
+i  functions: Finished "us-central1-coach" in 11.879625ms
+✔ a user with no pub record is refused (15.803583ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5616.637791
+✔  Script exited successfully (code 0)
+i  emulators: Shutting down emulators.
+i  functions: Stopping Functions Emulator
+i  firestore: Stopping Firestore Emulator
+i  auth: Stopping Authentication Emulator
+i  eventarc: Stopping Eventarc Emulator
+i  tasks: Stopping Cloud Tasks Emulator
+i  hub: Stopping emulator hub
+i  logging: Stopping Logging Emulator

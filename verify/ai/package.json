@@ -1,0 +1,8 @@
+{
+  "name": "algoarena-ai-checks",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  }
+}

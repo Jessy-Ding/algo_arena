@@ -1,0 +1,17 @@
+node_modules/
+.DS_Store
+*.log
+!verify/evidence/**/*.log
+functions/reports/
+functions/.stryker-tmp/
+test/rules/rules-coverage*.html
+test/e2e/app.html
+test/e2e/platform-firebase.js
+test/e2e/firebase-config.js
+test/e2e/coach-core.js
+test/e2e/shot_b_review.png
+test/rules/rules-coverage*.json
+verify/i6/www/
+functions/.secret*.local
+__pycache__/
+*.pyc
