@@ -1,4 +1,5 @@
-# Publishes site/ to GitHub Pages (https://yikangliu823.github.io/algo_arena/).
+# Publishes site/ to GitHub Pages (https://yikangliu823.github.io/algo_arena/) from main (owner, 2026-11-08). It used to
+# deploy from verify/firebase-round3, which is kept; a push there would still deploy through that branch's own copy.
 #
 # Author: Yikang (Richard) Liu, M.S. Candidate in Computer Science, Khoury College of Computer Sciences,
 #     Northeastern University
@@ -10,7 +11,7 @@
 name: pages
 on:
   push:
-    branches: [verify/firebase-round3]
+    branches: [main]
     paths: [site/**, .github/workflows/pages.yml]
   workflow_dispatch:
 permissions:
