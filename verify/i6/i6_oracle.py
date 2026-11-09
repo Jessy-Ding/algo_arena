@@ -178,7 +178,10 @@ def run_game(pages, questions):
     H, A, B = (pages[u] for u in UIDS)
     plan = []
     for p in (H, A, B):
-        p.wait_for_selector('[data-act="signIn"]', timeout=20000)
+        # Google sign-in sits behind "Other sign-in options"; the Northeastern email link is the default.
+        p.wait_for_selector('[data-act="gateOthers"]', timeout=20000)
+        p.click('[data-act="gateOthers"]')
+        p.wait_for_selector('[data-act="signIn"]', timeout=5000)
         p.click('[data-act="signIn"]')
     H.wait_for_selector('[data-act="launch"][data-id="set1"]', timeout=20000)
     H.click('[data-act="launch"][data-id="set1"]')
