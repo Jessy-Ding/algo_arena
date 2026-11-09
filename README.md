@@ -164,16 +164,6 @@ Evidence status and run order: `verify/EVIDENCE.md`. Threat model: `verify/THREA
 - Timing and load on a staging project: `verify/staging/driver.mjs`, then `python3 verify/analysis/bland_altman.py results/timing.csv` (pass: 95% limits of agreement within +/-250 ms).
 - AI reports: `verify/ai/export-reports.mjs`, `grounding.mjs`, `reconcile.mjs`, `rating_sheet.py`, `kappa.py`.
 
-### No Chinese text (pre-push hook)
-
-The repository keeps no Chinese text. `tools/hooks/pre-push` refuses a push if a commit it adds has a Chinese
-character in its message, in a file path, or in an added or changed file (`.gz` files are decompressed; other binary
-files are skipped). Git does not track `.git/hooks`, so install it once per clone; it then covers every branch:
-
-    cp tools/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
-
-It reads text as UTF-8 only, and `git push --no-verify` skips it.
-
 ### Next stages
 
 - B1: done in this package.
