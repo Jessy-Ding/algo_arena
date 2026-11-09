@@ -1,0 +1,576 @@
+i  emulators: Starting emulators: firestore
+i  emulators: Detected demo project ID "demo-algoarena", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail.
+i  firestore: Firestore Emulator logging to firestore-debug.log
+✔  firestore: Firestore Emulator was started in standard edition.
+✔  firestore: Firestore Emulator UI websocket is running on 9150.
+i  Running script: bash test/rules/run-with-coverage.sh
+✔ signed-out users read nothing (664.190125ms)
+[2026-10-30T02:04:22.086Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd25b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L47, false for 'update' @ L47
+✔ own data is private (67.339333ms)
+[2026-10-30T02:04:22.148Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd25e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L52:23 for 'create' @ L52, evaluation error at L52:23 for 'update' @ L52, false for 'create' @ L52
+✔ bank: everyone signed in reads, only admins write (85.899333ms)
+[2026-10-30T02:04:22.220Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd263 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'update' @ L61
+✔ only the host writes its room (58.750875ms)
+✔ answer accepted inside the window with the server timestamp (31.492417ms)
+[2026-10-30T02:04:22.297Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd268 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+✔ answer rejected during the reading phase (33.817458ms)
+✔ answer accepted during reading once the host opened answers early (24.660708ms)
+[2026-10-30T02:04:22.347Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd26c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+✔ answer rejected after the deadline (25.640167ms)
+[2026-10-30T02:04:22.371Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd26e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+✔ answer rejected when the room is not taking answers (24.139417ms)
+[2026-10-30T02:04:22.391Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd270 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+✔ answer rejected with a client-chosen timestamp (19.845083ms)
+[2026-10-30T02:04:22.413Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd272 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:22.424Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd273 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:22.435Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd274 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:22.447Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd275 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:22.457Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd276 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+✔ answer rejected for another user, question, session or id (65.68975ms)
+[2026-10-30T02:04:22.490Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd279 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+✔ one answer per question: a second write is refused (33.014583ms)
+✔ answers are readable by the host and their author only (92.534708ms)
+[2026-10-30T02:04:22.653Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd287 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L81, false for 'update' @ L81
+✔ public record: readable by its owner and the host it names (70.132833ms)
+[2026-10-30T02:04:22.704Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd28d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L66, false for 'update' @ L66
+✔ report deliveries: recipient and host only, even before the report exists (50.654084ms)
+[2026-10-30T02:04:22.733Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd291 error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+[2026-10-30T02:04:22.749Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd293 error. Code: 7 Message: 7 PERMISSION_DENIED: No matching allow statements
+✔ AI quota counters and the AI call log are closed to clients (45.704708ms)
+[2026-10-30T02:04:22.768Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd295 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:23 for 'create' @ L56, evaluation error at L56:23 for 'update' @ L56, false for 'create' @ L56
+[2026-10-30T02:04:22.777Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x790dd296 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L56:23 for 'create' @ L56, evaluation error at L56:23 for 'update' @ L56, false for 'update' @ L56
+✔ only admins can change the AI host list or the admin list (35.593208ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1667.212375
+[2026-10-30T02:04:23.358Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bc6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.378Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bc8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.398Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bca error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.413Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bcc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.437Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bce error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:23.455Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bd0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:23.474Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bd2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.494Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bd4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.513Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bd6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.532Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bd8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.551Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bda error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.569Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bdc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.591Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bde error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.606Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093be0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.623Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093be2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.640Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093be4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.659Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093be6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.679Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093be8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.698Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bea error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.716Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bec error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.734Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bee error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.748Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bf0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.766Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bf2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.783Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bf4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:23.796Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bf6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.814Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bf8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:23.831Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bfa error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.844Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bfc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.861Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093bfe error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.879Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c00 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.895Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c02 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:23.911Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c04 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:23.926Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c06 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.944Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c08 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:23.961Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c0a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.976Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c0c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:23.990Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c0e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.006Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c10 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.021Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c12 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.036Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c14 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.051Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c16 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.066Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c18 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.082Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c1a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.097Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c1c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.112Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c1e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.127Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c20 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.142Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c22 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.156Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c24 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.171Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c26 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.185Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c28 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.199Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c2a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.221Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c2c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.233Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c2e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.247Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c30 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.262Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c32 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.276Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c34 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.294Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c36 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.309Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c38 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.323Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c3a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.339Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c3c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.354Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c3e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.369Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c40 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.386Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c42 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.401Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c44 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.416Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c46 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.430Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c48 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.445Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c4a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.463Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c4c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.477Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c4e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.491Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c50 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.506Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c52 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.520Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c54 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.534Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c56 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.550Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c58 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.563Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c5a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.579Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c5c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.593Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c5e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.608Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c60 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.624Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c62 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.638Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c64 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.652Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c66 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.666Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c68 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.680Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c6a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.698Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c6c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.711Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c6e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.728Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c70 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.745Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c72 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.759Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c74 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.773Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c76 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.789Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c78 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.801Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c7a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.816Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c7c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.831Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c7e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.844Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c80 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.858Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c82 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.872Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c84 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.887Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c86 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.902Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c88 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.917Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c8a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.930Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c8c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:24.946Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c8e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.961Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c90 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:24.975Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c92 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:24.991Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c94 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.005Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c96 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.022Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c98 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.036Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c9a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.050Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c9c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.065Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093c9e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.079Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ca0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.091Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ca2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.106Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ca4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.118Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ca6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.133Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ca8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.147Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093caa error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.162Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cac error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.178Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cae error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.192Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cb0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.205Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cb2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.220Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cb4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.233Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cb6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.245Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cb8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.260Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cba error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.273Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cbc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.286Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cbe error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.301Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cc0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.313Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cc2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.329Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cc4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.340Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cc6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.355Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cc8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.370Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cca error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.384Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ccc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.398Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cce error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.412Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cd0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.427Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cd2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.440Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cd4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.454Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cd6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.464Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cd8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.476Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cda error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.491Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cdc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.505Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cde error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.519Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ce0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.532Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ce2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.544Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ce4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.559Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ce6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.572Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093ce8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.584Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cea error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.608Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cec error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.628Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cee error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.640Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cf0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.654Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cf2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.668Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cf4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.680Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cf6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.694Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cf8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.710Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cfa error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.723Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cfc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.740Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093cfe error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.754Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d00 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.768Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d02 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.785Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d04 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.800Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d06 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.814Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d08 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.831Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d0a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.844Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d0c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.855Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d0e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.870Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d10 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.884Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d12 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.899Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d14 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.913Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d16 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:25.926Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d18 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:25.940Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d1a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.954Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d1c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.968Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d1e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:25.985Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d20 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:26.000Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d22 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:26.014Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d24 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:26.029Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d26 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.043Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d28 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.059Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d2a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:26.073Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d2c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.086Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d2e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.104Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d30 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:26.118Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d32 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:26.130Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d34 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:26.145Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d36 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.157Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d38 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.169Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d3a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.183Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d3c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:26.195Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d3e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.209Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d40 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.222Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d42 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:26.235Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d44 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:26.249Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d46 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:26.262Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d48 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:26.274Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d4a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.289Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d4c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'create' @ L72
+[2026-10-30T02:04:26.303Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d4e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:26.315Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d50 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+[2026-10-30T02:04:26.329Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d52 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L72:26 for 'create' @ L72, false for 'update' @ L73, false for 'update' @ L73
+[2026-10-30T02:04:26.341Z]  @firebase/firestore: Firestore (10.14.1): GrpcConnection RPC 'Write' stream 0x1c093d54 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L72, false for 'update' @ L73
+✔ I1 holds for generated cases (reference model vs emulator) (3073.937166ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3353.832208
+L13  ok             {"false": 2, "true": 314}                        request.auth != null
+L15  MISSING false  {"true": 15}                                     signedIn
+L15  ok             {"error": 10, "false": 1, "true": 4}             signedIn() && exists(/databases/$(database)/documents/meta/admins
+L15  ok             {"error": 10, "false": 3, "true": 2}             signedIn() && exists(/databases/$(database)/documents/meta/admins) && request.auth.uid in get(/datab
+L16  ok             {"error": 10, "false": 1, "true": 4}             exists(/databases/$(database)/documents/meta/admins
+L17  ok             {"error": 10, "empty": 1, "true": 2, "false": 2} request.auth.uid in get(/databases/$(database)/documents/meta/admins).data.uids
+L24  ok             {"error": 107, "false": 6, "true": 1}            (r.get('openNowSrv', null) != null && request.time >= r.openNowSrv && request.time <= r.openNowSrv +
+L24  ok             {"error": 107, "true": 4, "false": 3}            (r.get('openNowSrv', null) != null && request.time >= r.openNowSrv && request.time <= r.openNowSrv +
+L24  ok             {"error": 107, "false": 5, "true": 2}            r.get('openNowSrv', null) != null
+L24  ok             {"error": 107, "false": 5, "true": 2}            r.get('openNowSrv', null) != null && request.time >= r.openNowSrv
+L25  MISSING false  {"error": 107, "empty": 5, "true": 2}            request.time >= r.openNowSrv
+L26  ok             {"error": 107, "empty": 5, "true": 1, "false": 1} request.time <= r.openNowSrv + msDur(int(r.q.T) * 1000 + 250
+L27  ok             {"error": 107, "true": 3, "false": 3, "empty": 1} (r.get('openNowSrv', null) == null && request.time >= r.shownSrv + msDur(int(r.readS) * 1000) && req
+L27  ok             {"error": 107, "true": 5, "empty": 1, "false": 1} r.get('openNowSrv', null) == null
+L27  ok             {"error": 107, "true": 4, "false": 2, "empty": 1} r.get('openNowSrv', null) == null && request.time >= r.shownSrv + msDur(int(r.readS) * 1000
+L28  ok             {"error": 107, "true": 4, "false": 1, "empty": 2} request.time >= r.shownSrv + msDur(int(r.readS) * 1000
+L29  ok             {"error": 107, "true": 3, "empty": 3, "false": 1} request.time <= r.shownSrv + msDur(int(r.readS) * 1000 + int(r.q.T) * 1000 + 250
+L32  ok             {"error": 107, "true": 4, "false": 158}          let r = roomOf(hostId); let d = request.resource.data; return r.status == 'question' && d.keys().has
+L33  ok             {"error": 107, "true": 4, "false": 158}          let d = request.resource.data; return r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q',
+L34  ok             {"error": 214, "true": 26, "false": 29}          r.status == 'question'
+L34  ok             {"error": 153, "true": 16, "false": 100}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 153, "true": 16, "false": 100}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 136, "true": 12, "false": 121}         r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 136, "true": 9, "false": 124}          r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 136, "true": 8, "false": 125}          r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 136, "true": 8, "false": 125}          r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 136, "true": 8, "false": 125}          r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 136, "true": 7, "false": 126}          r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 107, "true": 7, "false": 155}          r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L34  ok             {"error": 107, "true": 4, "false": 158}          r.status == 'question' && d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offs
+L35  ok             {"error": 107, "true": 62, "empty": 29, "false": 71} d.keys().hasOnly(['uid', 'sid', 'q', 'ct', 'srv', 'mono', 'localAt', 'offset', 'rtt', 'dev'
+L36  MISSING false  {"error": 107, "true": 62, "empty": 100}         d.keys().hasAll(['uid', 'sid', 'q', 'ct', 'srv'
+L37  ok             {"error": 107, "true": 41, "empty": 100, "false": 21} d.uid == request.auth.uid
+L38  ok             {"error": 136, "true": 9, "empty": 121, "false": 3} d.sid == r.sid
+L39  ok             {"error": 136, "true": 8, "empty": 124, "false": 1} d.q == r.qIndex
+L40  MISSING false  {"error": 107, "true": 37, "empty": 125}         d.ct is string
+L40  MISSING false  {"error": 107, "true": 37, "empty": 125}         d.ct.size() < 4096
+L41  ok             {"error": 136, "true": 7, "empty": 125, "false": 1} aid == request.auth.uid + '_' + r.sid + '_' + string(r.qIndex
+L42  ok             {"error": 107, "true": 7, "empty": 126, "false": 29} d.srv == request.time
+L43  ok             {"error": 107, "true": 4, "false": 3, "empty": 155} inAnswerWindow(r
+L47  MISSING false  {"true": 6}                                      signedIn
+L47  ok             {"true": 3, "false": 3}                          signedIn() && request.auth.uid == uid
+L47  ok             {"true": 3, "false": 3}                          request.auth.uid == uid
+L51  ok             {"false": 1, "true": 1}                          signedIn
+L52  ok             {"error": 4, "false": 1, "true": 1}              isAdmin
+L56  ok             {"error": 6, "false": 2, "true": 1}              isAdmin
+L60  ok             {"false": 1, "true": 1}                          signedIn
+L61  MISSING false  {"true": 2}                                      signedIn
+L61  ok             {"false": 1, "true": 1}                          signedIn() && request.auth.uid == hostId
+L61  ok             {"false": 1, "true": 1}                          request.auth.uid == hostId
+L65  MISSING false  {"true": 4}                                      signedIn
+L65  ok             {"true": 3, "false": 1}                          signedIn() && (request.auth.uid == hostId || rid.matches('^.*_' + request.auth.uid + '$'
+L65  ok             {"true": 3, "false": 1}                          (request.auth.uid == hostId || rid.matches('^.*_' + request.auth.uid + '$'
+L65  ok             {"false": 3, "true": 1}                          request.auth.uid == hostId
+L65  ok             {"true": 2, "empty": 1, "false": 1}              rid.matches('^.*_' + request.auth.uid + '$'
+L66  MISSING false  {"true": 2}                                      signedIn
+L66  MISSING true   {"false": 2}                                     signedIn() && request.auth.uid == hostId
+L66  MISSING true   {"false": 2}                                     request.auth.uid == hostId
+L71  MISSING false  {"true": 5}                                      signedIn
+L71  ok             {"true": 3, "false": 1, "error": 1}              signedIn() && (request.auth.uid == hostId || aid.matches('^' + request.auth.uid + '_.*'
+L71  ok             {"true": 3, "false": 1, "error": 1}              (request.auth.uid == hostId || aid.matches('^' + request.auth.uid + '_.*'
+L71  ok             {"false": 3, "true": 2}                          request.auth.uid == hostId
+L71  ok             {"true": 1, "empty": 2, "false": 1, "error": 1}  aid.matches('^' + request.auth.uid + '_.*'
+L72  MISSING false  {"true": 269}                                    signedIn
+L72  ok             {"error": 107, "true": 4, "false": 158}          signedIn() && validAnswer(hostId, aid
+L72  ok             {"error": 107, "true": 4, "false": 158}          validAnswer(hostId, aid
+L80  MISSING false  {"true": 7}                                      signedIn
+L80  ok             {"true": 3, "error": 3, "false": 1}              signedIn() && (request.auth.uid == uid || resource.data.host == request.auth.uid
+L80  ok             {"true": 3, "error": 3, "false": 1}              (request.auth.uid == uid || resource.data.host == request.auth.uid
+L80  ok             {"true": 1, "false": 4, "error": 2}              request.auth.uid == uid
+L80  ok             {"empty": 1, "error": 3, "true": 2, "false": 1}  resource.data.host == request.auth.uid
+L81  MISSING false  {"true": 2}                                      signedIn
+L81  MISSING true   {"false": 2}                                     signedIn() && request.auth.uid == uid
+L81  MISSING true   {"false": 2}                                     request.auth.uid == uid
+
+reports merged: 2; boolean expressions: 74; missing true or false: 17; allow lines with a non-literal condition never evaluated: none
+  GAP L15: never false: signedIn
+  GAP L25: never false: request.time >= r.openNowSrv
+  GAP L36: never false: d.keys().hasAll(['uid', 'sid', 'q', 'ct', 'srv'
+  GAP L40: never false: d.ct is string
+  GAP L40: never false: d.ct.size() < 4096
+  GAP L47: never false: signedIn
+  GAP L61: never false: signedIn
+  GAP L65: never false: signedIn
+  GAP L66: never false: signedIn
+  GAP L66: never true: signedIn() && request.auth.uid == hostId
+  GAP L66: never true: request.auth.uid == hostId
+  GAP L71: never false: signedIn
+  GAP L72: never false: signedIn
+  GAP L80: never false: signedIn
+  GAP L81: never false: signedIn
+  GAP L81: never true: signedIn() && request.auth.uid == uid
+  GAP L81: never true: request.auth.uid == uid
+⚠  Script exited unsuccessfully (code 1)
+i  emulators: Shutting down emulators.
+i  firestore: Stopping Firestore Emulator
+i  hub: Stopping emulator hub
+i  logging: Stopping Logging Emulator
+
+Error: Script "bash test/rules/run-with-coverage.sh" exited with code 1

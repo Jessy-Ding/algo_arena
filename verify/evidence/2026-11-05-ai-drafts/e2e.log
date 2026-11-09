@@ -1,0 +1,100 @@
+PASS signed-out users see 'Sign in with Google'
+PASS a blocked popup explains how to sign in instead of redirecting  [Sign-in didn't finish: Pop-ups are blocked, so Google sign-in cannot open. Allow pop-ups for this site, or open the link in Safari or Chrome rather than inside another app.]
+PASS after sign-in the host reaches Home
+PASS B's server-clock offset estimate corrects its -5 s skew  [5000]
+PASS an approved host uploads a prompt image to Cloud Storage and sees it in the editor  [https://firebasestorage.googleapis.com/v0/b/algoarena-for-research.firebasestorage.app/o/assets%2FH%2Fa6cbfa81-886b-47c8-b0af-63a88ae1e270?alt=media]
+PASS the saved question names the file as <uid>/<random id>, and the file exists  [H/a6cbfa81-886b-47c8-b0af-63a88ae1e270]
+PASS a player who is not an approved host cannot upload
+PASS an SVG is refused as an unsupported type
+PASS a file over 20 MB is refused before upload
+PASS an approved host may draft with AI and a player may not
+PASS the draft form names the drafting model and the daily limit
+PASS the draft button follows the count  [Draft 2 questions]
+PASS a quota refusal shows the function's message, not the storage-full one  [The daily AI drafting limit (50 questions) leaves 0 for today.]
+PASS the page sends only the form's fields, never prompt text  [{"module": "Module 2 (Sorting and Order Statistics)", "count": 2, "setId": "set2", "focus": "heaps", "chapter": 6, "difficulty": "mixed", "subtype": null, "sourceText": ""}]
+PASS drafts are listed with the checker's disagreement first, with its reasoning  [Draft 1
+Module 2 (Sorting and Order Statistics), behavior, easy
+Accept
+Edit
+Discard
+The checker chose B, not the marked A. Its reasoning: "The root keeps 4 beca]
+PASS the agreed draft carries its near-duplicate note
+PASS the host sees the misconception behind each wrong option, and none for the right one  [['B: Assumes the root never moves.', 'C: Stops after the first MAX-HEAPIFY call.', 'D: Confuses a max-heap with a min-heap of the last half.']]
+PASS hosting is off while drafts are pending
+PASS drafts are stored under the set and counted in its metadata; the dialog closed  [{'title': 'AI drafts', 'count': 0, 'updatedAt': 1793868793181, 'drafts': 2}]
+PASS an accepted draft is stored with origin ai_draft and its drafting record  [{"prompt": "What is the running time of BUILD-MAX-HEAP on an array of n elements, as CLRS proves?", "img": "", "options": ["\u0398(n)", "\u0398(n log n)", "\u0398(log n)", "\u0398(n\u00b2)"], "correct": 0, "optFeedback": ["Right: most nodes are near the leaves, so the total height is linear.", "That]
+PASS its provenance says who drafted, checked and accepted it  [Drafted by claude-sonnet-5-5 on 2026-11-05 (prompt qgen-draft-v1); verified by gpt-6.1-terra: agree; reviewed and accepted by the host on 2026-11-05.]
+PASS editing a draft opens the question editor as 'Edit AI draft'
+PASS an edited draft is marked editedBeforeAccept and says so in provenance
+PASS with no drafts left, the set can be hosted again  [{'title': 'AI drafts', 'count': 2, 'updatedAt': 1793868793900, 'drafts': 0}]
+PASS the form shows the quota left after a draft
+PASS discarded drafts are deleted and never reach the set
+PASS New question in the bank opens the editor in bank mode
+PASS a new bank question is saved to bank/{id} with its provenance, and the count updates  [['bank/q4fsy3q99f']]
+PASS Edit opens the bank question in the editor
+PASS an edited option is saved in place; fields the form does not show are kept
+PASS Delete asks first, then removes the question and updates the count
+PASS Download bank as JSON holds the current bank  [2]
+PASS players see the bank without edit, delete or new-question controls
+PASS after bank editing, the set editor still saves into the set
+PASS the reading time defaults to 5 s  [5]
+PASS the answer time defaults to 10 s  [10]
+PASS the launch screen shows the scoring formula, one case per line, and no consent notice
+PASS the brace tip sits midway between the two cases, with equal space above and below  [{'tipToMid': 0, 'topGap': 17.8046875, 'bottomGap': 17.8046875}]
+PASS two blank lines of the explanation's own line height separate it from the formula  [{'gap': 37.4375, 'line': 18.72}]
+PASS the host lobby centres the QR code with one line below it: scan, sign in and enter the room code  [{'off': 0, 'below': True}]
+PASS host sees both players (pub query filtered by host)
+PASS room has a server timestamp for the question
+PASS both players locked during reading
+PASS a player sees the uploaded prompt image, loaded from its Storage link  [https://firebasestorage.googleapis.com/v0/b/algoarena-for-research.firebasestorage.app/o/assets%2FH%2Fa6cbfa81-886b-47c8-b0af-63a88ae1e270?alt=media]
+PASS database refuses an answer written during reading
+PASS players unlock at the server's open time (within 0.6 s)  [471]
+PASS database refuses a client-chosen timestamp
+PASS after answering, a player can still tap the other options
+PASS a change is stored as a new document, the first one kept
+PASS after answering, the player's countdown keeps running  [13 -> 11]
+PASS everyone has answered, yet the round stays open until time runs out
+PASS the round closes when time is up  [{'dist': [1, 1, 0, 0], 'answered': 2, 'n': 2, 'at': 1793868820500, 'reason': 'time_up'}]
+PASS once time is up the player's answer is final
+PASS each selection is a submission row; only the final one counts  [[(1, False, 0), (0, True, 926)]]
+PASS the exposure records the first attempt, the number of selections and the final result  [{'exposure_id': 'Smw3b60iew2ib:0:P-effc4a98ad35', 'pid': 'P-effc4a98ad35', 'uid': 'A', 'session_id': 'Smw3b60iew2ib', 'question_id': 'q1', 'question_key': '6b68bc232b1c4bf1', 'q_index': 0, 'exposure_number': 1, 'question_shown_at_ms': 1793868801867, 'answers_open_at_ms': 1793868804867, 'first_submission_at_ms': 1793868806417, 'first_attempt_correct': False, 'first_attempt_rt_ms': 1550, 'n_submissions': 2, 'time_to_correct_ms': 2215, 'final_correct': True, 'timed_out_or_no_answer': False, 'full_explanation_viewed': None, 'reference_interactions': None, 'device_takeovers': 0}]
+PASS timing source is the server for both players
+PASS A's final answer elapsed ~1.6 s from open on the server clock  [2215]
+PASS B elapsed ~2 s despite a -5 s device clock  [2647]
+PASS client-measured elapsed recorded alongside  [[(1524, 1550), (2192, 2215), (2625, 2647)]]
+PASS A's score follows the final answer's server elapsed time  [926 at 2215 ms]
+PASS log uses the server open time
+PASS A sees Correct
+PASS open-now stores a server timestamp earlier than shown + 3 s
+PASS database refuses rewriting a selection
+PASS B scored from the early open (~1 s)  [1120]
+PASS database refuses answers while the room is not taking them
+PASS A's review lists 3 questions
+PASS other players' answers are unreadable to A
+PASS personal reports ready for both players and the class report ready  [{'A': 'ready', 'B': 'ready', '_class': 'ready'}]
+PASS report provenance records the model  [claude-sonnet-5-5]
+PASS the report footer reads 'Generated by <model>, <n> words.' only
+PASS report headings read 'AI interpretation' without the parenthetical
+PASS A receives the report on the end screen
+PASS every Anthropic call is made server-side with the secret key and the fixed system prompt  [4]
+PASS no prompt sent to the AI contains a display name
+PASS report calls ask for structured output with the personal and class schemas, never a forced tool  [{'common_error_patterns,instructor_review_areas,overview,possible_confusion_signals,prominent_knowledge_points', 'knowledge_points,next_steps,performance_summary,possible_confusions,resource_ids,weak_or_risky_areas'}]
+PASS personal prompts carry the 400-word budget
+PASS a forged player record does not unlock AI calls  [not_granted]
+PASS the failed call was retried and its quota unit returned  [quota 3, calls 4]
+PASS the session counter matches the successful calls and its cap is 2 x 2 players + 1  [{'uid': 'H', 'sid': 'Smw3b60iew2ib', 'count': 3, 'cap': 5}]
+PASS the host can use the rest of the session allowance, then is stopped; calls without a session are refused  [['ok', 'ok', 'quota_exceeded', 'quota_exceeded', 'quota_exceeded', 'quota_exceeded', 'invalid_argument']]
+PASS call log has one entry per success and no student text
+PASS clients cannot read quota counters
+PASS players get 3 AI calls a day, then quota_exceeded  [['ok', 'ok', 'ok', 'quota_exceeded']]
+PASS an unparseable AI reply is not retried (one call, then the report fails)  [{'bad': 'SyntaxError', 'badCalls': 1, 'longCalls': 1, 'words': 368}]
+PASS a long report is shortened locally to 400 words or fewer without a second call  [{'bad': 'SyntaxError', 'badCalls': 1, 'longCalls': 1, 'words': 368}]
+PASS export: reading time, server timing, client elapsed
+PASS export has 7 submission rows (A changed once), 6 of them final, and 6 exposures  [(7, 6, 6)]
+PASS export (schema 5): questions.csv says each question's origin; human-written ones read as human  [[('human', '', ''), ('human', '', ''), ('human', '', '')]]
+PASS the reports zip carries provenance: model, prompt version and evidence snapshot per report, keyed by research id  [(['reports/Alice (P-effc4a98ad35).md', 'reports/Bob (P-16954cf53e75).md', 'class-report.md', 'provenance.csv', 'provenance.json', 'README.md'], [('personal', 'P-effc4a98ad35'), ('personal', 'P-16954cf53e75'), ('class', None)])]
+PASS sign out returns to the sign-in screen
+PASS no uncaught errors  [[]]
+PASS no unexpected console errors or warnings  [[]]
+
+93/93 checks passed

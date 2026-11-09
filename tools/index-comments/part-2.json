@@ -1,0 +1,10 @@
+[
+ {
+  "anchor": "function readQForm() {",
+  "comment": "/** Every action that re-renders the question editor must call this first, or typed but unsaved edits are lost. */"
+ },
+ {
+  "anchor": "const openOf = (r) => (!r ? null : r.openNowSrv != null ? r.openNowSrv : r.shownSrv != null ? r.shownSrv + (r.readS || 0) * 1000 : r.openAt != null ? r.openAt : r.shownAt);",
+  "comment": "/** openAt/shownAt are only a fallback for older room documents; current rooms leave them null and use the server-time fields. */"
+ }
+]

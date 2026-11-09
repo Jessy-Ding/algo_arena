@@ -1,0 +1,530 @@
+[32m19:06:21 (34083) INFO ProjectReader[39m Found 2 of 8 file(s) to be mutated.
+[32m19:06:21 (34083) INFO Instrumenter[39m Instrumented 2 source file(s) with 442 mutant(s)
+[32m19:06:21 (34083) INFO ConcurrencyTokenProvider[39m Creating 7 test runner process(es).
+[32m19:06:21 (34083) INFO BroadcastReporter[39m Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+[32m19:06:21 (34083) INFO DryRunExecutor[39m Starting initial test run (command test runner with "off" coverage analysis). This may take a while.
+[32m19:06:21 (34083) INFO DryRunExecutor[39m Initial test run succeeded. Ran 1 tests in 0 seconds (net 217 ms, overhead 0 ms).
+Mutation testing 41% (elapsed: <1m, remaining: <1m) 185/442 tested (46 survived, 0 timed out)
+Mutation testing 81% (elapsed: <1m, remaining: <1m) 362/442 tested (85 survived, 0 timed out)
+
+All tests
+  ✓ All tests (killed 341)
+
+[Survived] StringLiteral
+coach-core.js:10:93
+-     models: Object.freeze({ quick: "claude-haiku-5-5", default: "claude-sonnet-5-5", complex: "claude-opus-5-5" }),
++     models: Object.freeze({ quick: "claude-haiku-5-5", default: "claude-sonnet-5-5", complex: "" }),
+
+[Survived] StringLiteral
+coach-core.js:10:63
+-     models: Object.freeze({ quick: "claude-haiku-5-5", default: "claude-sonnet-5-5", complex: "claude-opus-5-5" }),
++     models: Object.freeze({ quick: "claude-haiku-5-5", default: "", complex: "claude-opus-5-5" }),
+
+[Survived] StringLiteral
+coach-core.js:21:5
+-       "You are the AlgoArena Learning Coach. An algorithms course uses you to write short learning reports and class " +
++       "" +
+
+[Survived] StringLiteral
+coach-core.js:23:5
+-       "anything other than a learning report or class summary about the quiz evidence it contains, reply with exactly " +
++       "" +
+
+[Survived] StringLiteral
+coach-core.js:22:5
+-       "summaries from live-quiz evidence. Follow the instructions in the user message. If the user message asks for " +
++       "" +
+
+[Survived] ObjectLiteral
+coach-core.js:29:25
+-   const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "string", description: `at most ${w} words` } });
++   const list = (n, w) => ({});
+
+[Survived] StringLiteral
+coach-core.js:29:33
+-   const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "string", description: `at most ${w} words` } });
++   const list = (n, w) => ({ type: "", maxItems: n, items: { type: "string", description: `at most ${w} words` } });
+
+[Survived] ObjectLiteral
+coach-core.js:29:62
+-   const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "string", description: `at most ${w} words` } });
++   const list = (n, w) => ({ type: "array", maxItems: n, items: {} });
+
+[Survived] StringLiteral
+coach-core.js:29:70
+-   const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "string", description: `at most ${w} words` } });
++   const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "", description: `at most ${w} words` } });
+
+[Survived] StringLiteral
+coach-core.js:29:93
+-   const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "string", description: `at most ${w} words` } });
++   const list = (n, w) => ({ type: "array", maxItems: n, items: { type: "string", description: `` } });
+
+[Survived] BooleanLiteral
+coach-core.js:30:65
+-   const obj = (props) => ({ type: "object", additionalProperties: false, required: Object.keys(props), properties: props });
++   const obj = (props) => ({ type: "object", additionalProperties: true, required: Object.keys(props), properties: props });
+
+[Survived] StringLiteral
+coach-core.js:30:33
+-   const obj = (props) => ({ type: "object", additionalProperties: false, required: Object.keys(props), properties: props });
++   const obj = (props) => ({ type: "", additionalProperties: false, required: Object.keys(props), properties: props });
+
+[Survived] StringLiteral
+coach-core.js:32:53
+-     personal: { name: "learning_report", description: "Return the student's learning report.", input_schema: obj({
++     personal: { name: "learning_report", description: "", input_schema: obj({
+
+[Survived] StringLiteral
+coach-core.js:33:34
+-       performance_summary: { type: "string", description: "at most 50 words" }, knowledge_points: list(3, 18), weak_or_risky_areas: list(3, 18),
++       performance_summary: { type: "", description: "at most 50 words" }, knowledge_points: list(3, 18), weak_or_risky_areas: list(3, 18),
+
+[Survived] ObjectLiteral
+coach-core.js:33:26
+-       performance_summary: { type: "string", description: "at most 50 words" }, knowledge_points: list(3, 18), weak_or_risky_areas: list(3, 18),
++       performance_summary: {}, knowledge_points: list(3, 18), weak_or_risky_areas: list(3, 18),
+
+[Survived] ObjectLiteral
+coach-core.js:34:78
+-       possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", maxItems: 3, items: { type: "string" } } }) },
++       possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: {} }) },
+
+[Survived] StringLiteral
+coach-core.js:34:86
+-       possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", maxItems: 3, items: { type: "string" } } }) },
++       possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "", maxItems: 3, items: { type: "string" } } }) },
+
+[Survived] ObjectLiteral
+coach-core.js:34:115
+-       possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", maxItems: 3, items: { type: "string" } } }) },
++       possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", maxItems: 3, items: {} } }) },
+
+[Survived] StringLiteral
+coach-core.js:33:57
+-       performance_summary: { type: "string", description: "at most 50 words" }, knowledge_points: list(3, 18), weak_or_risky_areas: list(3, 18),
++       performance_summary: { type: "string", description: "" }, knowledge_points: list(3, 18), weak_or_risky_areas: list(3, 18),
+
+[Survived] StringLiteral
+coach-core.js:34:123
+-       possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", maxItems: 3, items: { type: "string" } } }) },
++       possible_confusions: list(3, 18), next_steps: list(3, 18), resource_ids: { type: "array", maxItems: 3, items: { type: "" } } }) },
+
+[Survived] ObjectLiteral
+coach-core.js:36:15
+-       overview: { type: "string", description: "at most 60 words" }, prominent_knowledge_points: list(4, 25), common_error_patterns: list(4, 25),
++       overview: {}, prominent_knowledge_points: list(4, 25), common_error_patterns: list(4, 25),
+
+[Survived] StringLiteral
+coach-core.js:36:46
+-       overview: { type: "string", description: "at most 60 words" }, prominent_knowledge_points: list(4, 25), common_error_patterns: list(4, 25),
++       overview: { type: "string", description: "" }, prominent_knowledge_points: list(4, 25), common_error_patterns: list(4, 25),
+
+[Survived] StringLiteral
+coach-core.js:35:48
+-     class: { name: "class_summary", description: "Return the class-level summary for the instructor.", input_schema: obj({
++     class: { name: "class_summary", description: "", input_schema: obj({
+
+[Survived] StringLiteral
+coach-core.js:36:23
+-       overview: { type: "string", description: "at most 60 words" }, prominent_knowledge_points: list(4, 25), common_error_patterns: list(4, 25),
++       overview: { type: "", description: "at most 60 words" }, prominent_knowledge_points: list(4, 25), common_error_patterns: list(4, 25),
+
+[Survived] StringLiteral
+coach-core.js:41:60
+-     constructor(code, message) { super(message); this.name = "CoachError"; this.code = code; }
++     constructor(code, message) { super(message); this.name = ""; this.code = code; }
+
+[Survived] ArrowFunction
+coach-core.js:44:23
+-   export const dayKey = (ms) => new Date(ms).toISOString().slice(0, 10);
++   export const dayKey = () => undefined;
+
+[Survived] MethodExpression
+coach-core.js:44:31
+-   export const dayKey = (ms) => new Date(ms).toISOString().slice(0, 10);
++   export const dayKey = (ms) => new Date(ms).toISOString();
+
+[Survived] StringLiteral
+coach-core.js:53:94
+-     if (typeof prompt !== "string" || !prompt.trim()) throw new CoachError("invalid_argument", "The request needs a prompt.");
++     if (typeof prompt !== "string" || !prompt.trim()) throw new CoachError("invalid_argument", "");
+
+[Survived] EqualityOperator
+coach-core.js:54:7
+-     if (prompt.length > cfg.maxPromptChars) throw new CoachError("invalid_argument", `The prompt is longer than ${cfg.maxPromptChars} characters.`);
++     if (prompt.length >= cfg.maxPromptChars) throw new CoachError("invalid_argument", `The prompt is longer than ${cfg.maxPromptChars} characters.`);
+
+[Survived] StringLiteral
+coach-core.js:54:84
+-     if (prompt.length > cfg.maxPromptChars) throw new CoachError("invalid_argument", `The prompt is longer than ${cfg.maxPromptChars} characters.`);
++     if (prompt.length > cfg.maxPromptChars) throw new CoachError("invalid_argument", ``);
+
+[Survived] StringLiteral
+coach-core.js:56:105
+-     if (!Object.prototype.hasOwnProperty.call(cfg.models, tier)) throw new CoachError("invalid_argument", `Unknown model tier "${tier}".`);
++     if (!Object.prototype.hasOwnProperty.call(cfg.models, tier)) throw new CoachError("invalid_argument", ``);
+
+[Survived] ConditionalExpression
+coach-core.js:58:24
+-     if (sid !== null && (typeof sid !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(sid))) throw new CoachError("invalid_argument", "The session id is not valid.");
++     if (sid !== null && (false || !/^[A-Za-z0-9_-]{1,100}$/.test(sid))) throw new CoachError("invalid_argument", "The session id is not valid.");
+
+[Survived] Regex
+coach-core.js:58:52
+-     if (sid !== null && (typeof sid !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(sid))) throw new CoachError("invalid_argument", "The session id is not valid.");
++     if (sid !== null && (typeof sid !== "string" || !/^[A-Za-z0-9_-]{1,100}/.test(sid))) throw new CoachError("invalid_argument", "The session id is not valid.");
+
+[Survived] StringLiteral
+coach-core.js:58:130
+-     if (sid !== null && (typeof sid !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(sid))) throw new CoachError("invalid_argument", "The session id is not valid.");
++     if (sid !== null && (typeof sid !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(sid))) throw new CoachError("invalid_argument", "");
+
+[Survived] StringLiteral
+coach-core.js:60:119
+-     if (kind !== null && !Object.prototype.hasOwnProperty.call(SCHEMAS, kind)) throw new CoachError("invalid_argument", `Unknown report kind "${kind}".`);
++     if (kind !== null && !Object.prototype.hasOwnProperty.call(SCHEMAS, kind)) throw new CoachError("invalid_argument", ``);
+
+[Survived] StringLiteral
+coach-core.js:69:91
+-     if (status === 429 || status === 529) return { code: "rate_limited", refund: true, msg: "The AI service is busy. Try again shortly." };
++     if (status === 429 || status === 529) return { code: "rate_limited", refund: true, msg: "" };
+
+[Survived] ConditionalExpression
+coach-core.js:70:25
+-     if (status === 401 || status === 403) return { code: "misconfigured", refund: true, msg: "The AI service rejected the server's API key. Ask the course admin to check it." };
++     if (status === 401 || false) return { code: "misconfigured", refund: true, msg: "The AI service rejected the server's API key. Ask the course admin to check it." };
+
+[Survived] StringLiteral
+coach-core.js:70:92
+-     if (status === 401 || status === 403) return { code: "misconfigured", refund: true, msg: "The AI service rejected the server's API key. Ask the course admin to check it." };
++     if (status === 401 || status === 403) return { code: "misconfigured", refund: true, msg: "" };
+
+[Survived] ConditionalExpression
+coach-core.js:71:25
+-     if (status === 400 || status === 413) return { code: "invalid_argument", refund: true, msg: "The AI service refused the request." };
++     if (status === 400 || false) return { code: "invalid_argument", refund: true, msg: "The AI service refused the request." };
+
+[Survived] StringLiteral
+coach-core.js:71:95
+-     if (status === 400 || status === 413) return { code: "invalid_argument", refund: true, msg: "The AI service refused the request." };
++     if (status === 400 || status === 413) return { code: "invalid_argument", refund: true, msg: "" };
+
+[Survived] StringLiteral
+coach-core.js:72:55
+-     return { code: "upstream_error", refund: true, msg: `The AI service failed (HTTP ${status}).` };
++     return { code: "upstream_error", refund: true, msg: `` };
+
+[Survived] ConditionalExpression
+coach-core.js:85:7
+-     if (!uid) throw new CoachError("not_granted", "Sign in first.");
++     if (false) throw new CoachError("not_granted", "Sign in first.");
+
+[Survived] StringLiteral
+coach-core.js:85:49
+-     if (!uid) throw new CoachError("not_granted", "Sign in first.");
++     if (!uid) throw new CoachError("not_granted", "");
+
+[Survived] StringLiteral
+coach-core.js:92:56
+-       if (!sid) throw new CoachError("invalid_argument", "AI reports must name the session they are for.");
++       if (!sid) throw new CoachError("invalid_argument", "");
+
+[Survived] StringLiteral
+coach-core.js:94:52
+-       if (!sess) throw new CoachError("not_granted", "That session is not one of yours.");
++       if (!sess) throw new CoachError("not_granted", "");
+
+[Survived] StringLiteral
+coach-core.js:95:58
+-       if (!sess.ended) throw new CoachError("not_granted", "AI reports are generated after the session ends.");
++       if (!sess.ended) throw new CoachError("not_granted", "");
+
+[Survived] StringLiteral
+coach-core.js:99:54
+-       if (!joined) throw new CoachError("not_granted", "AI reports are available to hosts and to players who joined a game.");
++       if (!joined) throw new CoachError("not_granted", "");
+
+[Survived] StringLiteral
+coach-core.js:100:72
+-       if (sid && sid !== joined.sid) throw new CoachError("not_granted", "That is not the session you played in.");
++       if (sid && sid !== joined.sid) throw new CoachError("not_granted", "");
+
+[Survived] ArithmeticOperator
+coach-core.js:105:68
+-       ? `This session's AI limit (${quota.sessionCap} reports for ${(quota.sessionCap - 1) / 2} players) has been reached.`
++       ? `This session's AI limit (${quota.sessionCap} reports for ${(quota.sessionCap + 1) / 2} players) has been reached.`
+
+[Survived] ArithmeticOperator
+coach-core.js:105:67
+-       ? `This session's AI limit (${quota.sessionCap} reports for ${(quota.sessionCap - 1) / 2} players) has been reached.`
++       ? `This session's AI limit (${quota.sessionCap} reports for ${(quota.sessionCap - 1) * 2} players) has been reached.`
+
+[Survived] ConditionalExpression
+coach-core.js:111:18
+-     const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
++     const signal = true ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
+
+[Survived] ConditionalExpression
+coach-core.js:111:18
+-     const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
++     const signal = false ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
+
+[Survived] LogicalOperator
+coach-core.js:111:18
+-     const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
++     const signal = typeof AbortSignal !== "undefined" || AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
+
+[Survived] StringLiteral
+coach-core.js:111:41
+-     const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
++     const signal = typeof AbortSignal !== "" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
+
+[Survived] ConditionalExpression
+coach-core.js:111:18
+-     const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
++     const signal = true && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
+
+[Survived] EqualityOperator
+coach-core.js:111:18
+-     const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
++     const signal = typeof AbortSignal === "undefined" && AbortSignal.timeout ? AbortSignal.timeout(cfg.timeoutMs) : undefined;
+
+[Survived] ArrowFunction
+coach-core.js:119:35
+-       json = await res.json().catch(() => null);
++       json = await res.json().catch(() => undefined);
+
+[Survived] StringLiteral
+coach-core.js:115:15
+-         method: "POST",
++         method: "",
+
+[Survived] StringLiteral
+coach-core.js:116:34
+-         headers: { "content-type": "application/json", "x-api-key": deps.apiKey(), "anthropic-version": cfg.apiVersion },
++         headers: { "content-type": "", "x-api-key": deps.apiKey(), "anthropic-version": cfg.apiVersion },
+
+[Survived] StringLiteral
+coach-core.js:122:44
+-       throw new CoachError("upstream_error", "Could not reach the AI service.");
++       throw new CoachError("upstream_error", "");
+
+[Survived] ConditionalExpression
+coach-core.js:126:9
+-       if (m.refund) await deps.refundQuota(quota);
++       if (true) await deps.refundQuota(quota);
+
+[Survived] ArrayDeclaration
+coach-core.js:129:44
+-     const blocks = (json && json.content) || [];
++     const blocks = (json && json.content) || ["Stryker was here"];
+
+[Survived] ConditionalExpression
+coach-core.js:130:42
+-     const tool = kind ? blocks.find((b) => b && b.type === "tool_use" && b.name === SCHEMAS[kind].name) : null;
++     const tool = kind ? blocks.find((b) => true) : null;
+
+[Survived] LogicalOperator
+coach-core.js:130:42
+-     const tool = kind ? blocks.find((b) => b && b.type === "tool_use" && b.name === SCHEMAS[kind].name) : null;
++     const tool = kind ? blocks.find((b) => b && b.type === "tool_use" || b.name === SCHEMAS[kind].name) : null;
+
+[Survived] ConditionalExpression
+coach-core.js:130:42
+-     const tool = kind ? blocks.find((b) => b && b.type === "tool_use" && b.name === SCHEMAS[kind].name) : null;
++     const tool = kind ? blocks.find((b) => true && b.name === SCHEMAS[kind].name) : null;
+
+[Survived] LogicalOperator
+coach-core.js:130:42
+-     const tool = kind ? blocks.find((b) => b && b.type === "tool_use" && b.name === SCHEMAS[kind].name) : null;
++     const tool = kind ? blocks.find((b) => b || b.type === "tool_use" && b.name === SCHEMAS[kind].name) : null;
+
+[Survived] ConditionalExpression
+coach-core.js:130:47
+-     const tool = kind ? blocks.find((b) => b && b.type === "tool_use" && b.name === SCHEMAS[kind].name) : null;
++     const tool = kind ? blocks.find((b) => b && true && b.name === SCHEMAS[kind].name) : null;
+
+[Survived] ConditionalExpression
+coach-core.js:130:72
+-     const tool = kind ? blocks.find((b) => b && b.type === "tool_use" && b.name === SCHEMAS[kind].name) : null;
++     const tool = kind ? blocks.find((b) => b && b.type === "tool_use" && true) : null;
+
+[Survived] ConditionalExpression
+coach-core.js:131:46
+-     const text = kind ? (tool && tool.input && typeof tool.input === "object" ? JSON.stringify(tool.input) : "")
++     const text = kind ? (tool && tool.input && true ? JSON.stringify(tool.input) : "")
+
+[Survived] MethodExpression
+coach-core.js:132:7
+-       : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("");
++       : blocks.map((b) => b.text || "").join("");
+
+[Survived] ConditionalExpression
+coach-core.js:132:28
+-       : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("");
++       : blocks.filter((b) => true).map((b) => b.text || "").join("");
+
+[Survived] LogicalOperator
+coach-core.js:132:28
+-       : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("");
++       : blocks.filter((b) => b || b.type === "text").map((b) => b.text || "").join("");
+
+[Survived] ConditionalExpression
+coach-core.js:132:33
+-       : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("");
++       : blocks.filter((b) => b && true).map((b) => b.text || "").join("");
+
+[Survived] StringLiteral
+coach-core.js:132:73
+-       : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("");
++       : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "Stryker was here!").join("");
+
+[Survived] StringLiteral
+coach-core.js:132:82
+-       : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("");
++       : blocks.filter((b) => b && b.type === "text").map((b) => b.text || "").join("Stryker was here!");
+
+[Survived] StringLiteral
+coach-core.js:133:95
+-     if (!text.trim()) { await deps.refundQuota(quota); throw new CoachError("empty_completion", "The AI service returned no text."); }
++     if (!text.trim()) { await deps.refundQuota(quota); throw new CoachError("empty_completion", ""); }
+
+[Survived] LogicalOperator
+coach-core.js:136:83
+-     const out = { text, truncated: json.stop_reason === "max_tokens", modelApplied: json.model || model, modelTierApplied: tier };
++     const out = { text, truncated: json.stop_reason === "max_tokens", modelApplied: json.model && model, modelTierApplied: tier };
+
+[Survived] StringLiteral
+coach-core.js:139:75
+-       uid, day, sid: quota.sid, kind, at: deps.now(), role: host ? "host" : "participant", model: out.modelApplied, tier,
++       uid, day, sid: quota.sid, kind, at: deps.now(), role: host ? "host" : "", model: out.modelApplied, tier,
+
+[Survived] ArrayDeclaration
+deps.js:4:114
+-     const uidsIn = async (path, uid) => { const s = await db.doc(path).get(); return s.exists && (s.get("uids") || []).includes(uid); };
++     const uidsIn = async (path, uid) => { const s = await db.doc(path).get(); return s.exists && (s.get("uids") || ["Stryker was here"]).includes(uid); };
+
+[Survived] ConditionalExpression
+deps.js:11:55
+-         const p = await db.doc(`pub/${uid}`).get(); if (!p.exists) return false;
++         const p = await db.doc(`pub/${uid}`).get(); if (false) return false;
+
+[Survived] ConditionalExpression
+deps.js:12:59
+-         const sid = p.get("sid"), host = p.get("host"); if (!sid || !host) return false;
++         const sid = p.get("sid"), host = p.get("host"); if (false) return false;
+
+[Survived] BooleanLiteral
+deps.js:12:81
+-         const sid = p.get("sid"), host = p.get("host"); if (!sid || !host) return false;
++         const sid = p.get("sid"), host = p.get("host"); if (!sid || !host) return true;
+
+[Survived] LogicalOperator
+deps.js:12:59
+-         const sid = p.get("sid"), host = p.get("host"); if (!sid || !host) return false;
++         const sid = p.get("sid"), host = p.get("host"); if (!sid && !host) return false;
+
+[Survived] EqualityOperator
+deps.js:14:27
+-         if (!sess.exists || now() - (sess.get("createdAt") || 0) > 3 * 864e5) return false;
++         if (!sess.exists || now() - (sess.get("createdAt") || 0) >= 3 * 864e5) return false;
+
+[Survived] ArrayDeclaration
+deps.js:15:43
+-         return (sess.get("participants") || []).some((x) => x && x.uid === uid) ? { sid } : false;
++         return (sess.get("participants") || ["Stryker was here"]).some((x) => x && x.uid === uid) ? { sid } : false;
+
+[Survived] ConditionalExpression
+deps.js:19:86
+-         const s = await db.doc(`data/users/${uid}/profile/sessions/${sid}`).get(); if (!s.exists) return null;
++         const s = await db.doc(`data/users/${uid}/profile/sessions/${sid}`).get(); if (false) return null;
+
+[Survived] ArrayDeclaration
+deps.js:20:81
+-         return { ended: !!s.get("endAt"), participants: (s.get("participants") || []).length };
++         return { ended: !!s.get("endAt"), participants: (s.get("participants") || ["Stryker was here"]).length };
+
+[Survived] ObjectLiteral
+deps.js:28:37
+-         if (dUsed >= dailyCap) return { ok: false, limit: "daily" };
++         if (dUsed >= dailyCap) return {};
+
+[Survived] StringLiteral
+deps.js:28:57
+-         if (dUsed >= dailyCap) return { ok: false, limit: "daily" };
++         if (dUsed >= dailyCap) return { ok: false, limit: "" };
+
+[Survived] ObjectLiteral
+deps.js:29:70
+-         tx.set(dRef, { uid, day, count: dUsed + 1, updatedAt: now() }, { merge: true });
++         tx.set(dRef, { uid, day, count: dUsed + 1, updatedAt: now() }, {});
+
+[Survived] BooleanLiteral
+deps.js:29:79
+-         tx.set(dRef, { uid, day, count: dUsed + 1, updatedAt: now() }, { merge: true });
++         tx.set(dRef, { uid, day, count: dUsed + 1, updatedAt: now() }, { merge: false });
+
+[Survived] ObjectLiteral
+deps.js:30:97
+-         if (sRef) tx.set(sRef, { uid, sid, count: sUsed + 1, cap: sessionCap, updatedAt: now() }, { merge: true });
++         if (sRef) tx.set(sRef, { uid, sid, count: sUsed + 1, cap: sessionCap, updatedAt: now() }, {});
+
+[Survived] BooleanLiteral
+deps.js:30:106
+-         if (sRef) tx.set(sRef, { uid, sid, count: sUsed + 1, cap: sessionCap, updatedAt: now() }, { merge: true });
++         if (sRef) tx.set(sRef, { uid, sid, count: sUsed + 1, cap: sessionCap, updatedAt: now() }, { merge: false });
+
+[Survived] ArrayDeclaration
+deps.js:34:102
+-         const refs = [db.doc(`aiQuota/${uid}_${day}`), ...(sid ? [db.doc(`aiQuota/${uid}_s_${sid}`)] : [])];
++         const refs = [db.doc(`aiQuota/${uid}_${day}`), ...(sid ? [db.doc(`aiQuota/${uid}_s_${sid}`)] : ["Stryker was here"])];
+
+[Survived] ArrayDeclaration
+deps.js:35:21
+-         const snaps = []; for (const r of refs) snaps.push(await tx.get(r));
++         const snaps = ["Stryker was here"]; for (const r of refs) snaps.push(await tx.get(r));
+
+[Survived] ConditionalExpression
+deps.js:36:80
+-         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, { merge: true }));
++         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? true : 0) - 1), updatedAt: now() }, { merge: true }));
+
+[Survived] LogicalOperator
+deps.js:36:80
+-         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, { merge: true }));
++         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") && 0 : 0) - 1), updatedAt: now() }, { merge: true }));
+
+[Survived] ConditionalExpression
+deps.js:36:80
+-         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, { merge: true }));
++         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? false : 0) - 1), updatedAt: now() }, { merge: true }));
+
+[Survived] StringLiteral
+deps.js:36:93
+-         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, { merge: true }));
++         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("") || 0 : 0) - 1), updatedAt: now() }, { merge: true }));
+
+[Survived] ObjectLiteral
+deps.js:36:138
+-         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, { merge: true }));
++         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, {}));
+
+[Survived] BooleanLiteral
+deps.js:36:147
+-         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, { merge: true }));
++         refs.forEach((r, k) => tx.set(r, { count: Math.max(0, (snaps[k].exists ? snaps[k].get("count") || 0 : 0) - 1), updatedAt: now() }, { merge: false }));
+
+Ran 1.00 tests per mutant on average.
+---------------|------------------|----------|-----------|------------|----------|----------|
+               | % Mutation score |          |           |            |          |          |
+File           |  total | covered | # killed | # timeout | # survived | # no cov | # errors |
+---------------|--------|---------|----------|-----------|------------|----------|----------|
+All files      |  77.15 |   77.15 |      341 |         0 |        101 |        0 |        0 |
+ coach-core.js |  74.43 |   74.43 |      227 |         0 |         78 |        0 |        0 |
+ deps.js       |  83.21 |   83.21 |      114 |         0 |         23 |        0 |        0 |
+---------------|--------|---------|----------|-----------|------------|----------|----------|
+[32m19:06:46 (34083) INFO MutationTestReportHelper[39m Final mutation score of 77.15 is greater than or equal to break threshold 70
+[32m19:06:46 (34083) INFO JsonReporter[39m Your report can be found at: file:///Users/richardlau/Desktop/%20Algo_Arena/algoarena-b/functions/reports/mutation/mutation.json
+[32m19:06:46 (34083) INFO HtmlReporter[39m Your report can be found at: file:///Users/richardlau/Desktop/%20Algo_Arena/algoarena-b/functions/reports/mutation/mutation.html
+[32m19:06:46 (34083) INFO MutationTestExecutor[39m Done in 25 seconds.

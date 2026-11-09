@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--
+  @fileoverview Test harness page for the route B end-to-end test (e2e_b.py).
+  It holds the shared mock Firebase state (window.__FB) used by mock-firebase.js in each iframe, adds one iframe of
+  app.html per test user with a chosen clock skew, and runs coach-core.js, the same file the Cloud Function uses,
+  against a fake Anthropic API and in-page quota and log storage.
+
+  Author: Yikang (Richard) Liu, M.S. Candidate in Computer Science, Khoury College of Computer Sciences,
+      Northeastern University
+  Version: 1.0
+  Created: October 29, 2026 · San Francisco, California, USA
+
+  License: This project is licensed under the MIT License — see LICENSE.md for details.
+  Copyright © 2026 Yikang (Richard) Liu.
+  @license MIT
+-->
+<html><head><meta charset="utf-8"><title>AlgoArena route B harness</title>
+<style>body{margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#333}iframe{width:100%;height:900px;border:0;background:#fff}</style>
+<script>
+/** Mock Firebase state shared by every app iframe; now() is this page's clock, which is the mock server clock. */
+window.__FB = { docs: new Map(), blobs: new Map(), subs: new Set(), signedIn: {}, names: {}, refused: [], errs: [], now: () => Date.now() };
+/**
+ * @param {string} name
+ * @param {string} uid Test user id, passed to app.html as the `u` query parameter.
+ * @param {number=} skew Device clock skew in ms.
+ */
+window.__FB.addFrame = (name, uid, skew = 0) => { const f = document.createElement("iframe"); f.name = name; f.src = "app.html?u=" + encodeURIComponent(uid) + "&skew=" + skew; document.body.appendChild(f); };
+/**
+ * @param {string} p
+ * @return {?Object} A deep copy of the stored document.
+ */
+window.__FB.get = (p) => { const d = window.__FB.docs.get(p); return d === undefined ? null : JSON.parse(JSON.stringify(d)); };
+</script>
+<script type="module">
+/* Server side of the mock: the real coach-core.js, shared with the Cloud Function, with a fake Anthropic API. */
+import { runCoach } from "./coach-core.js";
+const FB = window.__FB; FB.aiCalls = []; FB.aiFailNext = 0;
+const day = (ms) => new Date(ms).toISOString().slice(0, 10);
+function fakeAnthropic(url, init) {
+  const body = JSON.parse(init.body); const prompt = body.messages[0].content;
+  FB.aiCalls.push({ model: body.model, system: body.system, key: init.headers["x-api-key"], chars: prompt.length, names: /Alice|Bob|Host User/.test(prompt), schema: body.output_config ? Object.keys(body.output_config.format.schema.properties).sort().join(",") : null, toolChoice: body.tool_choice || null, budget: /fits in 400 words/.test(prompt) });
+  if (FB.aiFailNext > 0) { FB.aiFailNext--; return Promise.resolve({ ok: false, status: 529, json: async () => ({ type: "error" }) }); }
+  let j;
+  if (/class-level summary/.test(prompt)) j = { overview: "The class did well on running-time questions.", prominent_knowledge_points: ["Insertion sort worst case"], common_error_patterns: ["Confusing best and worst case"], possible_confusion_signals: ["Θ(n) vs Θ(n²)"], suggested_follow_up: ["Review loop invariants"] };
+  else { const ids = [...(prompt.split("CANDIDATES:")[1] || "").matchAll(/"id":"([^"]+)"/g)].map((m) => m[1]);
+    j = { performance_summary: "Your answers suggest steady work on running time.", knowledge_points: ["Worst-case analysis (Q1)"], weak_or_risky_areas: ["Timing on Q2"], possible_confusions: [], next_steps: ["Redo Q2"], resource_ids: ids.slice(0, 1) }; }
+  // Sonnet 5.5 and Opus 5.5 answer a forced tool_choice with HTTP 400 (functions/test/anthropic-contract.mjs).
+  if (body.tool_choice && /5-5$/.test(body.model)) return Promise.resolve({ ok: false, status: 400, json: async () => ({ type: "error", error: { type: "invalid_request_error", message: "forced tool use" } }) });
+  return Promise.resolve({ ok: true, status: 200, json: async () => ({ model: body.model, content: [{ type: "text", text: JSON.stringify(j) }], stop_reason: "end_turn", usage: { input_tokens: 500, output_tokens: 80 } }) });
+}
+/* coach-core.js deps backed by FB.docs instead of the Admin SDK. */
+const deps = {
+  now: () => Date.now(), fetch: fakeAnthropic, apiKey: () => "sk-test-secret",
+  isHost: async (uid) => [FB.get("meta/aiHosts"), FB.get("meta/admins")].some((d) => d && (d.uids || []).includes(uid)),
+  hasJoined: async (uid) => { const p = FB.get(`pub/${uid}`); if (!p || !p.sid || !p.host) return false;
+    const s = FB.get(`data/users/${p.host}/profile/sessions/${p.sid}`); return s && Date.now() - (s.createdAt || 0) < 3 * 864e5 && (s.participants || []).some((x) => x && x.uid === uid) ? { sid: p.sid } : false; },
+  hostSession: async (uid, sid) => { const s = FB.get(`data/users/${uid}/profile/sessions/${sid}`); return s ? { ended: !!s.endAt, participants: (s.participants || []).length } : null; },
+  consumeQuota: async ({ uid, day: d, dailyCap, sid, sessionCap }) => {
+    const dk = `aiQuota/${uid}_${d}`, sk = sid ? `aiQuota/${uid}_s_${sid}` : null; const du = (FB.get(dk) || {}).count || 0, su = sk ? (FB.get(sk) || {}).count || 0 : 0;
+    if (sk && su >= sessionCap) return { ok: false, limit: "session" }; if (du >= dailyCap) return { ok: false, limit: "daily" };
+    FB.docs.set(dk, { uid, day: d, count: du + 1 }); if (sk) FB.docs.set(sk, { uid, sid, count: su + 1, cap: sessionCap }); return { ok: true }; },
+  refundQuota: async ({ uid, day: d, sid }) => { for (const k of [`aiQuota/${uid}_${d}`, ...(sid ? [`aiQuota/${uid}_s_${sid}`] : [])]) { const c = (FB.get(k) || {}).count || 0; FB.docs.set(k, { ...(FB.get(k) || {}), count: Math.max(0, c - 1) }); } },
+  log: async (e) => { FB.docs.set(`aiLog/${Math.random().toString(36).slice(2)}`, e); },
+};
+// draftQuestions: the harness cannot load LangGraph, so it returns a result the real runDraft produced
+// (qgen-fixture.json, kept current by functions/test/qgen-core.test.mjs), after the same access check.
+const QGEN_FIXTURE = await (await fetch("qgen-fixture.json")).json();
+FB.draftCalls = []; FB.draftFailNext = null;
+async function draftQuestions(uid, data) {
+  if (!uid) throw Object.assign(new Error("Sign in first."), { code: "not_granted" });
+  if (!(await deps.isHost(uid))) throw Object.assign(new Error("AI drafting is available to approved hosts."), { code: "not_granted" });
+  if (!FB.get(`data/users/${uid}/profile/sets/${data.setId}`)) throw Object.assign(new Error("That question set is not one of yours."), { code: "not_granted" });
+  FB.draftCalls.push({ uid, data });
+  if (FB.draftFailNext) { const e = FB.draftFailNext; FB.draftFailNext = null; throw Object.assign(new Error(e.message), { code: e.code }); }
+  await new Promise((r) => setTimeout(r, 200));
+  return JSON.parse(JSON.stringify(QGEN_FIXTURE));
+}
+/**
+ * @param {string} name
+ * @param {?string} uid
+ * @param {!Object} data
+ * @return {!Promise<!Object>} The runCoach or draftQuestions result.
+ * @throws {!Error} not_granted for any other function; runCoach and draftQuestions errors propagate.
+ */
+FB.callFunction = async (name, uid, data) => {
+  if (name === "draftQuestions") return draftQuestions(uid, data);
+  if (name !== "coach") throw Object.assign(new Error("no such function"), { code: "not_granted" });
+  await new Promise((r) => setTimeout(r, 30)); return runCoach({ uid, data, deps });
+};
+</script></head><body></body></html>

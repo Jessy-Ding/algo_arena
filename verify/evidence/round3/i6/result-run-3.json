@@ -1,0 +1,100 @@
+{
+  "where": "emulator (Auth + Firestore, demo-algoarena); real page, real Firebase JS SDK 10.12.2, real rules",
+  "negative_control": false,
+  "session_id": "Smvuibrij5vgd",
+  "planned_clicks": 11,
+  "plan": [
+    {
+      "uid": "A",
+      "q": 0,
+      "ref": 0,
+      "phase": "live",
+      "path": "in-game buffer"
+    },
+    {
+      "uid": "A",
+      "q": 0,
+      "ref": 2,
+      "phase": "live",
+      "path": "in-game buffer"
+    },
+    {
+      "uid": "B",
+      "q": 0,
+      "ref": 1,
+      "phase": "live",
+      "path": "in-game buffer"
+    },
+    {
+      "uid": "A",
+      "q": 1,
+      "ref": 1,
+      "phase": "live",
+      "path": "in-game buffer"
+    },
+    {
+      "uid": "A",
+      "q": 1,
+      "ref": 1,
+      "phase": "live",
+      "path": "in-game buffer"
+    },
+    {
+      "uid": "B",
+      "q": 2,
+      "ref": 0,
+      "phase": "live",
+      "path": "in-game buffer"
+    },
+    {
+      "uid": "B",
+      "q": 2,
+      "ref": 1,
+      "phase": "live",
+      "path": "in-game buffer"
+    },
+    {
+      "uid": "B",
+      "q": 2,
+      "ref": 2,
+      "phase": "live",
+      "path": "in-game buffer"
+    },
+    {
+      "uid": "A",
+      "q": 0,
+      "ref": 0,
+      "phase": "post",
+      "path": "end screen, in-game buffer"
+    },
+    {
+      "uid": "B",
+      "q": 1,
+      "ref": 2,
+      "phase": "post",
+      "path": "home review, direct pub append"
+    },
+    {
+      "uid": "B",
+      "q": 2,
+      "ref": 1,
+      "phase": "post",
+      "path": "home review, direct pub append"
+    }
+  ],
+  "export_reference_rows": 11,
+  "recorded_exactly_once": 11,
+  "missing": [],
+  "unexpected_or_duplicate": [],
+  "exposure_reference_interactions_mismatch": [],
+  "links_opened_in_browser": {
+    "A": 5,
+    "B": 6
+  },
+  "page_errors": {
+    "H": [],
+    "A": [],
+    "B": []
+  },
+  "console_errors": []
+}

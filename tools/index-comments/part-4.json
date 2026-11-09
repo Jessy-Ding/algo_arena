@@ -1,0 +1,10 @@
+[
+ {
+  "anchor": "async function importLateEvents(X) {",
+  "comment": "/** Participant events keep landing in pub/<uid> after finishSession(); a pub record is read only while its sid is still this session, since joining another game overwrites it. */"
+ },
+ {
+  "anchor": "async function importParticipantReports() {",
+  "comment": "/** Counterpart of ACT.mySelfGen: imports reports participants generated on their own device after host generation failed, sealed to the session key in pub/<uid>.rep. */"
+ }
+]
