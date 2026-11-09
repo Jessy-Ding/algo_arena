@@ -22,7 +22,7 @@ Code and comment rules for this repository are in agent.md. Repository text is E
     (no LANGSMITH_*/LANGCHAIN_TRACING* variable is set).
   - The owner may later replace the GPT verifier with DeepSeek; design doc section 15 lists what that changes.
 
-- Northeastern email sign-in (decided 2026-11-09, not built yet):
+- Northeastern email sign-in (decided and built 2026-11-09):
   - Students sign in with a Firebase email link sent to their Northeastern address (passwordless sign-in): they type
     the address, open the link in Outlook, and are signed in. Google sign-in stays as a second option, because the
     owner's, the instructor's and existing players' data and admin entries belong to their Google uids.
@@ -33,5 +33,6 @@ Code and comment rules for this repository are in agent.md. Repository text is E
     checking uids, since Google sign-in is open to any account anyway.
   - Firebase console: Email/Password and "Email link (passwordless sign-in)" enabled; the continue URL's domain
     (yikangliu823.github.io) must be an authorized domain. Blaze allows 25,000 sign-in link emails a day.
-  - Before any code: one test email to a Northeastern mailbox, for delivery (inbox or junk), Microsoft Safe Links
-    rewriting, and how the Outlook app opens the link.
+  - Test email to a Northeastern mailbox (2026-11-09): delivered to Junk Email, the link wrapped by Safe Links with
+    the original URL kept. The "Check your email" screen says to look in Junk; a custom sending domain is the fallback
+    if that proves a problem in class.

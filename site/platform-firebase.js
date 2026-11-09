@@ -1,7 +1,8 @@
 /**
  * @fileoverview AlgoArena route B platform layer. The page was written against the claude.ai capability interface
  * (claude.use("db"), "user", "downloads", ...). This module provides the same interface backed by Firebase
- * Authentication (Google sign-in), Cloud Firestore and Cloud Storage (uploaded files), so the page logic stays the
+ * Authentication (Northeastern email links and Google sign-in), Cloud Firestore and Cloud Storage (uploaded files), so
+ * the page logic stays the
  * same. Differences from the
  * claude.ai runtime are noted where they matter:
  * - db.update() merges nested objects (claude.ai semantics); Firestore's updateDoc replaces nested maps, so updates
@@ -37,9 +38,35 @@ async function init() {
   try { fdb = fsM.initializeFirestore(app, { ignoreUndefinedProperties: true }); } catch { fdb = fsM.getFirestore(app); }
   Object.assign(F, { appM, authM, fsM, app, auth, fdb });
   F.user = await new Promise((resolve) => { const stop = authM.onAuthStateChanged(auth, (u) => { if (stop) stop(); resolve(u); }); });
+  if (authM.isSignInWithEmailLink(auth, location.href)) await useSignInLink();
   if (F.user) estimateServerOffset().catch((e) => console.warn("Server clock estimate failed:", e));
 }
 const boot = () => (ready = ready || init());
+
+/* ---------- email link sign-in ---------- */
+// The address is kept between asking for the link and opening it, as Firebase requires; opened in another browser,
+// the page asks for it again (claude.emailLink.pending === "needEmail").
+const LINK_EMAIL_KEY = "aaSignInEmail";
+const LINK_PARAMS = ["apiKey", "oobCode", "mode", "lang", "continueUrl", "tenantId"];
+const LINK = { pending: null, href: "" };
+const storedEmail = () => { try { return localStorage.getItem(LINK_EMAIL_KEY) || ""; } catch { return ""; } };
+const storeEmail = (v) => { try { if (v) localStorage.setItem(LINK_EMAIL_KEY, v); else localStorage.removeItem(LINK_EMAIL_KEY); } catch { /* private mode: the page asks again */ } };
+// Keeps the page's own parameters (such as ?join=CODE), so a student who arrived by a join link lands back on it.
+function pageUrlWithoutLink() {
+  const u = new URL(location.href); for (const p of LINK_PARAMS) u.searchParams.delete(p);
+  return u;
+}
+const dropLinkFromUrl = () => { const u = pageUrlWithoutLink(); history.replaceState(null, "", u.pathname + u.search + u.hash); };
+
+async function useSignInLink() {
+  LINK.href = location.href;
+  if (F.user) return dropLinkFromUrl(); // already signed in on this browser; the link is not needed
+  const email = storedEmail();
+  if (!email) { LINK.pending = "needEmail"; return; }
+  try { F.user = (await F.authM.signInWithEmailLink(F.auth, email, LINK.href)).user; storeEmail(""); }
+  catch (e) { LINK.pending = (e && e.code) || "auth/internal-error"; }
+  dropLinkFromUrl();
+}
 
 // Display only (countdowns); scoring uses server timestamps written by Firestore.
 async function estimateServerOffset() {
@@ -293,5 +320,32 @@ W.claude = {
   },
   /** @return {!Promise<void>} */
   signOut: async () => { await boot(); await F.authM.signOut(F.auth); },
+  emailLink: {
+    /** @return {?string} After boot: "needEmail" when a link opened without its address, an auth error code, or null. */
+    get pending() { return LINK.pending; },
+    /**
+     * @param {string} email A full address the page has already checked.
+     * @return {!Promise<void>}
+     */
+    send: async (email) => {
+      await boot();
+      const u = pageUrlWithoutLink();
+      await F.authM.sendSignInLinkToEmail(F.auth, email, { url: u.origin + u.pathname + u.search, handleCodeInApp: true });
+      storeEmail(email);
+    },
+    /**
+     * Finishes a link opened in a browser that did not ask for it.
+     *
+     * @param {string} email
+     * @return {!Promise<void>}
+     * @throws {!Error} auth/invalid-email when it is not the address the link was sent to; auth/invalid-action-code
+     *     when the link has expired or was used.
+     */
+    finish: async (email) => {
+      await boot();
+      F.user = (await F.authM.signInWithEmailLink(F.auth, email, LINK.href)).user;
+      LINK.pending = null; storeEmail(""); dropLinkFromUrl();
+    },
+  },
   platform: "firebase",
 };

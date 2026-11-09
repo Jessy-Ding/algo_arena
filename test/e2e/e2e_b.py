@@ -95,10 +95,14 @@ with sync_playwright() as pw:
             await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
             const de = f.contentDocument.documentElement; const dims = [de.scrollWidth, de.clientWidth]; f.style.width = ""; return dims; }""", [name, width])
 
-    # Google sign-in
+    # Sign-in: the Northeastern email field comes first; Google is behind "Other sign-in options".
     for F in (H, A, B):
-        F.wait_for_selector('[data-act="signIn"]', timeout=8000)
-    check("signed-out users see 'Sign in with Google'", "Google" in H.inner_text('[data-act="signIn"]'))
+        F.wait_for_selector("#neu", timeout=8000)
+    check("signed-out users see the Northeastern email field and no Google button until they ask for other options",
+          H.get_attribute("#neu", "placeholder") == "yourname@northeastern.edu" and H.query_selector('[data-act="signIn"]') is None)
+    for F in (H, A, B):
+        F.click('[data-act="gateOthers"]'); F.wait_for_selector('[data-act="signIn"]', timeout=4000)
+    check("other sign-in options offer 'Sign in with Google'", "Sign in with Google" in H.inner_text('[data-act="signIn"]'))
     page.evaluate("() => { __FB.popupBlocked = true; }")
     H.click('[data-act="signIn"]')
     H.wait_for_selector(".toast", timeout=4000)
@@ -468,9 +472,45 @@ with sync_playwright() as pw:
           and all(r["pid"].startswith("P-") for r in rows if r["kind"] == "personal") and "Alice" not in pcsv,
           str((names, [(r["kind"], r["pid"]) for r in rows])))
 
+    # Northeastern email sign-in, with the mock recording links instead of mailing them.
+    page.evaluate("() => __FB.addFrame('pE', 'E', 0)")
+    E = frame_for("E"); E.wait_for_selector("#neu", timeout=8000)
+    E.fill("#neu", "liu.yika@gmail.com"); E.click('[data-act="gateSend"]'); E.wait_for_selector('[role="alert"]', timeout=4000)
+    check("an address outside Northeastern is refused before any email is sent",
+          "Use your Northeastern email." in E.inner_text('[role="alert"]') and not page.evaluate("() => (__FB.emailLinks || []).length"))
+    E.fill("#neu", ""); E.type("#neu", "student.e")
+    dom = E.evaluate("""() => { const i = document.querySelector('#neu'), d = document.querySelector('.emailbox .dom');
+        return { shown: !d.hidden, gap: Math.round(d.getBoundingClientRect().left - i.getBoundingClientRect().right) }; }""")
+    check("while a name is typed, a grey @northeastern.edu follows it directly", dom["shown"] and abs(dom["gap"]) <= 3, str(dom))
+    E.click('[data-act="gateSend"]'); E.wait_for_selector("text=Check your email", timeout=6000)
+    links = page.evaluate("() => __FB.emailLinks")
+    check("the link goes to name@northeastern.edu, is handled in the app, and returns to this page",
+          len(links) == 1 and links[0]["email"] == "student.e@northeastern.edu" and links[0]["inApp"] and "u=E&" in links[0]["url"], json.dumps(links)[:240])
+    E.goto(links[0]["url"]); E.wait_for_selector("#dn", timeout=10000)
+    check("opening the link signs the student in (a new player picks a display name) and clears it from the address",
+          "oobCode" not in E.url and E.evaluate("() => S.uid") == "E", E.url)
+
+    page.evaluate("() => __FB.addFrame('pE2', 'E2', 0)")
+    E2 = frame_for("E2"); E2.wait_for_selector("#neu", timeout=8000)
+    E2.type("#neu", "student.f"); E2.click('[data-act="gateSend"]'); E2.wait_for_selector("text=Check your email", timeout=6000)
+    link2 = page.evaluate("() => __FB.emailLinks[1].url")
+    E2.evaluate("() => localStorage.removeItem('aaSignInEmail')")
+    E2.goto(link2); E2.wait_for_selector("text=Confirm your email", timeout=10000)
+    check("a link opened in another browser asks for the address again", E2.query_selector("#neu") is not None)
+    E2.type("#neu", "other.x"); E2.click('[data-act="gateFinish"]'); E2.wait_for_selector('[role="alert"]', timeout=4000)
+    check("a different address does not finish the sign-in", "isn't the email this link was sent to" in E2.inner_text('[role="alert"]'))
+    E2.fill("#neu", "student.f"); E2.click('[data-act="gateFinish"]'); E2.wait_for_selector("#dn", timeout=10000)
+    check("the same address finishes the sign-in", E2.evaluate("() => S.uid") == "E2")
+
+    page.evaluate("() => __FB.addFrame('pE3', 'E3', 0)")
+    E3 = frame_for("E3"); E3.wait_for_selector("#neu", timeout=8000)
+    E3.goto(link2.replace("u=E2&", "u=E3&")); E3.wait_for_selector("text=Confirm your email", timeout=10000)
+    E3.type("#neu", "student.f"); E3.click('[data-act="gateFinish"]'); E3.wait_for_selector('[role="alert"]', timeout=4000)
+    check("a used link is refused with a request for a new one", "expired or was already used" in E3.inner_text('[role="alert"]') and E3.evaluate("() => S.gate.step") == "enter")
+
     # sign out
     A.click('[data-act="home"]'); A.wait_for_selector('[data-act="signOut"]', timeout=5000); A.click('[data-act="signOut"]')
-    A.wait_for_selector('[data-act="signIn"]', timeout=8000)
+    A.wait_for_selector("#neu", timeout=8000)
     check("sign out returns to the sign-in screen", True)
 
     errs = page.evaluate("() => __FB.errs")

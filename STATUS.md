@@ -34,6 +34,9 @@ question drafting (v1.1) is live for admins and AI hosts. Next: M8 needs the cla
   GPT-6.1 Terra); 94935d7 (one Module and chapter list with CLRS 3rd edition chapters, Module 7 (Data Structures),
   prompt qgen-draft-v2; the `draftQuestions` function was deployed first). `coach` and the rules were not changed.
 - Admins (2026-11-05): two more admins added at the owner's request; meta/admins now holds 3 uids.
+- Northeastern email sign-in (2026-11-09): students type their Northeastern email and open a Firebase sign-in link
+  (the first one may land in Junk Email); Google sign-in is under "Other sign-in options". Email link sign-in is
+  enabled in Firebase Authentication; rules and functions are unchanged.
 - Branches (2026-11-08): the application was merged into `main` (pull request 1), and GitHub Pages now deploys from
   `main`. `verify/firebase-round3`, `verify/firebase-round2` and `feature/ai-question-generation` are kept; nothing
   is pushed to them any more, since a push to `verify/firebase-round3` would still deploy through that branch's own

@@ -40,7 +40,7 @@ const isSent = (v) => v && typeof v === "object" && v[SENT] === true;
  */
 export function initializeApp(config) { return { config }; }
 const auth = { currentUser: null };
-function userObj() { return M.signedIn[ME] ? { uid: ME, displayName: M.names[ME] || ME, email: ME + "@example.edu" } : null; }
+function userObj() { return M.signedIn[ME] ? { uid: ME, displayName: M.names[ME] || ME, email: (M.emails && M.emails[ME]) || ME + "@example.edu" } : null; }
 /**
  * Re-reads this frame's sign-in state from the shared store on every call.
  *
@@ -71,6 +71,44 @@ export async function signInWithPopup(a) {
  * @return {!Promise<void>}
  */
 export async function signOut(a) { M.signedIn[ME] = false; a.currentUser = null; }
+
+/* ---------- email link sign-in: links live in __FB.emailLinks; opening one signs in this frame's user ---------- */
+/**
+ * @param {!Object} a
+ * @param {string} href
+ * @return {boolean}
+ */
+export function isSignInWithEmailLink(a, href) { const q = new URL(href).searchParams; return q.get("mode") === "signIn" && !!q.get("oobCode"); }
+/**
+ * Records the link instead of mailing it. Its URL is the continue URL plus Firebase's parameters, as the real
+ * action handler redirects there.
+ *
+ * @param {!Object} a
+ * @param {string} email
+ * @param {{url: string, handleCodeInApp: boolean}} settings
+ * @return {!Promise<void>}
+ */
+export async function sendSignInLinkToEmail(a, email, settings) {
+  await delay();
+  const code = "code" + Math.random().toString(36).slice(2); const u = new URL(settings.url);
+  for (const [k, v] of Object.entries({ apiKey: "test-key", oobCode: code, mode: "signIn", lang: "en" })) u.searchParams.set(k, v);
+  (M.emailLinks = M.emailLinks || []).push({ email, code, url: u.href, inApp: settings.handleCodeInApp, used: false });
+}
+/**
+ * @param {{currentUser: ?Object}} a
+ * @param {string} email
+ * @param {string} href
+ * @return {!Promise<{user: !Object}>}
+ * @throws {!Error} auth/invalid-action-code for an unknown or used link; auth/invalid-email for another address.
+ */
+export async function signInWithEmailLink(a, email, href) {
+  await delay();
+  const link = (M.emailLinks || []).find((x) => x.code === new URL(href).searchParams.get("oobCode"));
+  if (!link || link.used) throw Object.assign(new Error("Invalid action code"), { code: "auth/invalid-action-code" });
+  if (link.email !== email) throw Object.assign(new Error("Invalid email"), { code: "auth/invalid-email" });
+  link.used = true; (M.emails = M.emails || {})[ME] = email; M.signedIn[ME] = true; a.currentUser = userObj();
+  return { user: a.currentUser };
+}
 
 /* ---------- encoding: stored data is JSON with {__ts: ms} for timestamps ---------- */
 function enc(v, now) {

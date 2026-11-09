@@ -670,6 +670,87 @@ rep(".btn{white-space:nowrap}\n",
     "@media (max-width:640px){.item{flex-wrap:wrap}.item .grow{flex-basis:100%}}\n"
     "@media (max-width:420px){.wordmark .mk{display:none}}\n", "phone_fit_css")
 
+# Northeastern email sign-in (owner, 2026-11-09; preview approved): students get a Firebase sign-in link at their
+# @northeastern.edu address; Google stays behind "Other sign-in options" for hosts and guests. The email field shows
+# the full example when empty and a grey "@northeastern.edu" after the typed name, which is added on submit.
+rep("VIEWS.gate = (a) => {\n",
+    "VIEWS.gate = (a) => {\n  if (a.reason === \"signin\" && window.claude && window.claude.emailLink) return signinView();\n",
+    "email_gate_view")
+rep("ACT.signOut = async () => { leaveLive(); await window.claude.signOut(); location.reload(); };",
+    "ACT.signOut = async () => { leaveLive(); await window.claude.signOut(); location.reload(); };\n" + r'''const NEU_DOMAIN = "@northeastern.edu";
+// husky.neu.edu is Northeastern's older domain, in the same Microsoft tenant; typing it in full is accepted.
+function neuAddress(raw) {
+  const v = String(raw || "").trim().toLowerCase(); if (!v) return null;
+  const full = v.includes("@") ? v : v + NEU_DOMAIN;
+  return /^[a-z0-9._%+-]+@(northeastern\.edu|husky\.neu\.edu)$/.test(full) ? full : null;
+}
+const LINK_ERRORS = { "auth/invalid-email": "That isn't the email this link was sent to.",
+  "auth/invalid-action-code": "This sign-in link has expired or was already used. Ask for a new one.",
+  "auth/expired-action-code": "This sign-in link has expired or was already used. Ask for a new one." };
+const linkError = (e) => LINK_ERRORS[e && e.code] || "Sign-in didn't finish: " + ((e && (e.code || e.message)) || e);
+const G_LOGO = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+function gateState() {
+  if (S.gate) return S.gate;
+  const p = window.claude.emailLink.pending;
+  return (S.gate = { step: p === "needEmail" ? "confirm" : "enter", email: "", typed: "", others: false, error: p && p !== "needEmail" ? linkError({ code: p }) : "" });
+}
+function emailBox(g) {
+  return `<div class="emailbox${g.error ? " bad" : ""}"><input id="neu" type="text" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" aria-label="Northeastern email" placeholder="yourname@northeastern.edu" value="${esc(g.typed)}"><span class="dom" aria-hidden="true" hidden>${NEU_DOMAIN}</span></div>`
+    + (g.error ? `<p class="small" role="alert" style="color:var(--bad);margin:6px 0 0">${esc(g.error)}</p>` : "");
+}
+function signinView() {
+  const g = gateState(); const head = (h) => `<main><div class="wrap" style="max-width:520px"><h1>${h}</h1>`;
+  if (g.step === "sent") return head("Check your email") + `<p>We sent a sign-in link to <b>${esc(g.email)}</b>. Open it on this phone or computer to finish signing in.</p>
+  <p class="muted small">It can take a minute. If it isn't in your inbox, look in Junk Email.</p>
+  <div class="row" style="margin-top:12px"><button class="btn" data-act="gateSend">Send the link again</button><button class="btn ghost" data-act="gateBack">Use a different email</button></div></div></main>`;
+  if (g.step === "confirm") return head("Confirm your email") + `<p>This link opened in a different browser from the one where you asked for it. Enter the same Northeastern email to finish signing in here.</p>
+  ${emailBox(g)}<div class="row" style="margin-top:12px"><button class="btn primary big" data-act="gateFinish">Finish signing in</button></div></div></main>`;
+  return head("Sign in to play") + `<p>Sign in with your Northeastern email. We'll send you a sign-in link.</p>
+  ${emailBox(g)}<div class="row" style="margin-top:12px"><button class="btn primary big" data-act="gateSend">Email me a sign-in link</button></div>
+  <p style="margin-top:22px"><button class="linkbtn" data-act="gateOthers" aria-expanded="${g.others}">Other sign-in options</button></p>
+  ${g.others ? `<div class="row"><button class="btn gbtn" data-act="signIn">${G_LOGO}Sign in with Google</button></div><p class="muted small" style="margin-top:6px">For hosts and guests without a Northeastern account.</p>` : ""}</div></main>`;
+}
+// The grey domain follows the typed name: the input is sized to its text while no "@" has been typed.
+let neuMeter = null;
+function fitNeu() {
+  const i = $("#neu"); if (!i) return; const dom = i.nextElementSibling; const v = i.value; const show = !!v && !v.includes("@");
+  dom.hidden = !show;
+  if (!show) { i.style.width = ""; i.style.flex = ""; return; }
+  neuMeter = neuMeter || Object.assign(document.createElement("span"), { ariaHidden: "true" });
+  neuMeter.style.cssText = "position:absolute;visibility:hidden;white-space:pre;font:" + getComputedStyle(i).font;
+  neuMeter.textContent = v; document.body.appendChild(neuMeter);
+  i.style.flex = "none"; i.style.width = neuMeter.getBoundingClientRect().width + 0.5 + "px"; // half a pixel leaves room for the caret neuMeter.remove();
+}
+AFTER.gate = fitNeu;
+document.addEventListener("input", (e) => { if (e.target && e.target.id === "neu") { S.gate.typed = e.target.value; fitNeu(); } });
+document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest(".emailbox"); if (b && e.target.id !== "neu") $("#neu").focus(); });
+ACT.gateOthers = () => { S.gate.others = !S.gate.others; rerender(); };
+ACT.gateBack = () => { Object.assign(S.gate, { step: "enter", error: "" }); rerender(); };
+ACT.gateSend = async (btn) => {
+  const g = S.gate; const again = g.step === "sent"; const email = again ? g.email : neuAddress($("#neu").value);
+  if (!email) { g.error = "Use your Northeastern email."; return rerender(); }
+  btn.disabled = true;
+  try { await window.claude.emailLink.send(email); Object.assign(g, { step: "sent", email, error: "" }); rerender(); if (again) toast("Sign-in link sent again."); }
+  catch (e) { btn.disabled = false; toast("The sign-in link couldn't be sent: " + ((e && (e.code || e.message)) || e), 6000); }
+};
+ACT.gateFinish = async (btn) => {
+  const g = S.gate; const email = neuAddress($("#neu").value);
+  if (!email) { g.error = "Use your Northeastern email."; return rerender(); }
+  btn.disabled = true;
+  try { await window.claude.emailLink.finish(email); location.reload(); }
+  catch (e) { btn.disabled = false; g.error = linkError(e); if (e && e.code !== "auth/invalid-email") g.step = "enter"; rerender(); }
+};''',
+    "email_gate_actions")
+rep("@media (max-width:420px){.wordmark .mk{display:none}}\n",
+    "@media (max-width:420px){.wordmark .mk{display:none}}\n"
+    ".emailbox{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:var(--radius-sm);background:var(--surface);min-height:44px;padding:0 12px;cursor:text}\n"
+    ".emailbox:focus-within{outline:3px solid var(--brand);outline-offset:2px}.emailbox.bad{border-color:var(--bad)}\n"
+    ".emailbox input{border:0;padding:10px 0;min-height:0;flex:1;min-width:0;background:transparent;outline:none}\n"
+    ".emailbox .dom{color:var(--muted);white-space:nowrap}\n"
+    ".linkbtn{background:none;border:0;padding:0;color:var(--brand);text-decoration:underline;text-underline-offset:3px;font-weight:700;cursor:pointer}\n"
+    ".btn.gbtn{background:#fff;color:#1f1f1f;border:1px solid #747775;font-weight:600}\n",
+    "email_gate_css")
+
 # File header and JSDoc overlay (comments only).
 rep("<!doctype html>\n", "<!doctype html>\n<!--\n"
     "  AlgoArena route B: the Live Classroom 2.1.1 page on GitHub Pages with Firebase (built by tools/build-from-2.1.1.py).\n\n"
